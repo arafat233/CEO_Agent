@@ -407,7 +407,8 @@ function loadData() {
     if (!d.profile.idea) d.profile.idea = 'AI-powered CBSE Class 10 exam preparation platform. Students practice questions, get AI explanations for mistakes, follow a smart planner, compete live, and receive personalised lessons — driven by a behavioural analysis engine.';
     if (!d.profile.industry) d.profile.industry = 'EdTech / AI Education';
     if (!d.profile.stage) d.profile.stage = 'Early growth — product built, scaling users';
-    if (!d.profile.codebase) d.profile.codebase = '/Users/Najeeb-CapOne/Desktop/AILearningPath';
+    const defaultCodebase = path.join(path.dirname(process.cwd()), 'AILearningPath');
+    if (!d.profile.codebase) d.profile.codebase = fs.existsSync(defaultCodebase) ? defaultCodebase : process.cwd();
     return d;
   }
   catch(_) { return {profile:{name:'Stellar / AILearningPath', idea:'AI-powered CBSE Class 10 exam prep platform', industry:'EdTech', stage:'Early growth'},outputs:{},memories:[],history:[]}; }
@@ -437,7 +438,7 @@ function callClaudeCLI(systemPrompt, userPrompt, onToken) {
       '--verbose',
       '--include-partial-messages',
       '--no-session-persistence',
-      '--add-dir', '/Users/Najeeb-CapOne/Desktop/CEO Agent',
+      '--add-dir', process.cwd(),
     ];
     if (systemPrompt) args.push('--system-prompt', systemPrompt);
 
@@ -582,7 +583,15 @@ function backendLabel() {
 }
 
 function buildMessages(agent, prompt) {
-  return [{role:'system',content:agent.system},{role:'user',content:prompt}];
+  let sys = agent.system;
+  try {
+    const data = loadData();
+    const codebasePath = data.profile?.codebase;
+    if (codebasePath && sys.includes('/Users/Najeeb-CapOne/Desktop/AILearningPath')) {
+      sys = sys.replace(/\/Users\/Najeeb\-CapOne\/Desktop\/AILearningPath/g, codebasePath);
+    }
+  } catch(_) {}
+  return [{role:'system',content:sys},{role:'user',content:prompt}];
 }
 
 async function buildToolContext(cfg, opts) {
@@ -602,14 +611,24 @@ async function buildToolContext(cfg, opts) {
 
 // Load AILearningPath blueprint once (cached)
 let _blueprintCache = null;
-function loadBlueprint() {
+function loadBlueprint(codebasePath) {
   if (_blueprintCache !== null) return _blueprintCache;
-  const bpPath = '/Users/Najeeb-CapOne/Desktop/AILearningPath/BLUEPRINT.md';
-  try {
-    const raw = fs.readFileSync(bpPath, 'utf8');
-    // Keep first 4000 chars — enough for full context without ballooning prompt
-    _blueprintCache = raw.slice(0, 4000);
-  } catch(_) { _blueprintCache = ''; }
+  const paths = [
+    codebasePath ? path.join(codebasePath, 'BLUEPRINT.md') : null,
+    path.join(process.cwd(), 'BLUEPRINT.md'),
+    '/Users/Najeeb-CapOne/Desktop/AILearningPath/BLUEPRINT.md'
+  ].filter(Boolean);
+
+  for (const bpPath of paths) {
+    try {
+      if (fs.existsSync(bpPath)) {
+        const raw = fs.readFileSync(bpPath, 'utf8');
+        _blueprintCache = raw.slice(0, 4000);
+        break;
+      }
+    } catch(_) {}
+  }
+  if (_blueprintCache === null) _blueprintCache = '';
   return _blueprintCache;
 }
 
@@ -627,7 +646,7 @@ function buildPrompt(task, data, toolCtx, upstreamOutputs) {
     ? 'PREVIOUS AGENT OUTPUTS:\n' + Object.entries(upstreamOutputs).slice(-3).map(([id,o])=>`[${id.toUpperCase()}]: ${o.slice(0,400)}`).join('\n') + '\n\n'
     : '';
 
-  const bp = loadBlueprint();
+  const bp = loadBlueprint(p.codebase);
   const bpCtx = bp ? `CODEBASE BLUEPRINT:\n${bp}\n\n` : '';
   return [profileCtx, bpCtx, upCtx, toolCtx ? toolCtx+'\n\n' : '', task || 'Provide your strategic analysis and recommendations.'].join('');
 }
@@ -1568,7 +1587,7 @@ const EXEC_AGENT_IDS = new Set([
   'cloud-architect','docker-specialist','kubernetes-engineer','terraform-expert',
 ]);
 
-const AILP_DIR     = '/Users/Najeeb-CapOne/Desktop/AILearningPath';
+const AILP_DIR     = path.join(path.dirname(process.cwd()), 'AILearningPath');
 const AILP_BACKEND = `${AILP_DIR}/ai-learning-backend/backend`;
 
 // Delegation footer injected into every non-exec agent's prompt in chain mode
@@ -1686,10 +1705,13 @@ Rules:
 const DELEGATION_FOOTER = buildDelegationFooter('ceo');
 
 // ── Run Jest tests and return {passed, failed, output} ───────────────────────
-function runTests() {
+function runTests(execDir) {
+  const backendPath = execDir
+    ? path.resolve(execDir, 'ai-learning-backend/backend')
+    : AILP_BACKEND;
   return new Promise(resolve => {
     const proc = spawn('npm', ['test', '--', '--forceExit', '--passWithNoTests'], {
-      cwd: AILP_BACKEND,
+      cwd: fs.existsSync(backendPath) ? backendPath : process.cwd(),
       env: {...process.env, CI:'true'},
       timeout: 120000,
     });
@@ -1713,7 +1735,7 @@ async function runFeedbackLoop(agentId, originalTask, execDir, maxRetries=2) {
     broadcastSSE({type:'test_start', agentId, attempt, ts:new Date().toISOString()});
     console.log(clr(c.cyan, `\n  🧪 Running tests (attempt ${attempt}/${maxRetries})…`));
 
-    const result = await runTests();
+    const result = await runTests(execDir);
     broadcastSSE({type:'test_result', agentId, passed:result.passed, summary:result.summary, failures:result.failures, attempt, ts:new Date().toISOString()});
 
     if (result.passed) {
