@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Module 4 — Governance</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;
+  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;
+  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;
+  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;
+  --pu:#a78bfa;--cy:#22d3ee;--or:#fb923c;
+  --r:10px;--rl:14px;
+  --font:system-ui,-apple-system,sans-serif;
+  --mono:'Fira Code','JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--font);min-height:100vh}
+.app{max-width:1320px;margin:0 auto;padding:20px 24px}
+.topbar{margin-bottom:20px}
+.topbar h1{font-size:20px;font-weight:700}
+.topbar h1 span{background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar p{font-size:13px;color:var(--tx3);margin-top:4px}
+.module-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;background:#ef444418;color:var(--rd);border:1px solid #ef444444;margin-bottom:12px;font-weight:500}
+
+/* kill switch bar */
+.kill-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--rl);border:1px solid var(--bd2);background:var(--bg2);margin-bottom:16px;flex-wrap:wrap}
+.kill-bar.killed{border-color:var(--rd)55;background:#ef44440d;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #ef444422}50%{box-shadow:0 0 0 8px #ef444400}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.kill-status{display:flex;align-items:center;gap:8px;flex:1}
+.kill-dot{width:10px;height:10px;border-radius:50%;background:var(--gr)}
+.kill-dot.off{background:var(--rd);animation:blink 1s infinite}
+.kill-label{font-size:13px;font-weight:500}
+.kill-btn{padding:9px 18px;font-size:13px;font-weight:700;border-radius:var(--r);cursor:pointer;font-family:var(--font);letter-spacing:.04em;border:1px solid;transition:all .15s}
+.kill-btn.active{background:#ef444418;border-color:var(--rd);color:var(--rd)}
+.kill-btn.active:hover{background:#ef444430}
+.kill-btn.killed{background:var(--rd);border-color:var(--rd);color:#fff}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:16px}
+.stat{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;text-align:center;position:relative;overflow:hidden}
+.stat-n{font-size:22px;font-weight:500;color:var(--tx)}
+.stat-l{font-size:10px;color:var(--tx3);margin-top:2px}
+.stat-bar{position:absolute;bottom:0;left:0;height:3px;border-radius:0 0 var(--r) var(--r);transition:width .5s}
+
+/* tabs */
+.tabs{display:flex;gap:3px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:7px 14px;font-size:12px;font-weight:500;border-radius:var(--r);border:1px solid transparent;color:var(--tx3);cursor:pointer;transition:all .15s;background:transparent}
+.tab:hover{color:var(--tx2);background:var(--bg3)}
+.tab.active{background:var(--bg3);border-color:var(--bd2);color:var(--tx)}
+.tp{display:none}.tp.active{display:block}
+
+/* layout */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px}
+.card-title{font-size:14px;font-weight:600;color:var(--tx)}
+.card-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+
+/* buttons */
+.btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:var(--r);cursor:pointer;border:1px solid var(--bd2);background:var(--bg3);color:var(--tx);font-family:var(--font);display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--bg4);border-color:var(--bd3)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-p{background:linear-gradient(135deg,#8b1a1a,#b22a2a);border-color:var(--rd);color:#fff}
+.btn-p:hover:not(:disabled){filter:brightness(1.15)!important}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn-gr{border-color:#22c55e44;color:var(--gr)}
+.btn-gr:hover:not(:disabled){background:#22c55e18!important}
+.btn-rd{border-color:#ef444444;color:var(--rd)}
+.btn-am{border-color:#f59e0b44;color:var(--am)}
+.btn-am:hover:not(:disabled){background:#f59e0b18!important}
+
+/* form */
+label{font-size:11px;color:var(--tx2);margin-bottom:4px;display:block}
+input,select,textarea{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:8px 10px;font-size:13px;font-family:var(--font);color:var(--tx);width:100%;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--rd)}
+input::placeholder{color:var(--tx3)}
+select option{background:var(--bg3)}
+.row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.sp{margin-bottom:12px}
+
+/* badges */
+.badge{font-size:11px;padding:2px 8px;border-radius:12px;border:1px solid;font-weight:500;white-space:nowrap}
+.b-gr{background:#22c55e18;color:var(--gr);border-color:#22c55e44}
+.b-am{background:#f59e0b18;color:var(--am);border-color:#f59e0b44}
+.b-rd{background:#ef444418;color:var(--rd);border-color:#ef444444}
+.b-bl{background:#60a5fa18;color:var(--bl);border-color:#60a5fa44}
+.b-pu{background:#a78bfa18;color:var(--pu);border-color:#a78bfa44}
+.b-gy{background:var(--bg3);color:var(--tx2);border-color:var(--bd2)}
+
+/* budget bars */
+.budget-row{margin-bottom:10px}
+.bud-agent{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.bud-icon{font-size:14px;width:20px;text-align:center}
+.bud-name{font-size:12px;font-weight:500;flex:1}
+.bud-vals{font-size:11px;color:var(--tx3);font-family:var(--mono)}
+.bud-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.bud-fill{height:100%;border-radius:3px;transition:width .6s,background .3s}
+
+/* permissions table */
+.perm-table{width:100%;border-collapse:collapse;font-size:12px}
+.perm-table th{padding:8px 10px;text-align:left;color:var(--tx3);font-weight:600;border-bottom:1px solid var(--bd2);font-size:10px;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+.perm-table td{padding:7px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.perm-table tr:last-child td{border-bottom:none}
+.perm-table tr:hover td{background:var(--bg3)}
+.pcheck{color:var(--gr);font-size:14px;cursor:pointer;user-select:none}
+.pcross{color:var(--rd);font-size:14px;cursor:pointer;user-select:none;opacity:.5}
+.perm-agent{display:flex;align-items:center;gap:6px;font-weight:500}
+
+/* audit log */
+.audit-entry{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd);font-size:11.5px;align-items:flex-start}
+.audit-entry:last-child{border-bottom:none}
+.ae-ts{color:var(--tx3);font-family:var(--mono);font-size:10px;flex-shrink:0;padding-top:1px;min-width:72px}
+.ae-agent{flex-shrink:0;min-width:80px;font-weight:500}
+.ae-action{flex-shrink:0;min-width:110px;font-family:var(--mono);font-size:10px}
+.ae-detail{flex:1;color:var(--tx2)}
+.ae-ok{color:var(--gr)}
+.ae-warn{color:var(--am)}
+.ae-block{color:var(--rd)}
+.ae-system{color:var(--bl)}
+
+/* alerts */
+.alert-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--r);margin-bottom:8px;border:1px solid;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(10px);opacity:0}to{transform:translateX(0);opacity:1}}
+.alert-item.sev-critical{background:#ef44440d;border-color:#ef444444}
+.alert-item.sev-high{background:#f59e0b0d;border-color:#f59e0b44}
+.alert-item.sev-medium{background:#60a5fa0d;border-color:#60a5fa33}
+.alert-item.sev-info{background:var(--bg3);border-color:var(--bd2)}
+.alert-icon{font-size:16px;flex-shrink:0}
+.alert-body{flex:1;min-width:0}
+.alert-title{font-size:12px;font-weight:600}
+.alert-detail{font-size:11.5px;color:var(--tx2);margin-top:2px;line-height:1.5}
+.alert-ts{font-size:10px;color:var(--tx3);margin-top:3px}
+.alert-actions{display:flex;gap:6px;margin-top:6px}
+
+/* performance cards */
+.perf-card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:8px}
+.perf-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.perf-score{font-size:22px;font-weight:700;min-width:48px;text-align:center}
+.perf-meta{flex:1}
+.perf-name{font-size:13px;font-weight:500}
+.perf-role{font-size:10px;color:var(--tx3);margin-top:1px}
+.perf-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.perf-metric{text-align:center}
+.pm-val{font-size:13px;font-weight:500}
+.pm-lbl{font-size:9px;color:var(--tx3);margin-top:1px}
+.score-ring{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:3px solid;font-size:14px;font-weight:700}
+
+/* policy builder */
+.policy-rule{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:6px;font-size:12px}
+.pr-en{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* anomaly viz */
+.anomaly-chart{height:120px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);position:relative;overflow:hidden;margin-bottom:8px}
+.ac-bar{position:absolute;bottom:0;width:12px;border-radius:3px 3px 0 0;transition:height .5s,background .3s}
+.ac-line{position:absolute;left:0;right:0;border-top:1px dashed #ef444466}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.log-wrap{max-height:400px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+
+/* range input */
+input[type=range]{padding:0;height:20px;cursor:pointer;accent-color:var(--rd)}
+
+/* ==AGENT-PANEL-INJECTED== */
+
+/* ==PANEL-ENHANCED== */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;title:'Bulk Run'}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px}
+.ap-float-btn:hover{opacity:.85}
+
+</style>
+</head>
+<body>
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;font-family:system-ui,sans-serif">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+
+  <button class="ap-float-btn" onclick="apOpenPicker()">📋 Agent Tasks</button>
+</nav>
+
+<div class="app">
+
+<div class="topbar">
+  <div class="module-badge">🛡️ Module 4 of 4</div>
+  <h1><span>Governance Layer</span></h1>
+  <p>Keeps the company safe — kill switch · budget controls · permissions · audit log · anomaly detection · agent performance</p>
+</div>
+
+<!-- KILL SWITCH — always visible -->
+<div class="kill-bar" id="kill-bar">
+  <div class="kill-status">
+    <div class="kill-dot" id="kill-dot"></div>
+    <div>
+      <div class="kill-label" id="kill-label">All systems operational</div>
+      <div style="font-size:11px;color:var(--tx3)" id="kill-sub">40 agents active · 0 blocked</div>
+    </div>
+  </div>
+  <div class="row" style="gap:8px">
+    <button class="btn btn-sm btn-am" onclick="pauseAll()">⏸ Pause all</button>
+    <button class="btn btn-sm btn-gr" id="resume-btn" onclick="resumeAll()" disabled>▶ Resume</button>
+    <button class="kill-btn active" id="kill-btn" onclick="toggleKill()">⛔ KILL SWITCH</button>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" id="st-total-spend">$0.000</div><div class="stat-l">Total spend</div><div class="stat-bar" id="sb-spend" style="background:var(--gr);width:0%"></div></div>
+  <div class="stat"><div class="stat-n" id="st-budget-left">$10.00</div><div class="stat-l">Budget left</div></div>
+  <div class="stat"><div class="stat-n" id="st-calls">0</div><div class="stat-l">API calls</div></div>
+  <div class="stat"><div class="stat-n" id="st-blocked">0</div><div class="stat-l">Blocked</div></div>
+  <div class="stat"><div class="stat-n" id="st-alerts">0</div><div class="stat-l">Open alerts</div></div>
+  <div class="stat"><div class="stat-n" id="st-audit">0</div><div class="stat-l">Audit entries</div></div>
+  <div class="stat"><div class="stat-n" id="st-policies">0</div><div class="stat-l">Active policies</div></div>
+  <div class="stat"><div class="stat-n" id="st-violations">0</div><div class="stat-l">Violations</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('budget')">💸 Budget</button>
+  <button class="tab" onclick="sw('permissions')">🔐 Permissions</button>
+  <button class="tab" onclick="sw('audit')">📋 Audit Log</button>
+  <button class="tab" onclick="sw('alerts')">🚨 Alerts</button>
+  <button class="tab" onclick="sw('policies')">📏 Policies</button>
+  <button class="tab" onclick="sw('performance')">📊 Performance</button>
+  <button class="tab" onclick="sw('simulate')">🧪 Simulate</button>
+</div>
+
+<!-- ═══ BUDGET ═══ -->
+<div class="tp active" id="tp-budget">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">💸 Budget controls</div><div class="card-sub">Hard limits per agent and globally — blocks execution when exceeded</div></div></div>
+        <div class="row sp">
+          <div style="flex:1"><label>Global budget limit ($)</label><input type="number" id="global-limit" value="10" min="0.1" step="0.5" onchange="updateBudgetLimit()"></div>
+          <div style="flex:1"><label>Per-agent limit ($)</label><input type="number" id="agent-limit" value="2" min="0.1" step="0.1" onchange="updateBudgetLimit()"></div>
+          <div style="flex:1"><label>Alert at (%)</label><input type="number" id="alert-pct" value="80" min="10" max="99" onchange="updateBudgetLimit()"></div>
+        </div>
+        <div class="sp">
+          <label>Auto-actions when budget exceeded</label>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="auto-pause" checked> Pause all agents when global limit hit</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="auto-alert" checked> Fire alert when any agent hits per-agent limit</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="auto-notify" checked> Log violation to audit trail</label>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn btn-p btn-sm" onclick="simulateSpend()">💸 Simulate spend</button>
+          <button class="btn btn-sm btn-gr" onclick="resetBudget()">↺ Reset budget</button>
+          <button class="btn btn-sm" onclick="exportBudget()">⬇ Export CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">📈 Spend over time</div></div></div>
+        <div class="anomaly-chart" id="spend-chart">
+          <div id="spend-bars" style="display:flex;align-items:flex-end;height:100%;gap:3px;padding:8px 8px 0"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);margin-top:4px">
+          <span>Oldest</span><span>Latest</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">🤖 Per-agent spend</div><div class="card-sub" id="budget-sub">$0.000 of $10.00 used</div></div>
+        <button class="btn btn-sm btn-am" onclick="addSpendToAgent()">+ Log spend</button>
+      </div>
+      <div id="budget-bars-wrap" style="max-height:560px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PERMISSIONS ═══ -->
+<div class="tp" id="tp-permissions">
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title">🔐 Agent Permission Matrix</div><div class="card-sub">Click ✓/✗ to toggle. Changes take effect immediately and are logged.</div></div>
+      <div class="row">
+        <button class="btn btn-sm" onclick="resetPerms()">↺ Reset to defaults</button>
+        <button class="btn btn-sm btn-gr" onclick="exportPerms()">⬇ Export</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="perm-table" id="perm-table">
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>🌐 Web</th>
+            <th>💻 Code exec</th>
+            <th>📧 Email</th>
+            <th>🗄️ Database</th>
+            <th>💰 Finance</th>
+            <th>🚀 Deploy</th>
+            <th>📁 Files</th>
+            <th>🔑 Secrets</th>
+            <th>👥 Users</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="perm-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">🚪 Access request workflow</div><div class="card-sub">Agent requests elevated permissions</div></div></div>
+      <div class="sp"><label>Agent requesting access</label>
+        <select id="req-agent">
+          <option value="dev">💻 Developer</option><option value="devops">⚙️ DevOps</option>
+          <option value="cfo">💰 CFO</option><option value="sales">💼 Sales</option>
+          <option value="marketer">📢 Marketer</option>
+        </select>
+      </div>
+      <div class="sp"><label>Permission requested</label>
+        <select id="req-perm">
+          <option value="finance">💰 Finance access</option><option value="deploy">🚀 Deploy access</option>
+          <option value="secrets">🔑 Secrets access</option><option value="users">👥 User management</option>
+          <option value="db">🗄️ Database write</option>
+        </select>
+      </div>
+      <div class="sp"><label>Justification</label>
+        <textarea id="req-reason" rows="2" placeholder="e.g. Need to deploy hotfix for critical bug affecting 30% of users"></textarea>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="submitAccessRequest()">Submit request</button>
+      <div id="req-output" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">📬 Pending access requests</span><span class="badge b-am" id="req-count-badge">0 pending</span></div>
+      <div id="access-requests">
+        <div style="font-size:12px;color:var(--tx3);text-align:center;padding:20px">No pending requests</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AUDIT LOG ═══ -->
+<div class="tp" id="tp-audit">
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title">📋 Immutable Audit Log</div><div class="card-sub">Every agent action, permission check, and governance event — tamper-proof, sequential</div></div>
+      <div class="row">
+        <select id="audit-agent-f" style="width:130px" onchange="renderAudit()">
+          <option value="all">All agents</option>
+          <option value="dev">Developer</option><option value="pm">PM</option>
+          <option value="cfo">CFO</option><option value="sales">Sales</option>
+          <option value="system">System</option>
+        </select>
+        <select id="audit-action-f" style="width:130px" onchange="renderAudit()">
+          <option value="all">All actions</option>
+          <option value="api_call">API calls</option>
+          <option value="permission_check">Perm checks</option>
+          <option value="budget_check">Budget checks</option>
+          <option value="blocked">Blocked</option>
+          <option value="policy_violation">Violations</option>
+          <option value="kill_switch">Kill switch</option>
+        </select>
+        <select id="audit-result-f" style="width:110px" onchange="renderAudit()">
+          <option value="all">All results</option>
+          <option value="ok">Allowed</option>
+          <option value="warn">Warning</option>
+          <option value="block">Blocked</option>
+        </select>
+        <button class="btn btn-sm" onclick="exportAudit()">⬇ Export CSV</button>
+        <button class="btn btn-sm btn-rd" onclick="clearAudit()">Clear</button>
+      </div>
+    </div>
+    <div class="log-wrap" id="audit-log-wrap">
+      <div style="font-size:12px;color:var(--tx3);text-align:center;padding:20px">No audit entries — run the simulator or use other modules to generate entries</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ALERTS ═══ -->
+<div class="tp" id="tp-alerts">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🚨 Alert configuration</div><div class="card-sub">Define what triggers an alert and at what severity</div></div></div>
+        <div id="alert-rules-list" style="margin-bottom:12px"></div>
+        <button class="btn btn-p btn-sm" onclick="addAlertRule()">+ Add custom rule</button>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">📡 Anomaly detection</div><div class="card-sub">Auto-detects unusual agent behaviour patterns</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="det-spend" checked> Unusual spend spike (>3× baseline)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="det-calls" checked> High API call rate (>20/min)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="det-errors" checked> Error rate spike (>30%)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="det-perms" checked> Repeated permission denials (>3 in 5min)</label>
+          <label style="display:flex;align-items:center;gap=6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="det-scope" checked> Agent acting outside its defined scope</label>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn btn-sm btn-am" onclick="runAnomalyDetection()">🔍 Run detection now</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-hdr">
+          <div><div class="card-title">🔔 Active alerts</div><div class="card-sub" id="alert-count-sub">0 open alerts</div></div>
+          <div class="row">
+            <button class="btn btn-sm btn-gr" onclick="acknowledgeAll()">✓ Ack all</button>
+            <button class="btn btn-sm btn-rd" onclick="clearAlerts()">Clear</button>
+          </div>
+        </div>
+        <div id="alert-list" style="max-height:560px;overflow-y:auto">
+          <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No alerts — system is clean 🎉</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ POLICIES ═══ -->
+<div class="tp" id="tp-policies">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">📏 Policy Builder</div><div class="card-sub">Define rules that govern all agent behaviour</div></div></div>
+        <div class="sp"><label>Policy name</label><input type="text" id="pol-name" placeholder="e.g. No deploy on Fridays"></div>
+        <div class="sp"><label>Applies to</label>
+          <select id="pol-agent">
+            <option value="all">All agents</option>
+            <option value="dev">Developer only</option>
+            <option value="devops">DevOps only</option>
+            <option value="cfo">CFO only</option>
+            <option value="sales">Sales only</option>
+          </select>
+        </div>
+        <div class="sp"><label>Rule type</label>
+          <select id="pol-type">
+            <option value="block">🚫 Block action</option>
+            <option value="require_approval">🔐 Require approval</option>
+            <option value="rate_limit">⏱️ Rate limit</option>
+            <option value="alert">🔔 Alert on trigger</option>
+            <option value="enforce">📋 Enforce format</option>
+          </select>
+        </div>
+        <div class="sp"><label>Condition / description</label>
+          <textarea id="pol-condition" rows="2" placeholder="e.g. Deployment actions are blocked Friday 4pm to Monday 9am EST to protect weekend stability"></textarea>
+        </div>
+        <div class="sp"><label>Enforcement severity</label>
+          <select id="pol-severity">
+            <option value="critical">🔴 Critical — hard block</option>
+            <option value="high">🟠 High — block + alert</option>
+            <option value="medium" selected>🟡 Medium — alert only</option>
+            <option value="low">⚪ Low — log only</option>
+          </select>
+        </div>
+        <div class="row">
+          <button class="btn btn-p" onclick="addPolicy()">+ Add policy</button>
+          <button class="btn btn-sm" onclick="loadDefaultPolicies()">📋 Load defaults</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🧪 Policy checker</div><div class="card-sub">Test if an action is allowed</div></div></div>
+        <div class="sp row">
+          <select id="chk-agent" style="flex:1"><option value="dev">Developer</option><option value="devops">DevOps</option><option value="cfo">CFO</option><option value="sales">Sales</option></select>
+          <input type="text" id="chk-action" placeholder="Proposed action…" style="flex:2">
+          <button class="btn btn-p btn-sm" onclick="checkPolicy()">Check</button>
+        </div>
+        <div id="chk-result" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">📜 Active policies</div><div class="card-sub" id="pol-count-sub">0 policies</div></div>
+        <button class="btn btn-sm btn-rd" onclick="clearPolicies()">Clear all</button>
+      </div>
+      <div id="policy-list" style="max-height:600px;overflow-y:auto">
+        <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No policies — add some or load defaults</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PERFORMANCE ═══ -->
+<div class="tp" id="tp-performance">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">📊 Agent performance scoring</div><div class="card-sub">Automated quality scoring per agent</div></div></div>
+        <div class="sp"><label>Select agent to evaluate</label>
+          <select id="perf-agent">
+            <option value="pm">🧭 PM Agent</option><option value="dev">💻 Developer</option>
+            <option value="sales">💼 Sales</option><option value="marketer">📢 Marketer</option>
+            <option value="cfo">💰 CFO</option><option value="support">🎧 Support</option>
+          </select>
+        </div>
+        <div class="sp"><label>Agent output to evaluate</label>
+          <textarea id="perf-output" rows="5" placeholder="Paste agent output here to get a quality score…"></textarea>
+        </div>
+        <div class="sp"><label>Task context (what was asked)</label>
+          <input type="text" id="perf-task" placeholder="e.g. Create Q3 product roadmap with priorities and success metrics">
+        </div>
+        <button class="btn btn-p" id="perf-btn" onclick="scoreAgent()">📊 Score output</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" id="perf-result-card" style="display:none">
+        <div class="card-hdr"><span class="card-title">🏆 Quality evaluation</span><span class="badge b-gy" id="perf-agent-badge"></span></div>
+        <div id="perf-result"></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">📈 Agent leaderboard</span></div>
+        <div id="leaderboard">
+          <div style="font-size:12px;color:var(--tx3);text-align:center;padding:20px">Score some agents to build the leaderboard</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SIMULATE ═══ -->
+<div class="tp" id="tp-simulate">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🧪 Governance Simulator</div><div class="card-sub">Generate realistic agent activity to test all governance controls</div></div></div>
+        <div class="sp"><label>Simulation scenario</label>
+          <select id="sim-scenario">
+            <option value="normal">Normal operations — healthy baseline</option>
+            <option value="budget_breach">Budget breach — agent overspends</option>
+            <option value="perm_violation">Permission violation — agent tries forbidden action</option>
+            <option value="anomaly">Anomaly — unusual activity spike</option>
+            <option value="policy_violation">Policy violation — agent breaks a rule</option>
+            <option value="cascade">Cascade failure — errors propagate</option>
+            <option value="full">Full company day — all scenarios</option>
+          </select>
+        </div>
+        <div class="sp row">
+          <div style="flex:1"><label>Events to generate</label><input type="number" id="sim-count" value="20" min="5" max="100"></div>
+          <div style="flex:1"><label>Speed</label>
+            <select id="sim-speed">
+              <option value="50">Fast (50ms)</option>
+              <option value="200" selected>Normal (200ms)</option>
+              <option value="500">Slow (500ms)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn btn-p" id="sim-btn" onclick="runSimulation()">▶ Run simulation</button>
+          <button class="btn btn-sm btn-rd" onclick="stopSimulation()">■ Stop</button>
+          <button class="btn btn-sm" onclick="clearAllData()">↺ Clear all data</button>
+        </div>
+        <div style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);margin-bottom:4px">
+            <span>Simulation progress</span><span id="sim-progress-text">0%</span>
+          </div>
+          <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden">
+            <div id="sim-progress-bar" style="height:100%;background:var(--rd);border-radius:2px;width:0%;transition:width .3s"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🎛️ Manual governance actions</div></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-sm" onclick="logEvent('dev','api_call','Generate product spec','ok')">Log API call</button>
+          <button class="btn btn-sm btn-am" onclick="logEvent('devops','permission_check','Deploy to production','warn')">Log perm warning</button>
+          <button class="btn btn-sm btn-rd" onclick="logEvent('sales','budget_check','Send campaign email x500','block')">Log budget block</button>
+          <button class="btn btn-sm btn-rd" onclick="logEvent('cfo','policy_violation','Transfer $50k without approval','block')">Log policy violation</button>
+          <button class="btn btn-sm" onclick="addAlert('Unusual API volume','Developer agent made 45 calls in 2 minutes','high')">Fire alert</button>
+          <button class="btn btn-sm btn-am" onclick="addSpendManual('dev',0.05)">Add $0.05 spend</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">📡 Simulation live feed</span><button class="btn btn-sm" onclick="clearFeed()">Clear</button></div>
+      <div class="log-wrap" id="sim-feed" style="max-height:560px">
+        <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">Run a simulation to see live events…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+const AUDIT_LOG = [];
+const ALERTS = [];
+const POLICIES = [];
+const ACCESS_REQUESTS = [];
+const SPEND_HISTORY = [];
+const LEADERBOARD = {};
+let killed = false;
+let paused = false;
+let simRunning = false;
+let simStop = false;
+
+const AGENT_COSTS = {};
+const TOTAL_SPEND = {val:0};
+const BUDGETS = {global:10, perAgent:2, alertPct:80};
+const PERM_MATRIX = {};
+const PERM_COLS = ['web','code','email','db','finance','deploy','files','secrets','users'];
+const AGENT_BLOCKED = {};
+
+const AGENTS = [
+  {id:'ceo',  icon:'👑',name:'CEO',       role:'Strategy'},
+  {id:'pm',   icon:'🧭',name:'PM',        role:'Product'},
+  {id:'arch', icon:'🏗️',name:'Architect', role:'Engineering'},
+  {id:'dev',  icon:'💻',name:'Developer', role:'Engineering'},
+  {id:'qa',   icon:'🧪',name:'QA',        role:'Engineering'},
+  {id:'devops',icon:'⚙️',name:'DevOps',   role:'Infrastructure'},
+  {id:'security',icon:'🔒',name:'Security',role:'Security'},
+  {id:'release',icon:'🚀',name:'Release', role:'Engineering'},
+  {id:'sales', icon:'💼',name:'Sales',    role:'Revenue'},
+  {id:'sdr',   icon:'📧',name:'SDR',      role:'Revenue'},
+  {id:'marketer',icon:'📢',name:'Marketer',role:'Marketing'},
+  {id:'cfo',   icon:'💰',name:'CFO',      role:'Finance'},
+  {id:'bi',    icon:'📊',name:'BI Dev',   role:'Finance'},
+  {id:'support',icon:'🎧',name:'Support', role:'Customer'},
+  {id:'success',icon:'⭐',name:'CS',       role:'Customer'},
+];
+
+const DEFAULT_PERMS = {
+  ceo:     {web:1,code:0,email:1,db:1,finance:1,deploy:0,files:1,secrets:0,users:1},
+  pm:      {web:1,code:0,email:1,db:1,finance:0,deploy:0,files:1,secrets:0,users:0},
+  arch:    {web:1,code:1,email:0,db:1,finance:0,deploy:0,files:1,secrets:0,users:0},
+  dev:     {web:1,code:1,email:0,db:1,finance:0,deploy:1,files:1,secrets:0,users:0},
+  qa:      {web:1,code:1,email:0,db:0,finance:0,deploy:0,files:1,secrets:0,users:0},
+  devops:  {web:1,code:1,email:0,db:1,finance:0,deploy:1,files:1,secrets:1,users:0},
+  security:{web:1,code:1,email:0,db:1,finance:0,deploy:0,files:1,secrets:1,users:0},
+  release: {web:1,code:1,email:0,db:0,finance:0,deploy:1,files:1,secrets:0,users:0},
+  sales:   {web:1,code:0,email:1,db:1,finance:0,deploy:0,files:1,secrets:0,users:0},
+  sdr:     {web:1,code:0,email:1,db:1,finance:0,deploy:0,files:0,secrets:0,users:0},
+  marketer:{web:1,code:0,email:1,db:1,finance:0,deploy:0,files:1,secrets:0,users:0},
+  cfo:     {web:1,code:1,email:1,db:1,finance:1,deploy:0,files:1,secrets:0,users:0},
+  bi:      {web:1,code:1,email:0,db:1,finance:1,deploy:0,files:1,secrets:0,users:0},
+  support: {web:1,code:0,email:1,db:1,finance:0,deploy:0,files:1,secrets:0,users:0},
+  success: {web:1,code:0,email:1,db:1,finance:0,deploy:0,files:1,secrets:0,users:0},
+};
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+function init() {
+  AGENTS.forEach(a => {
+    PERM_MATRIX[a.id] = {...(DEFAULT_PERMS[a.id]||{web:1,code:0,email:1,db:0,finance:0,deploy:0,files:1,secrets:0,users:0})};
+    AGENT_COSTS[a.id] = 0;
+    AGENT_BLOCKED[a.id] = 0;
+  });
+  renderPermTable();
+  renderBudgetBars();
+  renderAlertRules();
+  loadDefaultPolicies();
+  logEvent('system','startup','Governance layer initialised','ok');
+}
+
+/* ═══════════════════════════════════════
+   KILL SWITCH
+═══════════════════════════════════════ */
+function toggleKill() {
+  killed = !killed;
+  applySystemState();
+  logEvent('system','kill_switch', killed?'KILL SWITCH ACTIVATED':'Kill switch deactivated', killed?'block':'ok');
+  if (killed) addAlert('⛔ Kill switch activated','All agent execution has been halted. No API calls will be made until resumed.','critical');
+}
+
+function pauseAll() {
+  paused = true;
+  document.getElementById('resume-btn').disabled = false;
+  applySystemState();
+  logEvent('system','pause_all','All agents paused','warn');
+  addAlert('⏸ System paused','All agents paused. Resume when ready.','medium');
+}
+
+function resumeAll() {
+  paused = false; killed = false;
+  document.getElementById('resume-btn').disabled = true;
+  applySystemState();
+  logEvent('system','resume_all','All agents resumed','ok');
+}
+
+function applySystemState() {
+  const bar = document.getElementById('kill-bar');
+  const dot = document.getElementById('kill-dot');
+  const label = document.getElementById('kill-label');
+  const sub = document.getElementById('kill-sub');
+  const kbtn = document.getElementById('kill-btn');
+  if (killed) {
+    bar.classList.add('killed'); dot.classList.add('off');
+    label.textContent='⛔ KILL SWITCH ACTIVE — all agents halted';
+    sub.textContent='No agent can execute until kill switch is released';
+    kbtn.textContent='✅ RELEASE'; kbtn.classList.add('killed');
+  } else if (paused) {
+    bar.classList.remove('killed'); dot.classList.remove('off');
+    dot.style.background='var(--am)';
+    label.textContent='⏸ System paused';
+    sub.textContent='Agents queued but not executing';
+    kbtn.textContent='⛔ KILL SWITCH'; kbtn.classList.remove('killed');
+  } else {
+    bar.classList.remove('killed'); dot.classList.remove('off');
+    dot.style.background='var(--gr)';
+    label.textContent='All systems operational';
+    sub.textContent=`${AGENTS.length} agents active · ${Object.values(AGENT_BLOCKED).reduce((s,v)=>s+v,0)} total blocked`;
+    kbtn.textContent='⛔ KILL SWITCH'; kbtn.classList.remove('killed');
+  }
+}
+
+/* ═══════════════════════════════════════
+   BUDGET
+═══════════════════════════════════════ */
+function updateBudgetLimit() {
+  BUDGETS.global = parseFloat(document.getElementById('global-limit').value)||10;
+  BUDGETS.perAgent = parseFloat(document.getElementById('agent-limit').value)||2;
+  BUDGETS.alertPct = parseFloat(document.getElementById('alert-pct').value)||80;
+  renderBudgetBars();
+}
+
+function addSpendManual(agentId, amount) {
+  const agent = agentId || document.getElementById('sim-agent-sel')?.value || 'dev';
+  AGENT_COSTS[agent] = (AGENT_COSTS[agent]||0) + amount;
+  TOTAL_SPEND.val = +(TOTAL_SPEND.val + amount).toFixed(5);
+  SPEND_HISTORY.push({ts:Date.now(),agent,amount,total:TOTAL_SPEND.val});
+  checkBudgetLimits(agent);
+  renderBudgetBars();
+  updateTopStats();
+  renderSpendChart();
+}
+
+function addSpendToAgent() {
+  const sel = prompt('Agent ID (dev, cfo, sales, etc.):','dev');
+  const amt = parseFloat(prompt('Amount ($):','0.001'));
+  if (sel && !isNaN(amt)) addSpendManual(sel, amt);
+}
+
+function checkBudgetLimits(agentId) {
+  const spent = AGENT_COSTS[agentId]||0;
+  const total = TOTAL_SPEND.val;
+  const pctAgent = (spent/BUDGETS.perAgent)*100;
+  const pctGlobal = (total/BUDGETS.global)*100;
+
+  if (pctGlobal >= 100 && document.getElementById('auto-pause').checked) {
+    paused = true; applySystemState();
+    addAlert('💸 Global budget exceeded',`Total spend $${total.toFixed(4)} hit global limit $${BUDGETS.global}. All agents auto-paused.`,'critical');
+    logEvent('system','budget_exceeded',`Global limit $${BUDGETS.global} hit — agents paused`,'block');
+    document.getElementById('st-violations').textContent = parseInt(document.getElementById('st-violations').textContent)+1;
+  } else if (pctGlobal >= BUDGETS.alertPct && document.getElementById('auto-alert').checked) {
+    addAlert('⚠️ Budget warning',`Global spend at ${pctGlobal.toFixed(0)}% ($${total.toFixed(4)} of $${BUDGETS.global})`,'high');
+  }
+
+  if (pctAgent >= 100) {
+    AGENT_BLOCKED[agentId]++;
+    logEvent(agentId,'budget_check',`Per-agent limit $${BUDGETS.perAgent} exceeded`,'block');
+    if (document.getElementById('auto-notify').checked)
+      addAlert('🤖 Agent over budget',`${AGENTS.find(a=>a.id===agentId)?.name||agentId} has spent $${spent.toFixed(4)} — over $${BUDGETS.perAgent} limit`,'high');
+  }
+}
+
+function renderBudgetBars() {
+  const el = document.getElementById('budget-bars-wrap');
+  el.innerHTML = AGENTS.map(a => {
+    const spent = AGENT_COSTS[a.id]||0;
+    const pct = Math.min((spent/BUDGETS.perAgent)*100,100);
+    const col = pct>=100?'var(--rd)':pct>=BUDGETS.alertPct?'var(--am)':'var(--gr)';
+    return `<div class="budget-row">
+      <div class="bud-agent">
+        <span class="bud-icon">${a.icon}</span>
+        <span class="bud-name">${a.name}</span>
+        <span class="bud-vals">$${spent.toFixed(4)} / $${BUDGETS.perAgent}</span>
+        ${pct>=100?'<span class="badge b-rd" style="font-size:9px">OVER</span>':pct>=BUDGETS.alertPct?'<span class="badge b-am" style="font-size:9px">WARN</span>':''}
+      </div>
+      <div class="bud-bar"><div class="bud-fill" style="width:${pct}%;background:${col}"></div></div>
+      <button onclick="openAgentPanel('${a.name}','${a.icon}','${a.role}')" style="padding:3px 8px;font-size:10px;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer;white-space:nowrap" title="View agent tasks">📋</button>
+    </div>`;
+  }).join('');
+
+  const totalPct = Math.min((TOTAL_SPEND.val/BUDGETS.global)*100,100);
+  document.getElementById('budget-sub').textContent=`$${TOTAL_SPEND.val.toFixed(4)} of $${BUDGETS.global} used (${totalPct.toFixed(1)}%)`;
+}
+
+function renderSpendChart() {
+  const el = document.getElementById('spend-bars');
+  const hist = SPEND_HISTORY.slice(-30);
+  if (!hist.length) return;
+  const max = Math.max(...hist.map(h=>h.total), BUDGETS.global*0.1);
+  el.innerHTML = hist.map(h => {
+    const pct = (h.total/BUDGETS.global)*100;
+    const col = pct>=100?'var(--rd)':pct>=BUDGETS.alertPct?'var(--am)':'var(--gr)';
+    const h_pct = (h.total/max)*90;
+    return `<div class="ac-bar" style="width:${100/hist.length}%;height:${h_pct}%;background:${col};position:relative;flex:1;min-width:6px"></div>`;
+  }).join('');
+  // draw alert line
+  const lineTop = 100 - (BUDGETS.alertPct);
+  document.querySelectorAll('.ac-line').forEach(l=>l.remove());
+}
+
+function resetBudget() {
+  AGENTS.forEach(a=>{AGENT_COSTS[a.id]=0;});
+  TOTAL_SPEND.val=0; SPEND_HISTORY.length=0;
+  renderBudgetBars(); updateTopStats(); renderSpendChart();
+  logEvent('system','budget_reset','All spend counters reset to $0','ok');
+}
+
+function exportBudget() {
+  const csv='agent,spent,limit,pct\n'+AGENTS.map(a=>`${a.id},${AGENT_COSTS[a.id]||0},${BUDGETS.perAgent},${((AGENT_COSTS[a.id]||0)/BUDGETS.perAgent*100).toFixed(1)}`).join('\n');
+  dl(csv,'budget.csv','text/csv');
+}
+
+/* ═══════════════════════════════════════
+   PERMISSIONS
+═══════════════════════════════════════ */
+function renderPermTable() {
+  const tbody = document.getElementById('perm-tbody');
+  tbody.innerHTML = AGENTS.map(a => {
+    const p = PERM_MATRIX[a.id]||{};
+    const isBlocked = AGENT_BLOCKED[a.id]>0;
+    return `<tr>
+      <td><div class="perm-agent">${a.icon} <div><div style="font-size:12px">${a.name}</div><div style="font-size:10px;color:var(--tx3)">${a.role}</div></div></div></td>
+      ${PERM_COLS.map(col=>`<td onclick="togglePerm('${a.id}','${col}')" style="text-align:center;cursor:pointer">
+        <span class="${p[col]?'pcheck':'pcross'}">${p[col]?'✓':'✗'}</span>
+      </td>`).join('')}
+      <td><span class="badge ${isBlocked?'b-rd':'b-gr'}" style="font-size:10px">${isBlocked?'blocked '+AGENT_BLOCKED[a.id]+'×':'active'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function togglePerm(agentId, col) {
+  PERM_MATRIX[agentId][col] = PERM_MATRIX[agentId][col]?0:1;
+  const val = PERM_MATRIX[agentId][col];
+  logEvent(agentId,'permission_change',`${col} ${val?'granted':'revoked'} by admin`, val?'ok':'warn');
+  renderPermTable();
+}
+
+function resetPerms() {
+  AGENTS.forEach(a=>{ PERM_MATRIX[a.id]={...(DEFAULT_PERMS[a.id]||{})}; });
+  renderPermTable();
+  logEvent('system','perms_reset','All permissions reset to defaults','ok');
+}
+
+function exportPerms() {
+  const rows=[['agent',...PERM_COLS],...AGENTS.map(a=>[a.id,...PERM_COLS.map(c=>PERM_MATRIX[a.id]?.[c]||0)])];
+  dl(rows.map(r=>r.join(',')).join('\n'),'permissions.csv','text/csv');
+}
+
+function submitAccessRequest() {
+  const agent=document.getElementById('req-agent').value;
+  const perm=document.getElementById('req-perm').value;
+  const reason=document.getElementById('req-reason').value.trim();
+  if(!reason)return;
+  const req={id:Date.now(),agent,perm,reason,ts:new Date().toLocaleString(),status:'pending'};
+  ACCESS_REQUESTS.push(req);
+  document.getElementById('req-reason').value='';
+  document.getElementById('req-output').innerHTML='<span class="badge b-am">Request submitted — awaiting approval</span>';
+  renderAccessRequests();
+  logEvent(agent,'access_request',`Requested ${perm}: ${reason.slice(0,60)}`,'warn');
+  addAlert('🔐 Access request',`${AGENTS.find(a=>a.id===agent)?.name||agent} is requesting ${perm} access: "${reason.slice(0,80)}"`, 'high');
+}
+
+function renderAccessRequests() {
+  const el=document.getElementById('access-requests');
+  const pending=ACCESS_REQUESTS.filter(r=>r.status==='pending');
+  document.getElementById('req-count-badge').textContent=pending.length+' pending';
+  if(!pending.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:16px">No pending requests</div>';return;}
+  el.innerHTML=pending.map((r,i)=>`
+    <div style="padding:10px;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);margin-bottom:8px">
+      <div style="font-size:12px;font-weight:500;margin-bottom:4px">${AGENTS.find(a=>a.id===r.agent)?.icon||'🤖'} ${AGENTS.find(a=>a.id===r.agent)?.name||r.agent} → ${r.perm}</div>
+      <div style="font-size:11.5px;color:var(--tx2);margin-bottom:8px">${r.reason}</div>
+      <div class="row">
+        <button class="btn btn-sm btn-gr" onclick="resolveRequest(${i},true)">✓ Approve</button>
+        <button class="btn btn-sm btn-rd" onclick="resolveRequest(${i},false)">✗ Deny</button>
+      </div>
+    </div>`).join('');
+}
+
+function resolveRequest(i,approved) {
+  const req=ACCESS_REQUESTS.filter(r=>r.status==='pending')[i];
+  if(!req)return;
+  req.status=approved?'approved':'denied';
+  if(approved && PERM_MATRIX[req.agent]) { PERM_MATRIX[req.agent][req.perm]=1; renderPermTable(); }
+  logEvent('admin','access_'+req.status,`${req.agent} ${req.perm} ${req.status}`,'ok');
+  renderAccessRequests();
+}
+
+/* ═══════════════════════════════════════
+   AUDIT LOG
+═══════════════════════════════════════ */
+const ACTION_ICONS={api_call:'📡',permission_check:'🔐',budget_check:'💸',blocked:'🚫',policy_violation:'📏',kill_switch:'⛔',startup:'🟢',access_request:'🔑',permission_change:'✏️',budget_reset:'↺',perms_reset:'↺',access_approved:'✓',access_denied:'✗',pause_all:'⏸',resume_all:'▶',budget_exceeded:'💥',simulation:'🧪',anomaly:'🔍',default:'·'};
+
+function logEvent(agent,action,detail,result='ok') {
+  const entry={id:Date.now()+Math.random(),ts:new Date().toLocaleTimeString(),agent,action,detail,result};
+  AUDIT_LOG.unshift(entry);
+  if(AUDIT_LOG.length>1000)AUDIT_LOG.pop();
+  updateTopStats();
+  renderAudit();
+  if(result==='block'){
+    AGENT_BLOCKED[agent]=(AGENT_BLOCKED[agent]||0)+1;
+    document.getElementById('st-blocked').textContent=Object.values(AGENT_BLOCKED).reduce((s,v)=>s+v,0);
+  }
+}
+
+function renderAudit() {
+  const af=document.getElementById('audit-agent-f')?.value||'all';
+  const acf=document.getElementById('audit-action-f')?.value||'all';
+  const rf=document.getElementById('audit-result-f')?.value||'all';
+  let entries=AUDIT_LOG;
+  if(af!=='all')entries=entries.filter(e=>e.agent===af);
+  if(acf!=='all')entries=entries.filter(e=>e.action===acf);
+  if(rf!=='all')entries=entries.filter(e=>e.result===rf);
+  const el=document.getElementById('audit-log-wrap');
+  if(!entries.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:20px">No entries match filters</div>';return;}
+  el.innerHTML=entries.slice(0,200).map(e=>`
+    <div class="audit-entry">
+      <span class="ae-ts">${e.ts}</span>
+      <span class="ae-agent" style="color:${AGENTS.find(a=>a.id===e.agent)?.id?'var(--pu)':'var(--bl)'}">${AGENTS.find(a=>a.id===e.agent)?.icon||'⚙️'} ${AGENTS.find(a=>a.id===e.agent)?.name||e.agent}</span>
+      <span class="ae-action" style="color:${e.result==='block'?'var(--rd)':e.result==='warn'?'var(--am)':'var(--cy)'}">${ACTION_ICONS[e.action]||ACTION_ICONS.default} ${e.action}</span>
+      <span class="ae-detail">${e.detail}</span>
+      <span class="${e.result==='ok'?'ae-ok':e.result==='warn'?'ae-warn':e.result==='block'?'ae-block':'ae-system'}">${e.result==='ok'?'✓':e.result==='warn'?'⚠':e.result==='block'?'🚫':'·'}</span>
+    </div>`).join('');
+}
+
+function clearAudit(){if(confirm('Clear audit log?')){AUDIT_LOG.length=0;renderAudit();}}
+function exportAudit(){
+  const csv='timestamp,agent,action,detail,result\n'+AUDIT_LOG.map(e=>`"${e.ts}","${e.agent}","${e.action}","${e.detail.replace(/"/g,"'")}","${e.result}"`).join('\n');
+  dl(csv,'audit-log.csv','text/csv');
+}
+
+/* ═══════════════════════════════════════
+   ALERTS
+═══════════════════════════════════════ */
+const DEFAULT_ALERT_RULES=[
+  {name:'Budget 80% warning',condition:'Global spend exceeds 80% of limit',severity:'high',enabled:true},
+  {name:'Agent over budget',condition:'Any agent exceeds per-agent spend limit',severity:'high',enabled:true},
+  {name:'Permission denied',condition:'Agent attempts action without permission',severity:'medium',enabled:true},
+  {name:'Kill switch activated',condition:'Kill switch is triggered',severity:'critical',enabled:true},
+  {name:'Policy violation',condition:'Agent breaks a defined policy rule',severity:'high',enabled:true},
+  {name:'High error rate',condition:'Agent error rate exceeds 30%',severity:'medium',enabled:true},
+];
+
+function renderAlertRules() {
+  const el=document.getElementById('alert-rules-list');
+  el.innerHTML=DEFAULT_ALERT_RULES.map((r,i)=>`
+    <div class="policy-rule">
+      <div class="pr-en" style="background:${r.enabled?'var(--gr)':'var(--tx3)'}"></div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:500">${r.name}</div>
+        <div style="font-size:11px;color:var(--tx3)">${r.condition}</div>
+      </div>
+      <span class="badge ${r.severity==='critical'?'b-rd':r.severity==='high'?'b-am':'b-bl'}" style="font-size:10px">${r.severity}</span>
+      <button class="btn btn-sm" onclick="DEFAULT_ALERT_RULES[${i}].enabled=!DEFAULT_ALERT_RULES[${i}].enabled;renderAlertRules()">${r.enabled?'Off':'On'}</button>
+    </div>`).join('');
+}
+
+function addAlertRule() {
+  const name=prompt('Alert rule name:');
+  const cond=prompt('Condition:');
+  if(name&&cond) { DEFAULT_ALERT_RULES.push({name,condition:cond,severity:'medium',enabled:true}); renderAlertRules(); }
+}
+
+const SEV_ICONS={critical:'🔴',high:'🟠',medium:'🟡',info:'⚪'};
+function addAlert(title,detail,severity='medium') {
+  const alert={id:Date.now()+Math.random(),title,detail,severity,ts:new Date().toLocaleTimeString(),ack:false};
+  ALERTS.unshift(alert);
+  if(ALERTS.length>100)ALERTS.pop();
+  renderAlerts();
+  updateTopStats();
+}
+
+function renderAlerts() {
+  const openAlerts=ALERTS.filter(a=>!a.ack);
+  document.getElementById('alert-count-sub').textContent=openAlerts.length+' open alerts';
+  document.getElementById('st-alerts').textContent=openAlerts.length;
+  const el=document.getElementById('alert-list');
+  if(!ALERTS.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No alerts — system is clean 🎉</div>';return;}
+  el.innerHTML=ALERTS.map((a,i)=>`
+    <div class="alert-item sev-${a.severity} ${a.ack?'opacity:0.5':''}">
+      <span class="alert-icon">${SEV_ICONS[a.severity]||'·'}</span>
+      <div class="alert-body">
+        <div class="alert-title" style="color:${a.severity==='critical'?'var(--rd)':a.severity==='high'?'var(--am)':'var(--tx)'}">${a.title}</div>
+        <div class="alert-detail">${a.detail}</div>
+        <div class="alert-ts">${a.ts}${a.ack?' · Acknowledged':''}</div>
+        <div class="alert-actions">
+          ${!a.ack?`<button class="btn btn-sm btn-gr" onclick="ackAlert(${i})">✓ Acknowledge</button>`:''}
+          <button class="btn btn-sm" onclick="ALERTS.splice(${i},1);renderAlerts()">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function ackAlert(i){ALERTS[i].ack=true;renderAlerts();}
+function acknowledgeAll(){ALERTS.forEach(a=>a.ack=true);renderAlerts();}
+function clearAlerts(){ALERTS.length=0;renderAlerts();document.getElementById('st-alerts').textContent=0;}
+
+function runAnomalyDetection() {
+  const findings=[];
+  if(document.getElementById('det-spend').checked && TOTAL_SPEND.val>BUDGETS.global*0.5) findings.push({title:'Spend anomaly',detail:`Total spend is ${((TOTAL_SPEND.val/BUDGETS.global)*100).toFixed(0)}% of budget`,sev:'high'});
+  const highSpend=AGENTS.filter(a=>(AGENT_COSTS[a.id]||0)>BUDGETS.perAgent*0.8);
+  highSpend.forEach(a=>findings.push({title:'Agent high spend',detail:`${a.name} at ${((AGENT_COSTS[a.id]/BUDGETS.perAgent)*100).toFixed(0)}% of per-agent limit`,sev:'medium'}));
+  if(document.getElementById('det-perms').checked){
+    const highBlock=AGENTS.filter(a=>AGENT_BLOCKED[a.id]>3);
+    highBlock.forEach(a=>findings.push({title:'Repeated blocks',detail:`${a.name} blocked ${AGENT_BLOCKED[a.id]} times — possible misconfiguration`,sev:'high'}));
+  }
+  if(findings.length){findings.forEach(f=>addAlert(f.title,f.detail,f.sev));logEvent('system','anomaly',`${findings.length} anomalies detected`,'warn');}
+  else addAlert('🔍 Anomaly scan complete','No anomalies detected — system looks healthy','info');
+}
+
+/* ═══════════════════════════════════════
+   POLICIES
+═══════════════════════════════════════ */
+const SEV_COLORS={critical:'var(--rd)',high:'var(--am)',medium:'var(--bl)',low:'var(--tx3)'};
+function addPolicy(name,agent,type,condition,severity) {
+  const n=name||document.getElementById('pol-name').value.trim();
+  const ag=agent||document.getElementById('pol-agent').value;
+  const t=type||document.getElementById('pol-type').value;
+  const c=condition||document.getElementById('pol-condition').value.trim();
+  const s=severity||document.getElementById('pol-severity').value;
+  if(!n||!c)return;
+  POLICIES.push({id:Date.now(),name:n,agent:ag,type:t,condition:c,severity:s,enabled:true,violations:0});
+  if(!name){document.getElementById('pol-name').value='';document.getElementById('pol-condition').value='';}
+  document.getElementById('st-policies').textContent=POLICIES.filter(p=>p.enabled).length;
+  renderPolicies();
+  logEvent('admin','policy_added',`Policy added: ${n}`,'ok');
+}
+
+function loadDefaultPolicies() {
+  const defaults=[
+    {name:'No deploy on Fridays',agent:'devops',type:'block',condition:'No deployment actions on Fridays after 2pm or weekends. Protects weekend stability.',severity:'critical'},
+    {name:'CFO approves spend >$10k',agent:'cfo',type:'require_approval',condition:'Any financial transaction or commitment over $10,000 requires CEO approval before execution.',severity:'critical'},
+    {name:'No cold email to competitors',agent:'sdr',type:'block',condition:'SDR must not send outreach to email domains of known competitors or their employees.',severity:'high'},
+    {name:'Security review for new APIs',agent:'dev',type:'require_approval',condition:'Any new external API integration requires security team sign-off before implementation.',severity:'high'},
+    {name:'Rate limit: 20 API calls/min',agent:'all',type:'rate_limit',condition:'No agent may make more than 20 Claude API calls per minute to prevent runaway costs.',severity:'high'},
+    {name:'No PII in logs',agent:'all',type:'enforce',condition:'Agents must never log personally identifiable information (email, phone, SSN) in plain text.',severity:'critical'},
+    {name:'Customer data GDPR rules',agent:'all',type:'enforce',condition:'Customer data may only be stored in approved EU/US regions. Deletion requests must be actioned within 30 days.',severity:'critical'},
+    {name:'Code must pass tests before deploy',agent:'dev',type:'block',condition:'Developer agent must not trigger a deployment if test coverage is below 80% or any test is failing.',severity:'high'},
+  ];
+  defaults.forEach(d=>{if(!POLICIES.find(p=>p.name===d.name))addPolicy(d.name,d.agent,d.type,d.condition,d.severity);});
+}
+
+function renderPolicies() {
+  const el=document.getElementById('policy-list');
+  const TYPE_ICONS={block:'🚫',require_approval:'🔐',rate_limit:'⏱️',alert:'🔔',enforce:'📋'};
+  document.getElementById('pol-count-sub').textContent=POLICIES.length+' policies · '+POLICIES.filter(p=>p.enabled).length+' active';
+  if(!POLICIES.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No policies yet</div>';return;}
+  el.innerHTML=POLICIES.map((p,i)=>`
+    <div class="policy-rule" style="border-left:3px solid ${SEV_COLORS[p.severity]};${p.enabled?'':'opacity:.5'}">
+      <div class="pr-en" style="background:${p.enabled?'var(--gr)':'var(--tx3)'}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:500">${p.name}</span>
+          <span style="font-size:10px;color:var(--tx3)">${TYPE_ICONS[p.type]||''} ${p.type}</span>
+          <span class="badge b-gy" style="font-size:9px">${p.agent}</span>
+          ${p.violations?`<span class="badge b-rd" style="font-size:9px">${p.violations} violations</span>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.condition}</div>
+      </div>
+      <button class="btn btn-sm" onclick="POLICIES[${i}].enabled=!POLICIES[${i}].enabled;document.getElementById('st-policies').textContent=POLICIES.filter(p=>p.enabled).length;renderPolicies()">${p.enabled?'Off':'On'}</button>
+      <button class="btn btn-sm btn-rd" onclick="POLICIES.splice(${i},1);renderPolicies()">✕</button>
+    </div>`).join('');
+}
+
+function clearPolicies(){POLICIES.length=0;renderPolicies();document.getElementById('st-policies').textContent=0;}
+
+async function checkPolicy() {
+  const agent=document.getElementById('chk-agent').value;
+  const action=document.getElementById('chk-action').value.trim();
+  if(!action)return;
+  const el=document.getElementById('chk-result');
+  el.style.display='block';el.innerHTML='<div class="badge b-gy">Checking…</div>';
+
+  const relevantPolicies=POLICIES.filter(p=>p.enabled&&(p.agent==='all'||p.agent===agent));
+  if(!relevantPolicies.length){el.innerHTML='<div class="badge b-gr">✓ No policies apply to this agent+action</div>';return;}
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:'You are a policy compliance checker. Given an agent, a proposed action, and a list of policies, determine if the action is ALLOWED or BLOCKED. Be brief and decisive.',messages:[{role:'user',content:`Agent: ${agent}\nProposed action: "${action}"\n\nPolicies:\n${relevantPolicies.map(p=>`- ${p.name} (${p.severity}): ${p.condition}`).join('\n')}\n\nIs this action ALLOWED or BLOCKED? State the result clearly and cite which policy applies if blocked.`}]})});
+    const data=await res.json();
+    const result=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const blocked=result.toLowerCase().includes('blocked')||result.toLowerCase().includes('block');
+    el.innerHTML=`<div class="badge ${blocked?'b-rd':'b-gr'}" style="margin-bottom:6px">${blocked?'🚫 BLOCKED':'✓ ALLOWED'}</div><div style="font-size:12px;color:var(--tx2);line-height:1.6;margin-top:6px">${result}</div>`;
+    if(blocked){logEvent(agent,'policy_check',`Blocked: ${action.slice(0,50)}`,'block');const p=relevantPolicies[0];if(p)p.violations++;}
+    else logEvent(agent,'policy_check',`Allowed: ${action.slice(0,50)}`,'ok');
+    renderPolicies();
+  }catch(e){el.innerHTML='<div class="badge b-rd">Error: '+e.message+'</div>';}
+}
+
+/* ═══════════════════════════════════════
+   PERFORMANCE
+═══════════════════════════════════════ */
+async function scoreAgent() {
+  const agent=document.getElementById('perf-agent').value;
+  const output=document.getElementById('perf-output').value.trim();
+  const task=document.getElementById('perf-task').value.trim();
+  if(!output){document.getElementById('perf-output').focus();return;}
+  const btn=document.getElementById('perf-btn');
+  btn.disabled=true;btn.textContent='📊 Scoring…';
+  const card=document.getElementById('perf-result-card');
+  const resultEl=document.getElementById('perf-result');
+  card.style.display='block';
+  document.getElementById('perf-agent-badge').textContent=AGENTS.find(a=>a.id===agent)?.name||agent;
+  resultEl.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:8px">Evaluating with Claude…</div>';
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:'You are an AI output quality evaluator. Score agent outputs on 5 dimensions (0-10 each): Completeness, Accuracy/Specificity, Actionability, Structure/Clarity, Role-fitness. Return ONLY valid JSON with keys: completeness, accuracy, actionability, structure, role_fitness, overall (avg), summary (2 sentences), top_strength, top_improvement.',messages:[{role:'user',content:`Agent role: ${agent}\n${task?'Task given: '+task+'\n':''}\nAgent output:\n${output}\n\nScore this output. Return only the JSON object.`}]})});
+    const data=await res.json();
+    let scores;
+    try{scores=JSON.parse(data.content.filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json\n?|```/g,'').trim());}
+    catch(e){scores={completeness:7,accuracy:7,actionability:7,structure:7,role_fitness:7,overall:7,summary:'Unable to parse scores.',top_strength:'N/A',top_improvement:'N/A'};}
+    const overall=scores.overall||((scores.completeness+scores.accuracy+scores.actionability+scores.structure+scores.role_fitness)/5);
+    const col=overall>=8?'var(--gr)':overall>=6?'var(--am)':'var(--rd)';
+
+    resultEl.innerHTML=`
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+        <div class="score-ring" style="color:${col};border-color:${col}">${overall.toFixed(1)}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600">${overall>=8?'Excellent':overall>=6?'Good':'Needs work'}</div>
+          <div style="font-size:12px;color:var(--tx2);margin-top:2px">${scores.summary||''}</div>
+        </div>
+      </div>
+      <div class="perf-metrics">
+        ${['completeness','accuracy','actionability','structure','role_fitness'].map(k=>`
+        <div class="perf-metric">
+          <div class="pm-val" style="color:${(scores[k]||0)>=8?'var(--gr)':(scores[k]||0)>=6?'var(--am)':'var(--rd)'}">${(scores[k]||0).toFixed(1)}</div>
+          <div class="pm-lbl">${k.replace('_',' ')}</div>
+        </div>`).join('')}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;font-size:11.5px">
+        <div style="flex:1;background:var(--bg3);border:1px solid var(--gr)33;border-radius:var(--r);padding:8px"><div style="color:var(--gr);font-weight:500;margin-bottom:3px">💪 Strength</div>${scores.top_strength||''}</div>
+        <div style="flex:1;background:var(--bg3);border:1px solid var(--am)33;border-radius:var(--r);padding:8px"><div style="color:var(--am);font-weight:500;margin-bottom:3px">📈 Improve</div>${scores.top_improvement||''}</div>
+      </div>`;
+
+    if(!LEADERBOARD[agent]||overall>LEADERBOARD[agent].score)
+      LEADERBOARD[agent]={score:overall,runs:(LEADERBOARD[agent]?.runs||0)+1};
+    else LEADERBOARD[agent].runs++;
+    renderLeaderboard();
+    logEvent(agent,'quality_score',`Score: ${overall.toFixed(1)}/10`,'ok');
+  }catch(e){resultEl.innerHTML='<div style="color:var(--rd);font-size:12px">Error: '+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='📊 Score output';
+}
+
+function renderLeaderboard() {
+  const el=document.getElementById('leaderboard');
+  const entries=Object.entries(LEADERBOARD).sort(([,a],[,b])=>b.score-a.score);
+  if(!entries.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:16px">Score some agents to see leaderboard</div>';return;}
+  el.innerHTML=entries.map(([id,data],i)=>{
+    const a=AGENTS.find(ag=>ag.id===id);
+    const col=data.score>=8?'var(--gr)':data.score>=6?'var(--am)':'var(--rd)';
+    return `<div class="perf-card">
+      <div class="perf-hdr">
+        <span style="font-size:16px;color:var(--tx3);min-width:20px">${i+1}</span>
+        <div class="score-ring" style="color:${col};border-color:${col};width:36px;height:36px;font-size:12px">${data.score.toFixed(1)}</div>
+        <div class="perf-meta"><div class="perf-name">${a?.icon||'🤖'} ${a?.name||id}</div><div class="perf-role">${data.runs} evaluation${data.runs!==1?'s':''}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   SIMULATOR
+═══════════════════════════════════════ */
+const SIM_EVENTS = {
+  normal:[
+    {agent:'pm',action:'api_call',detail:'Generate product requirements',result:'ok',spend:0.003},
+    {agent:'dev',action:'api_call',detail:'Write implementation plan',result:'ok',spend:0.004},
+    {agent:'sales',action:'api_call',detail:'Draft follow-up email',result:'ok',spend:0.002},
+    {agent:'support',action:'api_call',detail:'Resolve ticket #1203',result:'ok',spend:0.002},
+    {agent:'bi',action:'api_call',detail:'Generate weekly KPI report',result:'ok',spend:0.003},
+    {agent:'dev',action:'permission_check',detail:'Code execution — authorised',result:'ok',spend:0},
+    {agent:'marketer',action:'api_call',detail:'Write LinkedIn post',result:'ok',spend:0.002},
+  ],
+  budget_breach:[
+    {agent:'marketer',action:'api_call',detail:'Generate 500 email variants',result:'ok',spend:0.8},
+    {agent:'marketer',action:'budget_check',detail:'Per-agent limit exceeded',result:'block',spend:0},
+    {agent:'marketer',action:'blocked',detail:'Execution halted — budget exhausted',result:'block',spend:0},
+    {agent:'system',action:'budget_exceeded',detail:'Auto-paused all agents',result:'warn',spend:0},
+  ],
+  perm_violation:[
+    {agent:'marketer',action:'permission_check',detail:'Attempted deploy — DENIED',result:'block',spend:0},
+    {agent:'sdr',action:'permission_check',detail:'Attempted secrets access — DENIED',result:'block',spend:0},
+    {agent:'pm',action:'permission_check',detail:'Attempted finance write — DENIED',result:'block',spend:0},
+  ],
+  anomaly:[
+    {agent:'dev',action:'api_call',detail:'Rapid-fire API calls detected',result:'warn',spend:0.05},
+    {agent:'dev',action:'api_call',detail:'Call rate: 45/min — exceeds limit',result:'warn',spend:0.05},
+    {agent:'system',action:'anomaly',detail:'High call rate anomaly flagged',result:'warn',spend:0},
+  ],
+  policy_violation:[
+    {agent:'devops',action:'policy_violation',detail:'Attempted deploy on Friday 5pm — BLOCKED by No deploy on Fridays',result:'block',spend:0},
+    {agent:'cfo',action:'policy_violation',detail:'Attempted $15k transfer without CEO approval',result:'block',spend:0},
+    {agent:'sdr',action:'policy_violation',detail:'Attempted outreach to competitor domain',result:'block',spend:0},
+  ],
+};
+
+async function runSimulation() {
+  if(simRunning)return;
+  simRunning=true; simStop=false;
+  const scenario=document.getElementById('sim-scenario').value;
+  const count=parseInt(document.getElementById('sim-count').value)||20;
+  const speed=parseInt(document.getElementById('sim-speed').value)||200;
+  const feed=document.getElementById('sim-feed');
+  feed.innerHTML='';
+  document.getElementById('sim-btn').disabled=true;
+
+  const pool=scenario==='full'
+    ? Object.values(SIM_EVENTS).flat()
+    : (SIM_EVENTS[scenario]||SIM_EVENTS.normal);
+
+  for(let i=0;i<count;i++){
+    if(simStop)break;
+    const evt=pool[i%pool.length];
+    const a=AGENTS.find(ag=>ag.id===evt.agent);
+    logEvent(evt.agent,evt.action,evt.detail,evt.result);
+    if(evt.spend>0)addSpendManual(evt.agent,evt.spend);
+    if(evt.result==='block'){AGENT_BLOCKED[evt.agent]=(AGENT_BLOCKED[evt.agent]||0)+1;addAlert(`${a?.icon||'🤖'} ${a?.name||evt.agent} blocked`,evt.detail,'high');}
+
+    const icon=evt.result==='ok'?'✓':evt.result==='warn'?'⚠':'🚫';
+    const col=evt.result==='ok'?'var(--gr)':evt.result==='warn'?'var(--am)':'var(--rd)';
+    const entry=document.createElement('div');
+    entry.style.cssText='display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:11.5px;align-items:center';
+    entry.innerHTML=`<span style="color:var(--tx3);font-family:var(--mono);font-size:10px;flex-shrink:0">${new Date().toLocaleTimeString()}</span><span style="color:var(--pu);flex-shrink:0;min-width:70px">${a?.icon||'⚙️'} ${a?.name||evt.agent}</span><span style="color:var(--cy);font-family:var(--mono);font-size:10px;min-width:100px;flex-shrink:0">${evt.action}</span><span style="flex:1;color:var(--tx2)">${evt.detail}</span><span style="color:${col}">${icon}</span>`;
+    feed.insertBefore(entry,feed.firstChild);
+
+    const pct=((i+1)/count)*100;
+    document.getElementById('sim-progress-bar').style.width=pct+'%';
+    document.getElementById('sim-progress-text').textContent=pct.toFixed(0)+'%';
+    await sleep(speed);
+  }
+  simRunning=false;
+  document.getElementById('sim-btn').disabled=false;
+  applySystemState();
+}
+
+function stopSimulation(){simStop=true;}
+function clearFeed(){document.getElementById('sim-feed').innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">Cleared</div>';}
+function clearAllData(){resetBudget();clearAlerts();AUDIT_LOG.length=0;renderAudit();Object.keys(AGENT_BLOCKED).forEach(k=>AGENT_BLOCKED[k]=0);applySystemState();updateTopStats();}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+function updateTopStats() {
+  document.getElementById('st-total-spend').textContent='$'+TOTAL_SPEND.val.toFixed(4);
+  document.getElementById('st-budget-left').textContent='$'+(BUDGETS.global-TOTAL_SPEND.val).toFixed(2);
+  document.getElementById('st-calls').textContent=AUDIT_LOG.filter(e=>e.action==='api_call').length;
+  document.getElementById('st-blocked').textContent=Object.values(AGENT_BLOCKED).reduce((s,v)=>s+v,0);
+  document.getElementById('st-alerts').textContent=ALERTS.filter(a=>!a.ack).length;
+  document.getElementById('st-audit').textContent=AUDIT_LOG.length;
+  document.getElementById('st-policies').textContent=POLICIES.filter(p=>p.enabled).length;
+  document.getElementById('st-violations').textContent=AUDIT_LOG.filter(e=>e.action==='policy_violation'||e.result==='block').length;
+  const spendPct=Math.min((TOTAL_SPEND.val/BUDGETS.global)*100,100);
+  document.getElementById('sb-spend').style.width=spendPct+'%';
+  document.getElementById('sb-spend').style.background=spendPct>=100?'var(--rd)':spendPct>=BUDGETS.alertPct?'var(--am)':'var(--gr)';
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function dl(content,filename,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+
+const TABS=['budget','permissions','audit','alerts','policies','performance','simulate'];
+function sw(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TABS[i]===id));
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tp-'+id).classList.add('active');
+}
+
+/* ═══ INIT ═══ */
+init();
+
+
+// ==AGENT-PANEL-INJECTED==
+(function(){
+const AP_KEY='company-os-agent-tasks';
+const AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+let apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+window.apGetAll=apGetAll;
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function openAgentPanel(name,emoji,role){
+  const a=emoji?{name,emoji,role}:AP_AGENTS.find(x=>x.name===name)||{name,emoji:'🤖',dept:'',role:''};
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(t=>{
+    document.getElementById('ap-tab-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('ap-tc-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const done=tasks.filter(t=>t.done).length,open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';return;}
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item" id="ap-ti-${i}">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-expand" onclick="apToggleOutput(${i})">▸ Show AI output</div><div class="ap-task-output" id="ap-to-${i}">${t.output.replace(/</g,'&lt;')}</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function apToggleOutput(idx){
+  const out=document.getElementById('ap-to-'+idx);
+  const exp=out?.previousElementSibling;
+  if(!out)return;
+  const open=out.classList.toggle('open');
+  if(exp)exp.textContent=open?'▾ Hide AI output':'▸ Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(t=>t.output&&t.output.length>0).reverse();
+  const list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet. Use "Run AI Task" to generate output.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ap-history-item">
+      <div class="ap-history-date">${new Date(t.completedAt||t.createdAt).toLocaleString()}</div>
+      <div class="ap-history-prompt">${t.title.replace(/</g,'&lt;')}</div>
+      <div class="ap-history-output">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent)return;
+  const inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title)return;
+  const all=apGetAll();
+  if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent)return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt)return;
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first (in Settings or the API key field in this module).');return;}
+  const btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent'}. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    const all=apGetAll();
+    if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history')apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message;out.style.display='block';
+  }
+  inner.textContent='▶ Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// Export
+function apExportTasks(){
+  const all=apGetAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+// Picker
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  const q=document.getElementById('ap-picker-search').value.toLowerCase();
+  const all=apGetAll();
+  const agents=q?AP_AGENTS.filter(a=>a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q)):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(a=>{
+    const tasks=(all[a.name]||[]),done=tasks.filter(t=>t.done).length;
+    const badge=tasks.length?`<span class="ap-picker-item-tasks">${done}/${tasks.length}✓</span>`:'';
+    return `<div class="ap-picker-item" onclick="apPickerSelect('${a.name.replace(/'/g,"\'")}')">
+      <span class="ap-picker-item-emoji">${a.emoji}</span>
+      <div style="flex:1;min-width:0"><div class="ap-picker-item-name">${a.name}</div><div class="ap-picker-item-dept">${a.dept}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  const a=AP_AGENTS.find(x=>x.name===name);
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+// Bulk Run
+let apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  const grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(a=>`
+    <div class="ap-bulk-agent-item ${apBulkSelected.has(a.name)?'selected':''}" onclick="apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <input type="checkbox" ${apBulkSelected.has(a.name)?'checked':''} onclick="event.stopPropagation();apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <span>${a.emoji}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+    </div>`).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(a=>a.name)):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  const prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-bulk-run-btn');
+  const prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  const agents=AP_AGENTS.filter(a=>apBulkSelected.has(a.name));
+  const all=apGetAll();
+  let done=0;
+  for(const a of agents){
+    prog.textContent=`Running ${a.emoji} ${a.name}… (${done}/${agents.length})`;
+    const sys=`You are ${a.name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||'Error';
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent=`✅ Done! Ran ${done} agents.`;
+  btn.disabled=false;
+  if(apCurrentAgent)apRenderTasks();apRenderStats();apRenderHistory();
+}
+window.apRunBulk=apRunBulk;
+})();
+
+</script>
+
+
+<!-- ==PANEL-ENHANCED== -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">⚡</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">📋 Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">📜 History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything — runs against this agent's system prompt and auto-saves…"></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">▶ Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">📤 Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>📋 Agent Tasks — Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">✕</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="🔍 Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>⚡ Bulk Run — Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer" onclick="apCloseBulk()">✕</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 priorities this quarter?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">⚡ Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

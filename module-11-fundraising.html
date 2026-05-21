@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Module 11 — Fundraising Command Centre</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;
+  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;
+  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;
+  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;
+  --pu:#a78bfa;--cy:#22d3ee;--or:#fb923c;
+  --r:10px;--rl:14px;
+  --font:system-ui,-apple-system,sans-serif;
+  --mono:'Fira Code','JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--font);min-height:100vh}
+.app{max-width:1400px;margin:0 auto;padding:20px 24px}
+.topbar{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.topbar h1{font-size:20px;font-weight:700}
+.topbar h1 span{background:linear-gradient(135deg,var(--gr),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar p{font-size:12px;color:var(--tx3);margin-top:2px}
+.module-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;background:#22c55e18;color:var(--gr);border:1px solid #22c55e44;font-weight:500}
+.key-input{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:7px 12px;color:var(--tx);font-size:12px;width:260px}
+.key-input:focus{outline:none;border-color:var(--pu)}
+.btn-save-key{padding:7px 14px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg3);color:var(--tx2);font-size:12px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-save-key:hover{border-color:var(--pu);color:var(--pu)}
+.tabs{display:flex;gap:3px;margin-bottom:16px;flex-wrap:wrap;background:var(--bg2);padding:4px;border-radius:var(--rl);border:1px solid var(--bd)}
+.tab{padding:8px 15px;font-size:12px;font-weight:500;border-radius:var(--r);border:1px solid transparent;color:var(--tx3);cursor:pointer;transition:all .15s;background:transparent;font-family:var(--font)}
+.tab.active{background:var(--bg3);border-color:var(--bd2);color:var(--tx)}
+.tab:hover:not(.active){color:var(--tx2)}
+.pane{display:none}.pane.active{display:block}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:12px}
+.card-sm{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:8px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1;min-width:280px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+@media(max-width:768px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+label{font-size:11px;color:var(--tx3);display:block;margin-bottom:3px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:8px 12px;color:var(--tx);font-size:13px;font-family:var(--font);outline:none;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--pu)}
+textarea{resize:vertical;min-height:80px}
+select option{background:var(--bg3)}
+.btn{padding:8px 16px;border-radius:var(--r);border:1px solid var(--bd2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font);background:var(--bg3);color:var(--tx2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--pu);color:var(--tx)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#1a6b3a,#15803d);border-color:#22c55e66;color:#fff}
+.btn-primary:hover:not(:disabled){filter:brightness(1.15)!important}
+.btn-ai{background:linear-gradient(135deg,#3730a3,#4f46e5);border-color:#6366f166;color:#fff}
+.btn-ai:hover:not(:disabled){filter:brightness(1.15)!important}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-danger{background:#ef444420;border:1px solid #ef444440;color:var(--rd)}
+.btn-danger:hover:not(:disabled){background:#ef444430!important}
+.stat{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;text-align:center}
+.stat-n{font-size:24px;font-weight:700}
+.stat-l{font-size:11px;color:var(--tx3);margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-gr{background:#22c55e20;color:var(--gr);border:1px solid #22c55e40}
+.badge-am{background:#f59e0b20;color:var(--am);border:1px solid #f59e0b40}
+.badge-rd{background:#ef444420;color:var(--rd);border:1px solid #ef444440}
+.badge-bl{background:#60a5fa20;color:var(--bl);border:1px solid #60a5fa40}
+.badge-pu{background:#a78bfa20;color:var(--pu);border:1px solid #a78bfa40}
+.badge-cy{background:#22d3ee20;color:var(--cy);border:1px solid #22d3ee40}
+.badge-or{background:#fb923c20;color:var(--or);border:1px solid #fb923c40}
+.badge-tx{background:var(--bg3);color:var(--tx2);border:1px solid var(--bd2)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--tx3);border-bottom:1px solid var(--bd);background:var(--bg3);white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.tbl tr:hover td{background:var(--bg3)}
+.output-box{background:#0a0c13;border:1px solid var(--bd2);border-radius:var(--r);padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:500px;overflow-y:auto;margin-top:10px;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+.output-box::-webkit-scrollbar{width:3px}
+.output-box::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ph{color:var(--tx3);font-style:italic;font-size:13px}
+/* Agent Panel CSS */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s;font-family:var(--font)}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%;font-family:var(--font)}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none;font-family:var(--font)}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:var(--font);margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font)}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem;font-family:var(--font)}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none;font-family:var(--font)}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px;font-family:var(--font)}
+.ap-float-btn:hover{opacity:.85}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:6px;font-size:12px;font-family:system-ui,sans-serif;flex-wrap:wrap">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px;white-space:nowrap">&#127968; Company OS</a>
+  <span style="color:#2d3354">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#9889; Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128256; Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#129504; Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128737;&#65039; Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128268; Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128302; Vector</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128241; Mobile</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128257; Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128200; Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#127981; Operations</a>
+  <a href="module-11-fundraising.html" style="color:#dde1f5;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;border:1px solid #2d3354;white-space:nowrap">&#128176; Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">&#128202; Dashboard</a>
+  <button class="ap-float-btn" onclick="apOpenPicker()">&#128203; Agent Tasks</button>
+</nav>
+
+<!-- APP -->
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="module-badge">Module 11 &mdash; Fundraising Command Centre</div>
+      <h1>Fundraising <span>Command Centre</span></h1>
+      <p>Pitch Deck &middot; Investor CRM &middot; Term Sheet &middot; Cap Table &middot; Runway &middot; Outreach</p>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input class="key-input" type="password" id="api-key" placeholder="sk-ant-... Anthropic key">
+      <button class="btn-save-key" onclick="saveKey()">Save Key</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('pitch',this)">&#127919; Pitch Deck</button>
+    <button class="tab" onclick="switchTab('crm',this)">&#128101; Investor CRM</button>
+    <button class="tab" onclick="switchTab('termsheet',this)">&#128196; Term Sheet</button>
+    <button class="tab" onclick="switchTab('captable',this)">&#128202; Cap Table</button>
+    <button class="tab" onclick="switchTab('runway',this)">&#127939; Runway</button>
+    <button class="tab" onclick="switchTab('outreach',this)">&#128231; Outreach</button>
+  </div>
+
+  <!-- TAB 1: PITCH DECK -->
+  <div class="pane active" id="pane-pitch">
+    <div class="row">
+      <div class="col" style="max-width:420px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:14px">&#127919; Pitch Deck Builder</div>
+          <label>Company Name</label>
+          <input id="pd-company" placeholder="Acme AI">
+          <label>One-Liner</label>
+          <input id="pd-oneliner" placeholder="We help X do Y so they can Z">
+          <label>Problem</label>
+          <textarea id="pd-problem" rows="2" placeholder="What painful problem do you solve?"></textarea>
+          <label>Solution</label>
+          <textarea id="pd-solution" rows="2" placeholder="Your product / approach"></textarea>
+          <label>Market Size ($)</label>
+          <input id="pd-market" placeholder="e.g. $50B TAM">
+          <label>Business Model</label>
+          <input id="pd-bizmodel" placeholder="SaaS, usage-based, marketplace...">
+          <label>Traction</label>
+          <textarea id="pd-traction" rows="2" placeholder="MRR, users, growth rate, key customers..."></textarea>
+          <label>Team</label>
+          <textarea id="pd-team" rows="2" placeholder="Founders, key hires, advisors..."></textarea>
+          <label>Funding Ask</label>
+          <input id="pd-ask" placeholder="e.g. $3M Seed at $12M pre-money">
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn btn-ai" onclick="generatePitchDeck()" id="pd-gen-btn" style="flex:1">&#129504; Generate slide outline</button>
+            <button class="btn" onclick="exportPitchDeck()">&#128229; Export</button>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="min-height:400px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:14px;font-weight:700">Slide Outline Preview</div>
+            <span id="pd-status" class="badge badge-tx" style="display:none"></span>
+          </div>
+          <div id="pd-output" class="output-box" style="max-height:600px"><span class="ph">Fill in the fields and click "Generate slide outline" to get a 12-slide pitch deck from the Investor Relations Agent.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: INVESTOR CRM -->
+  <div class="pane" id="pane-crm">
+    <div class="stats" id="crm-stats"></div>
+    <div class="row" style="align-items:flex-start">
+      <div class="col" style="max-width:380px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px" id="crm-form-title">Add Investor</div>
+          <input type="hidden" id="crm-edit-idx" value="-1">
+          <label>Name</label><input id="crm-name" placeholder="Jane Smith">
+          <label>Firm</label><input id="crm-firm" placeholder="Sequoia, a16z...">
+          <label>Stage</label>
+          <select id="crm-stage">
+            <option>Pre-seed</option><option>Seed</option><option>Series A</option><option>Series B</option><option>Series C</option>
+          </select>
+          <label>Check Size ($)</label><input id="crm-check" placeholder="e.g. 500000">
+          <label>Status</label>
+          <select id="crm-status">
+            <option value="Prospect">Prospect</option>
+            <option value="Intro">Intro</option>
+            <option value="Meeting">Meeting</option>
+            <option value="DD">Due Diligence</option>
+            <option value="Term Sheet">Term Sheet</option>
+            <option value="Passed">Passed</option>
+            <option value="Invested">Invested</option>
+          </select>
+          <label>Notes</label>
+          <textarea id="crm-notes" rows="2" placeholder="Key context, referrals, interests..."></textarea>
+          <label>Last Contact Date</label>
+          <input type="date" id="crm-date">
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-primary" onclick="saveInvestor()" style="flex:1">Save Investor</button>
+            <button class="btn btn-sm" onclick="clearCrmForm()">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="padding:12px">
+          <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+            <div style="font-size:14px;font-weight:700;flex:1">Investor Pipeline</div>
+            <select id="crm-filter-stage" onchange="renderCrmTable()" style="width:130px;padding:6px 10px;font-size:12px">
+              <option value="">All Stages</option>
+              <option>Pre-seed</option><option>Seed</option><option>Series A</option><option>Series B</option><option>Series C</option>
+            </select>
+            <select id="crm-filter-status" onchange="renderCrmTable()" style="width:140px;padding:6px 10px;font-size:12px">
+              <option value="">All Statuses</option>
+              <option>Prospect</option><option>Intro</option><option>Meeting</option><option>DD</option><option>Term Sheet</option><option>Passed</option><option>Invested</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead>
+                <tr><th>Name</th><th>Firm</th><th>Stage</th><th>Check</th><th>Status</th><th>Last Contact</th><th>Notes</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="crm-tbody"></tbody>
+            </table>
+          </div>
+          <div id="crm-empty" class="ph" style="padding:20px 0;text-align:center;display:none">No investors yet. Add one using the form.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: TERM SHEET ANALYSER -->
+  <div class="pane" id="pane-termsheet">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px">&#128196; Paste Term Sheet</div>
+          <textarea id="ts-input" rows="18" placeholder="Paste the full term sheet text here...&#10;&#10;e.g.&#10;Pre-Money Valuation: $10,000,000&#10;Investment Amount: $2,000,000&#10;Option Pool: 10%&#10;Liquidation Preference: 1x non-participating&#10;Anti-Dilution: Broad-based weighted average&#10;Board: 2 founders, 1 lead investor, 2 independents" style="font-family:var(--mono);font-size:12px;line-height:1.6;min-height:320px"></textarea>
+          <button class="btn btn-ai" onclick="analyseTermSheet()" id="ts-btn" style="width:100%;margin-top:10px">&#128269; Analyse with Legal/CFO Agent</button>
+        </div>
+        <div class="card" id="ts-terms-card" style="display:none">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">&#128273; Key Terms Extracted</div>
+          <div id="ts-terms-grid" class="grid2"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="min-height:420px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:14px;font-weight:700">AI Analysis</div>
+            <span id="ts-status" style="font-size:11px;color:var(--tx3)"></span>
+          </div>
+          <div id="ts-output" class="output-box" style="max-height:660px"><span class="ph">Paste a term sheet on the left and click Analyse to get an expert review covering valuation, dilution, risks, red flags, and market comparison.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: CAP TABLE -->
+  <div class="pane" id="pane-captable">
+    <div class="row" style="align-items:flex-start">
+      <div class="col" style="max-width:380px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px" id="ct-form-title">Add Shareholder</div>
+          <input type="hidden" id="ct-edit-idx" value="-1">
+          <label>Name</label><input id="ct-name" placeholder="Founder / Investor name">
+          <label>Type</label>
+          <select id="ct-type">
+            <option>Founder</option><option>Angel</option><option>VC</option><option>ESOP</option><option>Advisor</option>
+          </select>
+          <label>Shares</label><input id="ct-shares" type="number" placeholder="e.g. 1000000" min="0">
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-primary" onclick="saveShareholder()" style="flex:1">Save</button>
+            <button class="btn btn-sm" onclick="clearCtForm()">Clear</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">&#128167; Waterfall Calculator</div>
+          <label>Exit / Liquidation Amount ($)</label>
+          <input id="ct-exit" type="number" placeholder="e.g. 20000000" oninput="calcWaterfall()">
+          <div id="ct-waterfall" style="margin-top:12px"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:700">Cap Table</div>
+            <div style="font-size:12px;color:var(--tx3)">Total: <span id="ct-total-shares" style="color:var(--tx);font-weight:700">0</span> shares</div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead>
+                <tr><th>Name</th><th>Type</th><th>Shares</th><th>Ownership %</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="ct-tbody"></tbody>
+            </table>
+          </div>
+          <div id="ct-empty" class="ph" style="padding:16px 0;text-align:center;display:none">No shareholders yet.</div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px">&#129369; Ownership Breakdown</div>
+          <div id="ct-chart" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: RUNWAY CALCULATOR -->
+  <div class="pane" id="pane-runway">
+    <div class="row" style="align-items:flex-start">
+      <div class="col" style="max-width:360px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:14px">&#127939; Runway Inputs</div>
+          <label>Current Cash ($)</label>
+          <input id="rw-cash" type="number" placeholder="e.g. 1500000" oninput="calcRunway()">
+          <label>Monthly Burn Rate ($)</label>
+          <input id="rw-burn" type="number" placeholder="e.g. 80000" oninput="calcRunway()">
+          <label>Current MRR ($)</label>
+          <input id="rw-mrr" type="number" placeholder="e.g. 20000" oninput="calcRunway()">
+          <label>MRR Growth Rate (%/month)</label>
+          <input id="rw-growth" type="number" placeholder="e.g. 10" oninput="calcRunway()">
+          <div class="stats" style="margin-top:14px" id="rw-stats"></div>
+          <button class="btn btn-ai" onclick="runwayCfoAI()" id="rw-ai-btn" style="width:100%;margin-top:8px">&#128161; Optimize with CFO AI</button>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px">Monthly Projections</div>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead>
+                <tr><th>Month</th><th>Date</th><th>MRR</th><th>Burn</th><th>Net</th><th>Cumulative Cash</th><th>Status</th></tr>
+              </thead>
+              <tbody id="rw-tbody"></tbody>
+            </table>
+          </div>
+          <div id="rw-empty" class="ph" style="padding:16px;text-align:center">Enter values above to see projections.</div>
+        </div>
+        <div class="card" id="rw-ai-card" style="display:none">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px">&#128161; CFO AI Suggestions</div>
+          <div id="rw-ai-output" class="output-box"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: INVESTOR OUTREACH -->
+  <div class="pane" id="pane-outreach">
+    <div class="row" style="align-items:flex-start">
+      <div class="col" style="max-width:420px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px">&#128231; Campaign Composer</div>
+          <label>Subject Line</label>
+          <input id="oe-subject" placeholder="e.g. Intro: {{company}} raising Seed">
+          <label>Email Body (use {{investor_name}}, {{firm}}, {{stage}} as placeholders)</label>
+          <textarea id="oe-body" rows="8" placeholder="Hi {{investor_name}},&#10;&#10;I noticed {{firm}} focuses on {{stage}} companies..."></textarea>
+          <button class="btn btn-ai" onclick="draftOutreachAI()" id="oe-ai-btn" style="width:100%;margin-top:10px">&#10024; Draft with AI</button>
+          <div style="margin-top:16px;border-top:1px solid var(--bd);padding-top:14px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px">&#128101; Select Investors from CRM</div>
+            <div id="oe-investor-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+              <div class="ph">No investors in CRM yet.</div>
+            </div>
+            <button class="btn btn-primary" onclick="sendOutreach()" style="width:100%;margin-top:12px">&#128228; Send to Selected</button>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" id="oe-ai-preview-card" style="display:none">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px">&#10024; AI Draft Preview</div>
+          <div id="oe-ai-output" class="output-box" style="max-height:280px"></div>
+          <button class="btn btn-sm" style="margin-top:8px" onclick="useAIDraft()">Use this draft</button>
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px">&#128236; Outreach Log</div>
+          <div id="oe-log-empty" class="ph" style="padding:12px 0;text-align:center">No outreach sent yet.</div>
+          <table class="tbl" id="oe-log-table" style="display:none">
+            <thead>
+              <tr><th>Date</th><th>Investor</th><th>Firm</th><th>Subject</th><th>Status</th><th>Response</th></tr>
+            </thead>
+            <tbody id="oe-log-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+
+<script>
+'use strict';
+const API_URL='https://api.anthropic.com/v1/messages';
+const MODEL='claude-haiku-4-5-20251001';
+
+function getKey(){return localStorage.getItem('company-os-api-key')||'';}
+function saveKey(){
+  var v=document.getElementById('api-key').value.trim();
+  if(v){localStorage.setItem('company-os-api-key',v);showToast('API key saved');}
+}
+function showToast(msg){
+  var t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;z-index:99999;pointer-events:none;opacity:1;transition:opacity .5s';
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},600);},2000);
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  var k=getKey();
+  if(k) document.getElementById('api-key').value=k;
+  renderCrmTable();
+  renderCtTable();
+  calcRunway();
+  renderOutreachLog();
+  renderOutreachInvestorList();
+  renderCrmStats();
+  var savedPitch=localStorage.getItem('company-os-pitch');
+  if(savedPitch) document.getElementById('pd-output').textContent=savedPitch;
+  var rw=JSON.parse(localStorage.getItem('company-os-runway')||'{}');
+  if(rw.cash) document.getElementById('rw-cash').value=rw.cash;
+  if(rw.burn) document.getElementById('rw-burn').value=rw.burn;
+  if(rw.mrr)  document.getElementById('rw-mrr').value=rw.mrr;
+  if(rw.growth!==undefined) document.getElementById('rw-growth').value=rw.growth;
+  calcRunway();
+});
+
+function switchTab(name,el){
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('pane-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='crm'){renderCrmTable();renderCrmStats();}
+  if(name==='captable'){renderCtTable();}
+  if(name==='outreach'){renderOutreachInvestorList();renderOutreachLog();}
+}
+
+async function callClaude(system,userMsg,maxTokens){
+  maxTokens=maxTokens||1500;
+  var key=getKey();
+  if(!key) throw new Error('No API key. Enter your Anthropic key in the topbar and click Save Key.');
+  var r=await fetch(API_URL,{
+    method:'POST',
+    headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:MODEL,max_tokens:maxTokens,system:system,messages:[{role:'user',content:userMsg}]})
+  });
+  var d=await r.json();
+  if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+  return (d.content&&d.content[0]&&d.content[0].text)||'';
+}
+
+function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── TAB 1: PITCH DECK ───────────────────────────────────────────
+async function generatePitchDeck(){
+  var company=document.getElementById('pd-company').value.trim();
+  var oneliner=document.getElementById('pd-oneliner').value.trim();
+  var problem=document.getElementById('pd-problem').value.trim();
+  var solution=document.getElementById('pd-solution').value.trim();
+  var market=document.getElementById('pd-market').value.trim();
+  var bizmodel=document.getElementById('pd-bizmodel').value.trim();
+  var traction=document.getElementById('pd-traction').value.trim();
+  var team=document.getElementById('pd-team').value.trim();
+  var ask=document.getElementById('pd-ask').value.trim();
+  if(!company&&!oneliner){showToast('Enter at least a company name and one-liner');return;}
+  var btn=document.getElementById('pd-gen-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Generating...';
+  var out=document.getElementById('pd-output');
+  out.innerHTML='<span class="ph">Generating 12-slide pitch deck outline...</span>';
+  var status=document.getElementById('pd-status');
+  status.style.display='inline-block';status.className='badge badge-am';status.textContent='Generating...';
+  var sys='You are an expert Investor Relations Agent with deep experience in venture capital fundraising. You create compelling, investor-ready pitch deck outlines that clearly communicate vision, traction, and return potential. Format output as a numbered 12-slide outline with each slide having a title, 3-5 bullet points of key content, and a brief speaker note.';
+  var userMsg='Create a 12-slide pitch deck outline for the following company:\nCompany: '+company+'\nOne-liner: '+oneliner+'\nProblem: '+problem+'\nSolution: '+solution+'\nMarket size: '+market+'\nBusiness model: '+bizmodel+'\nTraction: '+traction+'\nTeam: '+team+'\nFunding ask: '+ask+'\n\nFormat each slide as:\nSLIDE N: [TITLE]\n- Bullet 1\n- Bullet 2\n- Bullet 3\nSpeaker note: [brief note]\n\nMake it compelling and investor-grade.';
+  try{
+    var reply=await callClaude(sys,userMsg,2000);
+    out.textContent=reply;
+    localStorage.setItem('company-os-pitch',reply);
+    status.className='badge badge-gr';status.textContent='Done';
+  }catch(e){
+    out.textContent='Error: '+e.message;
+    status.className='badge badge-rd';status.textContent='Error';
+  }
+  btn.disabled=false;
+  btn.innerHTML='Generate slide outline';
+}
+window.generatePitchDeck=generatePitchDeck;
+
+function exportPitchDeck(){
+  var text=document.getElementById('pd-output').textContent;
+  if(!text||text.includes('Fill in the fields')){showToast('Nothing to export yet');return;}
+  var company=document.getElementById('pd-company').value||'company';
+  var blob=new Blob([text],{type:'text/plain'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=company.replace(/\s+/g,'-').toLowerCase()+'-pitch-deck-outline.txt';
+  a.click();
+}
+window.exportPitchDeck=exportPitchDeck;
+
+// ── TAB 2: INVESTOR CRM ─────────────────────────────────────────
+function getCrmData(){return JSON.parse(localStorage.getItem('company-os-investors')||'[]');}
+function saveCrmData(d){localStorage.setItem('company-os-investors',JSON.stringify(d));}
+
+var STATUS_BADGE={
+  'Prospect':'badge-tx','Intro':'badge-bl','Meeting':'badge-cy',
+  'DD':'badge-am','Term Sheet':'badge-pu','Passed':'badge-rd','Invested':'badge-gr'
+};
+
+function fmtM(n){
+  n=parseFloat(n)||0;
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(0)+'K';
+  return n.toLocaleString();
+}
+
+function renderCrmStats(){
+  var data=getCrmData();
+  var active=data.filter(function(i){return['Intro','Meeting','DD'].includes(i.status);}).length;
+  var ts=data.filter(function(i){return i.status==='Term Sheet';}).length;
+  var invested=data.filter(function(i){return i.status==='Invested';});
+  var capital=invested.reduce(function(s,i){return s+(parseFloat(i.checkSize)||0);},0);
+  document.getElementById('crm-stats').innerHTML=
+    '<div class="stat"><div class="stat-n" style="color:var(--pu)">'+data.length+'</div><div class="stat-l">Total Investors</div></div>'+
+    '<div class="stat"><div class="stat-n" style="color:var(--bl)">'+active+'</div><div class="stat-l">Active Pipeline</div></div>'+
+    '<div class="stat"><div class="stat-n" style="color:var(--am)">'+ts+'</div><div class="stat-l">Term Sheets</div></div>'+
+    '<div class="stat"><div class="stat-n" style="color:var(--gr)">$'+fmtM(capital)+'</div><div class="stat-l">Capital Committed</div></div>';
+}
+
+function renderCrmTable(){
+  var data=getCrmData();
+  var fsStage=(document.getElementById('crm-filter-stage')||{}).value||'';
+  var fsStatus=(document.getElementById('crm-filter-status')||{}).value||'';
+  var filtered=data.filter(function(i){
+    if(fsStage&&i.stage!==fsStage) return false;
+    if(fsStatus&&i.status!==fsStatus) return false;
+    return true;
+  });
+  var tbody=document.getElementById('crm-tbody');
+  var empty=document.getElementById('crm-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(function(inv){
+    var realIdx=data.indexOf(inv);
+    var bc=STATUS_BADGE[inv.status]||'badge-tx';
+    var checkFmt=inv.checkSize?'$'+fmtM(parseFloat(inv.checkSize)):'--';
+    return '<tr>'+
+      '<td style="font-weight:600">'+esc(inv.name)+'</td>'+
+      '<td style="color:var(--tx2)">'+esc(inv.firm||'--')+'</td>'+
+      '<td><span class="badge badge-bl">'+esc(inv.stage)+'</span></td>'+
+      '<td style="color:var(--gr)">'+checkFmt+'</td>'+
+      '<td><span class="badge '+bc+'">'+esc(inv.status)+'</span></td>'+
+      '<td style="color:var(--tx3);font-size:12px">'+esc(inv.lastContact||'--')+'</td>'+
+      '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--tx3)">'+esc(inv.notes||'')+'</td>'+
+      '<td style="white-space:nowrap">'+
+        '<button class="btn btn-sm" onclick="editInvestor('+realIdx+')" style="margin-right:4px">Edit</button>'+
+        '<button class="btn btn-sm btn-danger" onclick="deleteInvestor('+realIdx+')">Del</button>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+  renderCrmStats();
+}
+
+function saveInvestor(){
+  var name=document.getElementById('crm-name').value.trim();
+  if(!name){showToast('Enter investor name');return;}
+  var inv={
+    name:name,
+    firm:document.getElementById('crm-firm').value.trim(),
+    stage:document.getElementById('crm-stage').value,
+    checkSize:document.getElementById('crm-check').value.trim(),
+    status:document.getElementById('crm-status').value,
+    notes:document.getElementById('crm-notes').value.trim(),
+    lastContact:document.getElementById('crm-date').value
+  };
+  var data=getCrmData();
+  var editIdx=parseInt(document.getElementById('crm-edit-idx').value);
+  if(editIdx>=0) data[editIdx]=inv; else data.push(inv);
+  saveCrmData(data);clearCrmForm();renderCrmTable();renderCrmStats();
+  showToast(editIdx>=0?'Investor updated':'Investor added');
+}
+window.saveInvestor=saveInvestor;
+
+function editInvestor(idx){
+  var inv=getCrmData()[idx];
+  if(!inv) return;
+  document.getElementById('crm-edit-idx').value=idx;
+  document.getElementById('crm-name').value=inv.name;
+  document.getElementById('crm-firm').value=inv.firm||'';
+  document.getElementById('crm-stage').value=inv.stage;
+  document.getElementById('crm-check').value=inv.checkSize||'';
+  document.getElementById('crm-status').value=inv.status;
+  document.getElementById('crm-notes').value=inv.notes||'';
+  document.getElementById('crm-date').value=inv.lastContact||'';
+  document.getElementById('crm-form-title').textContent='Edit Investor';
+}
+window.editInvestor=editInvestor;
+
+function deleteInvestor(idx){
+  if(!confirm('Delete this investor?')) return;
+  var data=getCrmData();data.splice(idx,1);saveCrmData(data);renderCrmTable();renderCrmStats();
+  showToast('Investor deleted');
+}
+window.deleteInvestor=deleteInvestor;
+
+function clearCrmForm(){
+  ['crm-name','crm-firm','crm-check','crm-notes','crm-date'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('crm-stage').value='Pre-seed';
+  document.getElementById('crm-status').value='Prospect';
+  document.getElementById('crm-edit-idx').value='-1';
+  document.getElementById('crm-form-title').textContent='Add Investor';
+}
+window.clearCrmForm=clearCrmForm;
+
+// ── TAB 3: TERM SHEET ─────────────────────────────────────────────
+async function analyseTermSheet(){
+  var raw=document.getElementById('ts-input').value.trim();
+  if(!raw){showToast('Paste a term sheet first');return;}
+  var btn=document.getElementById('ts-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analysing...';
+  var out=document.getElementById('ts-output');
+  out.innerHTML='<span class="ph">Analysing term sheet...</span>';
+  document.getElementById('ts-status').textContent='Running Legal/CFO Agent...';
+  var sys='You are a senior legal and financial advisor with extensive experience in venture capital term sheets, M&A, and startup financing. Provide expert, structured analysis.';
+  var userMsg='Analyse this venture capital term sheet thoroughly. Provide:\n\n1. VALUATION ANALYSIS - pre-money, post-money, implied valuation multiples\n2. DILUTION IMPACT - founder/existing shareholder dilution percentages\n3. KEY RISKS - top 3-5 risks in this term sheet for founders\n4. RED FLAGS - any unusual or unfavourable clauses (highlight clearly)\n5. MARKET COMPARISON - how does this compare to market standard terms?\n6. RECOMMENDATIONS - what to negotiate or push back on\n\nTerm sheet:\n'+raw;
+  try{
+    var reply=await callClaude(sys,userMsg,2000);
+    out.textContent=reply;
+    document.getElementById('ts-status').textContent='Analysis complete';
+    extractKeyTerms(raw);
+  }catch(e){
+    out.textContent='Error: '+e.message;
+    document.getElementById('ts-status').textContent='Error';
+  }
+  btn.disabled=false;btn.innerHTML='Analyse with Legal/CFO Agent';
+}
+window.analyseTermSheet=analyseTermSheet;
+
+function extractKeyTerms(text){
+  var patterns=[
+    {label:'Pre-Money Valuation',regex:/pre[\s-]?money[^$\d]*\$?([\d,]+(?:\.\d+)?(?:\s*[MmBb])?)/i},
+    {label:'Post-Money Valuation',regex:/post[\s-]?money[^$\d]*\$?([\d,]+(?:\.\d+)?(?:\s*[MmBb])?)/i},
+    {label:'Investment Amount',regex:/investment[^$\d]*\$?([\d,]+(?:\.\d+)?(?:\s*[MmBb])?)/i},
+    {label:'Option Pool',regex:/option\s*pool[^%\d]*(\d+(?:\.\d+)?%)/i},
+    {label:'Liquidation Pref.',regex:/liquidation\s*preference[:\s]*([^\n,;]+)/i},
+    {label:'Anti-Dilution',regex:/anti[\s-]?dilution[:\s]*([^\n,;]+)/i},
+    {label:'Board Composition',regex:/board[^:]*:[:\s]*([^\n]+)/i},
+    {label:'Dividend Rate',regex:/dividend[^%\d]*(\d+(?:\.\d+)?%)/i}
+  ];
+  var found=patterns.map(function(p){return{label:p.label,value:(text.match(p.regex)||[])[1]||'--'};}).filter(function(x){return x.value!=='--';});
+  if(!found.length) return;
+  var grid=document.getElementById('ts-terms-grid');
+  grid.innerHTML=found.map(function(f){
+    return '<div style="background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:10px">'+
+      '<div style="font-size:10px;color:var(--tx3);margin-bottom:3px;font-weight:600;text-transform:uppercase">'+esc(f.label)+'</div>'+
+      '<div style="font-size:13px;color:var(--tx);font-weight:600">'+esc(f.value.trim())+'</div>'+
+    '</div>';
+  }).join('');
+  document.getElementById('ts-terms-card').style.display='block';
+}
+
+// ── TAB 4: CAP TABLE ──────────────────────────────────────────────
+function getCtData(){return JSON.parse(localStorage.getItem('company-os-captable')||'[]');}
+function saveCtData(d){localStorage.setItem('company-os-captable',JSON.stringify(d));}
+
+var CT_COLORS=['#a78bfa','#22c55e','#60a5fa','#f59e0b','#22d3ee','#fb923c','#ef4444','#6366f1','#ec4899','#84cc16'];
+
+function renderCtTable(){
+  var data=getCtData();
+  var total=data.reduce(function(s,r){return s+(parseFloat(r.shares)||0);},0);
+  document.getElementById('ct-total-shares').textContent=total.toLocaleString();
+  var tbody=document.getElementById('ct-tbody');
+  var empty=document.getElementById('ct-empty');
+  if(!data.length){tbody.innerHTML='';empty.style.display='block';renderCtChart([],0);return;}
+  empty.style.display='none';
+  tbody.innerHTML=data.map(function(sh,i){
+    var pct=total>0?((parseFloat(sh.shares)||0)/total*100).toFixed(2):'0.00';
+    var color=CT_COLORS[i%CT_COLORS.length];
+    return '<tr>'+
+      '<td style="font-weight:600">'+esc(sh.name)+'</td>'+
+      '<td><span class="badge badge-pu">'+esc(sh.type)+'</span></td>'+
+      '<td style="font-family:var(--mono)">'+parseFloat(sh.shares||0).toLocaleString()+'</td>'+
+      '<td><div style="display:flex;align-items:center;gap:8px">'+
+        '<div style="flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;min-width:60px">'+
+          '<div style="height:100%;background:'+color+';width:'+pct+'%;border-radius:3px;transition:width .4s"></div>'+
+        '</div>'+
+        '<span style="font-weight:700;color:'+color+';min-width:48px">'+pct+'%</span>'+
+      '</div></td>'+
+      '<td style="white-space:nowrap">'+
+        '<button class="btn btn-sm" onclick="editShareholder('+i+')" style="margin-right:4px">Edit</button>'+
+        '<button class="btn btn-sm btn-danger" onclick="deleteShareholder('+i+')">Del</button>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+  renderCtChart(data,total);
+  calcWaterfall();
+}
+
+function renderCtChart(data,total){
+  var chart=document.getElementById('ct-chart');
+  if(!data.length){chart.innerHTML='<span class="ph">Add shareholders to see chart.</span>';return;}
+  chart.innerHTML=data.map(function(sh,i){
+    var pct=total>0?((parseFloat(sh.shares)||0)/total*100).toFixed(1):0;
+    var color=CT_COLORS[i%CT_COLORS.length];
+    return '<div style="display:flex;align-items:center;gap:10px">'+
+      '<div style="width:12px;height:12px;border-radius:3px;background:'+color+';flex-shrink:0"></div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'+
+          '<span style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(sh.name)+'</span>'+
+          '<span style="font-size:12px;color:'+color+';font-weight:700;flex-shrink:0;margin-left:8px">'+pct+'%</span>'+
+        '</div>'+
+        '<div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden">'+
+          '<div style="height:100%;background:'+color+';width:'+pct+'%;border-radius:4px;transition:width .5s"></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function calcWaterfall(){
+  var data=getCtData();
+  var total=data.reduce(function(s,r){return s+(parseFloat(r.shares)||0);},0);
+  var exitEl=document.getElementById('ct-exit');
+  var div=document.getElementById('ct-waterfall');
+  if(!div||!exitEl) return;
+  var exit=parseFloat(exitEl.value)||0;
+  if(!exit||!data.length){div.innerHTML='<span class="ph" style="font-size:12px">Enter an exit amount above.</span>';return;}
+  div.innerHTML='<div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Payout at $'+fmtM(exit)+' exit (pro-rata, simplified)</div>'+
+    data.map(function(sh){
+      var pct=total>0?(parseFloat(sh.shares)||0)/total:0;
+      var payout=pct*exit;
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bd);font-size:12px">'+
+        '<span style="color:var(--tx2)">'+esc(sh.name)+'</span>'+
+        '<span style="color:var(--gr);font-weight:700">$'+fmtM(payout)+'</span>'+
+      '</div>';
+    }).join('');
+}
+window.calcWaterfall=calcWaterfall;
+
+function saveShareholder(){
+  var name=document.getElementById('ct-name').value.trim();
+  var shares=parseFloat(document.getElementById('ct-shares').value)||0;
+  if(!name||!shares){showToast('Enter name and shares');return;}
+  var sh={name:name,type:document.getElementById('ct-type').value,shares:shares};
+  var data=getCtData();
+  var editIdx=parseInt(document.getElementById('ct-edit-idx').value);
+  if(editIdx>=0) data[editIdx]=sh; else data.push(sh);
+  saveCtData(data);clearCtForm();renderCtTable();
+  showToast(editIdx>=0?'Shareholder updated':'Shareholder added');
+}
+window.saveShareholder=saveShareholder;
+
+function editShareholder(idx){
+  var sh=getCtData()[idx];
+  if(!sh) return;
+  document.getElementById('ct-edit-idx').value=idx;
+  document.getElementById('ct-name').value=sh.name;
+  document.getElementById('ct-type').value=sh.type;
+  document.getElementById('ct-shares').value=sh.shares;
+  document.getElementById('ct-form-title').textContent='Edit Shareholder';
+}
+window.editShareholder=editShareholder;
+
+function deleteShareholder(idx){
+  if(!confirm('Delete this shareholder?')) return;
+  var data=getCtData();data.splice(idx,1);saveCtData(data);renderCtTable();
+  showToast('Shareholder deleted');
+}
+window.deleteShareholder=deleteShareholder;
+
+function clearCtForm(){
+  ['ct-name','ct-shares'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('ct-type').value='Founder';
+  document.getElementById('ct-edit-idx').value='-1';
+  document.getElementById('ct-form-title').textContent='Add Shareholder';
+}
+window.clearCtForm=clearCtForm;
+
+// ── TAB 5: RUNWAY ─────────────────────────────────────────────────
+function saveRunwayInputs(){
+  localStorage.setItem('company-os-runway',JSON.stringify({
+    cash:document.getElementById('rw-cash').value,
+    burn:document.getElementById('rw-burn').value,
+    mrr:document.getElementById('rw-mrr').value,
+    growth:document.getElementById('rw-growth').value
+  }));
+}
+
+function calcRunway(){
+  saveRunwayInputs();
+  var cash=parseFloat(document.getElementById('rw-cash').value)||0;
+  var burn=parseFloat(document.getElementById('rw-burn').value)||0;
+  var mrr=parseFloat(document.getElementById('rw-mrr').value)||0;
+  var growth=parseFloat(document.getElementById('rw-growth').value)||0;
+  var tbody=document.getElementById('rw-tbody');
+  var empty=document.getElementById('rw-empty');
+  if(!cash&&!burn){tbody.innerHTML='';empty.style.display='block';document.getElementById('rw-stats').innerHTML='';return;}
+  empty.style.display='none';
+  var rows=[];
+  var cumCash=cash,curMrr=mrr,runwayMonths=0,zeroMonth=null,beMonth=null;
+  var now=new Date();
+  for(var m=1;m<=36;m++){
+    curMrr=m===1?mrr:curMrr*(1+growth/100);
+    var net=curMrr-burn;
+    cumCash+=net;
+    var dt=new Date(now.getFullYear(),now.getMonth()+m,1);
+    var label=dt.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+    if(cumCash>0) runwayMonths=m;
+    if(cumCash<=0&&!zeroMonth) zeroMonth={m:m,label:label};
+    if(net>=0&&!beMonth) beMonth={m:m,label:label};
+    rows.push({m:m,label:label,mrr:curMrr,burn:burn,net:net,cumCash:cumCash});
+  }
+  tbody.innerHTML=rows.map(function(r){
+    var cashColor=r.cumCash<0?'var(--rd)':r.cumCash<burn*3?'var(--am)':'var(--gr)';
+    var status=r.cumCash<=0?'<span class="badge badge-rd">Deficit</span>':
+               r.cumCash<burn*3?'<span class="badge badge-am">Critical</span>':
+               r.net>=0?'<span class="badge badge-gr">Break-even</span>':
+               '<span class="badge badge-bl">Burning</span>';
+    return '<tr '+(r.cumCash<=0?'style="opacity:.5"':'')+'>'+
+      '<td style="color:var(--tx3)">M'+r.m+'</td>'+
+      '<td style="font-size:12px">'+r.label+'</td>'+
+      '<td style="color:var(--cy)">$'+fmtM(r.mrr)+'</td>'+
+      '<td style="color:var(--rd)">$'+fmtM(r.burn)+'</td>'+
+      '<td style="color:'+(r.net>=0?'var(--gr)':'var(--rd)')+'">$'+fmtM(Math.abs(r.net))+'</td>'+
+      '<td style="color:'+cashColor+';font-weight:700">$'+(r.cumCash>=0?fmtM(r.cumCash):'-'+fmtM(Math.abs(r.cumCash)))+'</td>'+
+      '<td>'+status+'</td>'+
+    '</tr>';
+  }).join('');
+  var statsEl=document.getElementById('rw-stats');
+  var rwColor=runwayMonths>12?'var(--gr)':runwayMonths>6?'var(--am)':'var(--rd)';
+  statsEl.innerHTML=
+    '<div class="stat"><div class="stat-n" style="color:'+rwColor+'">'+runwayMonths+'</div><div class="stat-l">Runway Months</div></div>'+
+    '<div class="stat"><div class="stat-n" style="font-size:16px;color:var(--rd)">'+(zeroMonth?zeroMonth.label:'N/A')+'</div><div class="stat-l">Zero Cash Date</div></div>'+
+    '<div class="stat"><div class="stat-n" style="font-size:16px;color:var(--gr)">'+(beMonth?beMonth.label:'N/A')+'</div><div class="stat-l">Break-even</div></div>';
+}
+window.calcRunway=calcRunway;
+
+async function runwayCfoAI(){
+  var cash=document.getElementById('rw-cash').value;
+  var burn=document.getElementById('rw-burn').value;
+  var mrr=document.getElementById('rw-mrr').value;
+  var growth=document.getElementById('rw-growth').value;
+  if(!cash||!burn){showToast('Enter cash and burn rate first');return;}
+  var btn=document.getElementById('rw-ai-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analysing...';
+  var card=document.getElementById('rw-ai-card');card.style.display='block';
+  var out=document.getElementById('rw-ai-output');
+  out.innerHTML='<span class="ph">CFO Agent thinking...</span>';
+  var sys='You are an experienced CFO and startup financial advisor. Provide specific, actionable advice to extend runway and reach profitability.';
+  var userMsg='I am a startup founder with the following financials:\n- Current cash: $'+parseFloat(cash||0).toLocaleString()+'\n- Monthly burn rate: $'+parseFloat(burn||0).toLocaleString()+'\n- Current MRR: $'+parseFloat(mrr||0).toLocaleString()+'\n- MRR growth rate: '+growth+'%/month\n\nProvide a concrete CFO analysis with:\n1. KEY METRICS ASSESSMENT - what these numbers mean\n2. TOP 5 WAYS TO EXTEND RUNWAY - specific cost-cutting or revenue actions\n3. FUNDRAISING TIMING ADVICE - when to start raising and at what metrics\n4. BURN RATE BENCHMARKS - how we compare to similar-stage companies\n5. 90-DAY ACTION PLAN - immediate steps to improve financial position';
+  try{
+    var reply=await callClaude(sys,userMsg,1500);
+    out.textContent=reply;
+  }catch(e){out.textContent='Error: '+e.message;}
+  btn.disabled=false;btn.innerHTML='Optimize with CFO AI';
+}
+window.runwayCfoAI=runwayCfoAI;
+
+// ── TAB 6: OUTREACH ───────────────────────────────────────────────
+function getOutreachLog(){return JSON.parse(localStorage.getItem('company-os-outreach')||'[]');}
+function saveOutreachLog(d){localStorage.setItem('company-os-outreach',JSON.stringify(d));}
+
+function renderOutreachInvestorList(){
+  var investors=getCrmData().filter(function(i){return!['Passed','Invested'].includes(i.status);});
+  var el=document.getElementById('oe-investor-list');
+  if(!investors.length){el.innerHTML='<div class="ph">No investors in CRM yet. Add some in the Investor CRM tab.</div>';return;}
+  var allData=getCrmData();
+  el.innerHTML=investors.map(function(inv){
+    var realIdx=allData.indexOf(inv);
+    var bc=STATUS_BADGE[inv.status]||'badge-tx';
+    return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:8px;cursor:pointer;border:1px solid var(--bd);margin-top:0;font-size:13px;color:var(--tx)">'+
+      '<input type="checkbox" value="'+realIdx+'" style="width:14px;height:14px;accent-color:var(--pu);flex-shrink:0;cursor:pointer">'+
+      '<span style="flex:1;font-weight:600">'+esc(inv.name)+'</span>'+
+      '<span style="color:var(--tx3);font-size:11px">'+esc(inv.firm||'')+'</span>'+
+      '<span class="badge '+bc+'" style="flex-shrink:0">'+esc(inv.status)+'</span>'+
+    '</label>';
+  }).join('');
+}
+
+async function draftOutreachAI(){
+  var subject=document.getElementById('oe-subject').value.trim();
+  var body=document.getElementById('oe-body').value.trim();
+  var btn=document.getElementById('oe-ai-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Drafting...';
+  var card=document.getElementById('oe-ai-preview-card');card.style.display='block';
+  var out=document.getElementById('oe-ai-output');
+  out.innerHTML='<span class="ph">Drafting outreach email...</span>';
+  var sys='You are an expert Investor Relations and Business Development Agent with deep experience in VC fundraising outreach. You write warm, compelling, concise investor emails that get responses.';
+  var userMsg='Draft a compelling, personalized investor outreach email for a fundraising campaign.\n'+(subject?'Subject line hint: '+subject:'')+'\n'+(body?'Email template / context: '+body:'')+'\n\nWrite a polished, investor-grade outreach email that:\n- Opens with a personalized hook (use {{investor_name}} and {{firm}} placeholders)\n- Clearly states the ask and opportunity in 2-3 sentences\n- Shows traction and social proof\n- Has a clear, low-friction CTA (e.g. 15-min call)\n- Is under 200 words total\n\nFormat:\nSubject: [subject line]\n---\n[email body with {{investor_name}}, {{firm}}, {{stage}} placeholders]';
+  try{
+    var reply=await callClaude(sys,userMsg,800);
+    out.textContent=reply;
+  }catch(e){out.textContent='Error: '+e.message;}
+  btn.disabled=false;btn.innerHTML='Draft with AI';
+}
+window.draftOutreachAI=draftOutreachAI;
+
+function useAIDraft(){
+  var draftText=document.getElementById('oe-ai-output').textContent;
+  if(!draftText) return;
+  var lines=draftText.split('\n');
+  var subjLine=lines.find(function(l){return l.startsWith('Subject:');});
+  if(subjLine) document.getElementById('oe-subject').value=subjLine.replace('Subject:','').trim();
+  var bodyStart=lines.findIndex(function(l){return l.trim()==='---';});
+  if(bodyStart>=0){
+    document.getElementById('oe-body').value=lines.slice(bodyStart+1).join('\n').trim();
+  } else {
+    document.getElementById('oe-body').value=draftText.replace(subjLine||'','').replace('---','').trim();
+  }
+  showToast('Draft applied');
+}
+window.useAIDraft=useAIDraft;
+
+function sendOutreach(){
+  var subject=document.getElementById('oe-subject').value.trim();
+  var body=document.getElementById('oe-body').value.trim();
+  if(!subject||!body){showToast('Enter subject and body first');return;}
+  var selected=Array.from(document.querySelectorAll('#oe-investor-list input[type=checkbox]:checked')).map(function(cb){return parseInt(cb.value);});
+  if(!selected.length){showToast('Select at least one investor');return;}
+  var investors=getCrmData();
+  var log=getOutreachLog();
+  var now=new Date().toLocaleDateString();
+  selected.forEach(function(idx){
+    var inv=investors[idx];
+    if(!inv) return;
+    var personalSubject=subject.replace(/\{\{investor_name\}\}/g,inv.name).replace(/\{\{firm\}\}/g,inv.firm||'').replace(/\{\{stage\}\}/g,inv.stage||'');
+    log.push({date:now,investorName:inv.name,firm:inv.firm||'',subject:personalSubject,status:'Sent',response:'--'});
+  });
+  saveOutreachLog(log);renderOutreachLog();
+  showToast('Sent to '+selected.length+' investor'+(selected.length>1?'s':'')+'! (simulated)');
+}
+window.sendOutreach=sendOutreach;
+
+function renderOutreachLog(){
+  var log=getOutreachLog();
+  var empty=document.getElementById('oe-log-empty');
+  var table=document.getElementById('oe-log-table');
+  var tbody=document.getElementById('oe-log-tbody');
+  if(!log.length){empty.style.display='block';table.style.display='none';return;}
+  empty.style.display='none';table.style.display='';
+  tbody.innerHTML=log.slice().reverse().map(function(entry,i){
+    var realIdx=log.length-1-i;
+    return '<tr>'+
+      '<td style="color:var(--tx3);font-size:12px">'+esc(entry.date)+'</td>'+
+      '<td style="font-weight:600">'+esc(entry.investorName)+'</td>'+
+      '<td style="color:var(--tx2)">'+esc(entry.firm)+'</td>'+
+      '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">'+esc(entry.subject)+'</td>'+
+      '<td><span class="badge badge-bl">'+esc(entry.status)+'</span></td>'+
+      '<td>'+
+        '<select style="width:130px;padding:4px 8px;font-size:11px;background:var(--bg3)" onchange="updateOutreachResponse('+realIdx+',this.value)">'+
+          '<option '+(entry.response==='--'?'selected':'')+'>--</option>'+
+          '<option '+(entry.response==='Replied'?'selected':'')+'>Replied</option>'+
+          '<option '+(entry.response==='Meeting Booked'?'selected':'')+'>Meeting Booked</option>'+
+          '<option '+(entry.response==='Passed'?'selected':'')+'>Passed</option>'+
+          '<option '+(entry.response==='No response'?'selected':'')+'>No response</option>'+
+        '</select>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function updateOutreachResponse(idx,val){
+  var log=getOutreachLog();
+  if(log[idx]) log[idx].response=val;
+  saveOutreachLog(log);showToast('Response updated');
+}
+window.updateOutreachResponse=updateOutreachResponse;
+</script>
+
+<!-- AGENT PANEL SCRIPT -->
+<script>
+(function(){
+'use strict';
+var AP_KEY='company-os-agent-tasks';
+var AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Fundraising'},
+  {name:'Investor Relations',emoji:'📑',dept:'Finance & Fundraising'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Fundraising'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Fundraising'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Fundraising'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Fundraising'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Fundraising'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Fundraising'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Fundraising'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Fundraising'},
+  {name:'Contract Manager',emoji:'📃',dept:'Legal & Compliance'},
+  {name:'Legal Counsel',emoji:'🏛️',dept:'Legal & Compliance'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Compliance Officer',emoji:'📋',dept:'Legal & Compliance'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Legal & Compliance'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Operations'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Operations'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security'},
+  {name:'CISO',emoji:'🔐',dept:'Security'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'}
+];
+
+var apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch(e){return{};}}
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d));}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||'';}
+
+function openAgentPanel(name,emoji,role){
+  var a=emoji?{name:name,emoji:emoji,role:role}:(AP_AGENTS.find(function(x){return x.name===name;})||{name:name,emoji:'🤖',dept:'',role:''});
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(function(t){
+    var tabEl=document.getElementById('ap-tab-'+t);
+    var contEl=document.getElementById('ap-tc-'+t);
+    if(tabEl) tabEl.classList.toggle('active',t===tab);
+    if(contEl) contEl.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent) return;
+  var tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  var done=tasks.filter(function(t){return t.done;}).length,open=tasks.length-done;
+  var pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent) return;
+  var tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  var list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet.</div>';return;}
+  list.innerHTML=tasks.map(function(t,i){
+    return '<div class="ap-task-item" id="ap-ti-'+i+'">'+
+      '<div class="ap-chk '+(t.done?'done':'')+'" onclick="apToggle('+i+')">'+(t.done?'✓':'')+'</div>'+
+      '<div class="ap-task-body">'+
+        '<div class="ap-task-title '+(t.done?'done':'')+'">'+t.title.replace(/</g,'&lt;')+'</div>'+
+        (t.output?'<div class="ap-task-expand" onclick="apToggleOutput('+i+')">Show AI output</div><div class="ap-task-output" id="ap-to-'+i+'">'+t.output.replace(/</g,'&lt;')+'</div>':'')+
+        '<div class="ap-task-meta">'+new Date(t.createdAt).toLocaleDateString()+'</div>'+
+      '</div>'+
+      '<button class="ap-task-del" onclick="apDelete('+i+')">Del</button>'+
+    '</div>';
+  }).join('');
+}
+
+function apToggleOutput(idx){
+  var out=document.getElementById('ap-to-'+idx);
+  var exp=out?out.previousElementSibling:null;
+  if(!out) return;
+  var open=out.classList.toggle('open');
+  if(exp) exp.textContent=open?'Hide AI output':'Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent) return;
+  var tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(function(t){return t.output&&t.output.length>0;}).reverse();
+  var list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet.</div>';return;}
+  list.innerHTML=tasks.map(function(t){
+    return '<div class="ap-history-item">'+
+      '<div class="ap-history-date">'+new Date(t.completedAt||t.createdAt).toLocaleString()+'</div>'+
+      '<div class="ap-history-prompt">'+t.title.replace(/</g,'&lt;')+'</div>'+
+      '<div class="ap-history-output">'+t.output.replace(/</g,'&lt;')+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent) return;
+  var all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent) return;
+  var all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent) return;
+  var inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title) return;
+  var all=apGetAll();
+  if(!all[apCurrentAgent.name]) all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent) return;
+  var prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt) return;
+  var key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  var btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite;vertical-align:middle"></span> Running...';
+  btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  var sys='You are '+apCurrentAgent.name+', a '+(apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent')+'. Be expert, concise, and actionable.';
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    var d=await r.json();
+    var reply=(d.content&&d.content[0]&&d.content[0].text)||JSON.stringify(d);
+    var out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    var all=apGetAll();
+    if(!all[apCurrentAgent.name]) all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history') apRenderHistory();
+  }catch(e){
+    var outEl=document.getElementById('ap-run-output');
+    outEl.textContent='Error: '+e.message;outEl.style.display='block';
+  }
+  inner.textContent='Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+function apExportTasks(){
+  var all=apGetAll();
+  var blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  var q=document.getElementById('ap-picker-search').value.toLowerCase();
+  var all=apGetAll();
+  var agents=q?AP_AGENTS.filter(function(a){return a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q);}):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(function(a){
+    var tasks=(all[a.name]||[]),done=tasks.filter(function(t){return t.done;}).length;
+    var badge=tasks.length?'<span class="ap-picker-item-tasks">'+done+'/'+tasks.length+'</span>':'';
+    var safeName=a.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div class="ap-picker-item" onclick="apPickerSelect(\''+safeName+'\')">'+
+      '<span class="ap-picker-item-emoji">'+a.emoji+'</span>'+
+      '<div style="flex:1;min-width:0"><div class="ap-picker-item-name">'+a.name+'</div><div class="ap-picker-item-dept">'+a.dept+'</div></div>'+
+      badge+'</div>';
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  var a=AP_AGENTS.find(function(x){return x.name===name;});
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+var apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  var grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(function(a){
+    var sel=apBulkSelected.has(a.name);
+    var safeName=a.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div class="ap-bulk-agent-item '+(sel?'selected':'')+'" onclick="apBulkToggle(\''+safeName+'\')">'+
+      '<input type="checkbox" '+(sel?'checked':'')+' onclick="event.stopPropagation();apBulkToggle(\''+safeName+'\')">'+
+      '<span>'+a.emoji+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+a.name+'</span>'+
+    '</div>';
+  }).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(function(a){return a.name;})):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  var prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  var key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  var btn=document.getElementById('ap-bulk-run-btn');
+  var prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  var agents=AP_AGENTS.filter(function(a){return apBulkSelected.has(a.name);});
+  var all=apGetAll();
+  var done=0;
+  for(var i=0;i<agents.length;i++){
+    var a=agents[i];
+    prog.textContent='Running '+a.emoji+' '+a.name+'... ('+done+'/'+agents.length+')';
+    var sys='You are '+a.name+', a '+a.dept+' specialist. Be expert, concise, and actionable.';
+    try{
+      var r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      var d=await r.json();
+      var reply=(d.content&&d.content[0]&&d.content[0].text)||'Error';
+      if(!all[a.name]) all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name]) all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent='Done! Ran '+done+' agents.';
+  btn.disabled=false;
+  if(apCurrentAgent){apRenderTasks();apRenderStats();apRenderHistory();}
+}
+window.apRunBulk=apRunBulk;
+})();
+</script>
+
+<!-- Agent Panel HTML -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">&#9889;</button>
+      <button class="ap-panel-close" onclick="apClose()">&#x2715;</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything to run against this agent..."></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">&#9654; Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>Agent Tasks &mdash; Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">&#x2715;</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>Bulk Run &mdash; Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.9rem" onclick="apCloseBulk()">&#x2715;</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 fundraising priorities?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Company Intelligence — Module 9</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;
+  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;
+  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;
+  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;
+  --pu:#a78bfa;--cy:#22d3ee;--or:#fb923c;
+  --r:10px;--rl:14px;
+}
+\n*{box-sizing:border-box;margin:0;padding:0}\n:root{\n  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;\n  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;\n  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;\n  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;\n  --pu:#a78bfa;--cy:#22d3ee;--or:#fb923c;\n  --r:10px;--rl:14px;\n}\nbody{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}\n.app{max-width:1320px;margin:0 auto;padding:20px 24px}\n.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px}\n.topbar-left{display:flex;flex-direction:column;gap:2px}\n.topbar-title{font-size:18px;font-weight:700;color:var(--tx)}\n.topbar-sub{font-size:11px;color:var(--tx3)}\n.badge{background:var(--bg3);border:1px solid var(--bd2);color:var(--pu);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap}\n.topbar-right{display:flex;align-items:center;gap:8px}\n.api-input{background:var(--bg2);border:1px solid var(--bd);color:var(--tx);border-radius:var(--r);padding:6px 10px;font-size:12px;width:220px}\n.api-input:focus{outline:none;border-color:var(--bd2)}\n.api-save{background:var(--pu);color:#fff;border:none;border-radius:var(--r);padding:6px 12px;font-size:12px;cursor:pointer}\n.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:4px;width:fit-content}\n.tab{padding:7px 14px;font-size:12px;font-weight:500;border-radius:10px;border:1px solid transparent;color:var(--tx3);cursor:pointer;background:transparent;transition:all .15s}\n.tab:hover{color:var(--tx2)}\n.tab.active{background:var(--bg3);border-color:var(--bd2);color:var(--tx)}\n.panel{display:none}.panel.active{display:block}\n.card{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:16px}\n.card+.card{margin-top:12px}\n.btn{background:var(--pu);color:#fff;border:none;border-radius:var(--r);padding:8px 16px;font-size:13px;cursor:pointer;transition:opacity .15s}\n.btn:hover{opacity:.85}\n.btn-sm{padding:4px 10px;font-size:11px}\n.btn-gr{background:var(--gr)}\n.btn-am{background:var(--am);color:#000}\n.btn-rd{background:var(--rd)}\n.btn-cy{background:var(--cy);color:#000}\n.btn-bl{background:var(--bl);color:#000}\n.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}\n.row{display:flex;gap:12px;align-items:center}\n.row-sb{display:flex;justify-content:space-between;align-items:center}\nlabel{font-size:12px;color:var(--tx2);display:block;margin-bottom:4px}\ninput,select,textarea{background:var(--bg3);border:1px solid var(--bd2);color:var(--tx);border-radius:var(--r);padding:7px 10px;font-size:13px;width:100%}\ninput:focus,select:focus,textarea:focus{outline:none;border-color:var(--pu)}\ntextarea{resize:vertical;min-height:70px}\n.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}\n.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}\n.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}\n.sec-title{font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}\n.progress-wrap{background:var(--bg4);border-radius:4px;height:6px;width:100%;margin-top:4px}\n.progress-bar{height:6px;border-radius:4px;transition:width .3s}\n.tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600}\n.tag-gr{background:rgba(34,197,94,.15);color:var(--gr)}\n.tag-am{background:rgba(245,158,11,.15);color:var(--am)}\n.tag-rd{background:rgba(239,68,68,.15);color:var(--rd)}\n.tag-bl{background:rgba(96,165,250,.15);color:var(--bl)}\n.tag-pu{background:rgba(167,139,250,.15);color:var(--pu)}\n.tag-cy{background:rgba(34,211,238,.15);color:var(--cy)}\n.tag-or{background:rgba(251,146,60,.15);color:var(--or)}\n.divider{border:none;border-top:1px solid var(--bd);margin:12px 0}\n.table{width:100%;border-collapse:collapse;font-size:12px}\n.table th{color:var(--tx3);font-weight:500;padding:6px 10px;text-align:left;border-bottom:1px solid var(--bd)}\n.table td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--tx2);vertical-align:middle}\n.table tr:hover td{background:var(--bg3)}\n.table tr:last-child td{border-bottom:none}\n.editable{cursor:pointer;border-bottom:1px dashed var(--tx3);display:inline-block}\n.editable:hover{color:var(--tx);border-color:var(--tx2)}\n.ai-output{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:12px;color:var(--tx2);white-space:pre-wrap;line-height:1.6;max-height:300px;overflow-y:auto;margin-top:10px}\n.stat-num{font-size:22px;font-weight:700;color:var(--tx)}\n.stat-label{font-size:11px;color:var(--tx3);margin-top:2px}\n.stat-sub{font-size:11px;color:var(--tx2);margin-top:2px}\n.okr-obj{margin-bottom:16px}\n.kr-row{display:grid;grid-template-columns:1fr 80px 80px 90px 80px auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}\n.kr-row:last-child{border-bottom:none}\n.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:center;justify-content:center}\n.modal{background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--rl);padding:20px;width:520px;max-height:80vh;overflow-y:auto}\n.modal-title{font-size:15px;font-weight:600;margin-bottom:16px}\n.form-group{margin-bottom:12px}\n.kpi-group{margin-bottom:20px}\n.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}\n.kpi-card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px}\n.kpi-label{font-size:10px;color:var(--tx3);font-weight:500;margin-bottom:4px}\n.kpi-val{font-size:18px;font-weight:700}\n.kpi-target{font-size:10px;color:var(--tx3);margin-top:2px}\n.trend-up{color:var(--gr)}\n.trend-dn{color:var(--rd)}\n.trend-fl{color:var(--am)}\n.cal-event{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd)}\n.cal-event:last-child{border-bottom:none}\n.cal-date-box{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:6px 10px;text-align:center;min-width:48px}\n.cal-day{font-size:18px;font-weight:700;line-height:1}\n.cal-mo{font-size:10px;color:var(--tx3);text-transform:uppercase}\n.cal-upcoming{border-left:2px solid var(--am)}\n.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--bd2);border-top-color:var(--pu);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}\n@keyframes spin{to{transform:rotate(360deg)}}\n.budget-row{display:grid;grid-template-columns:160px 110px 110px 1fr 80px 80px auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}\n.budget-row.total-row{border-top:2px solid var(--bd2);font-weight:600;color:var(--tx)}\n.decision-row{cursor:pointer}\n.decision-detail{background:var(--bg3);padding:12px;border-radius:var(--r);margin-top:6px;font-size:12px;color:var(--tx2);line-height:1.6}\n
+/* ==AGENT-PANEL-INJECTED== */
+
+/* ==PANEL-ENHANCED== */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;title:'Bulk Run'}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px}
+.ap-float-btn:hover{opacity:.85}
+
+
+</style>
+</head>
+<body>
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;font-family:system-ui,sans-serif">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+
+  <button class="ap-float-btn" onclick="apOpenPicker()">📋 Agent Tasks</button>
+</nav>
+
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="row" style="gap:10px;align-items:center">
+        <span class="topbar-title">Company Intelligence</span>
+        <span class="badge">Module 9 — Company Intelligence</span>
+      </div>
+      <div class="topbar-sub">OKRs · KPIs · Decisions · Scorecards · Budget · Calendar</div>
+    </div>
+    <div class="topbar-right">
+      <input class="api-input" type="password" id="apiKeyInput" placeholder="Anthropic API Key…">
+      <button class="api-save" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('okrs',this)">🎯 OKRs</button>
+    <button class="tab" onclick="switchTab('kpis',this)">📊 KPIs</button>
+    <button class="tab" onclick="switchTab('decisions',this)">⚖️ Decisions</button>
+    <button class="tab" onclick="switchTab('scorecards',this)">🏆 Scorecards</button>
+    <button class="tab" onclick="switchTab('budget',this)">💰 Budget</button>
+    <button class="tab" onclick="switchTab('calendar',this)">📅 Calendar</button>
+  </div>
+
+  <!-- OKRs -->
+  <div id="panel-okrs" class="panel active">
+    <div class="row-sb" style="margin-bottom:14px">
+      <div class="sec-title" style="margin:0">Objectives & Key Results</div>
+      <div class="row" style="gap:8px">
+        <button class="btn btn-sm" onclick="openOKRAIModal()">✨ Generate OKRs with AI</button>
+        <button class="btn btn-sm btn-gr" onclick="openAddObjectiveModal()">+ Add Objective</button>
+      </div>
+    </div>
+    <div id="okr-list">
+</div>
+    <div id="okr-ai-output">
+</div>
+  </div>
+
+  <!-- KPIs -->
+  <div id="panel-kpis" class="panel">
+    <div class="row-sb" style="margin-bottom:14px">
+      <div class="sec-title" style="margin:0">KPI Dashboard</div>
+      <button class="btn btn-sm" onclick="runCFOAnalysis()">🧮 Analyze with CFO</button>
+    </div>
+    <div id="kpi-dashboard">
+</div>
+    <div id="kpi-ai-output">
+</div>
+  </div>
+
+  <!-- Decisions -->
+  <div id="panel-decisions" class="panel">
+    <div class="row-sb" style="margin-bottom:14px">
+      <div class="sec-title" style="margin:0">Decision Log</div>
+      <button class="btn btn-sm btn-gr" onclick="openAddDecisionModal()">+ Log Decision</button>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="row" style="gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+<label>Outcome</label>
+          <select id="dec-filter-outcome" onchange="renderDecisions()">
+            <option value="">All Outcomes</option>
+            <option>Pending</option>
+<option>Positive</option>
+<option>Negative</option>
+<option>Mixed</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:120px">
+<label>Agent</label>
+          <select id="dec-filter-agent" onchange="renderDecisions()">
+<option value="">All Agents</option>
+</select>
+        </div>
+        <div style="flex:1;min-width:120px">
+<label>From</label>
+          <input type="date" id="dec-filter-from" onchange="renderDecisions()">
+        </div>
+        <div style="flex:1;min-width:120px">
+<label>To</label>
+          <input type="date" id="dec-filter-to" onchange="renderDecisions()">
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="table">
+        <thead>
+<tr>
+          <th>Title</th>
+<th>Date</th>
+<th>Decision Maker</th>
+<th>Outcome</th>
+<th>Actions</th>
+        </tr>
+</thead>
+        <tbody id="dec-tbody">
+</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Scorecards -->
+  <div id="panel-scorecards" class="panel">
+    <div class="row-sb" style="margin-bottom:14px">
+      <div class="sec-title" style="margin:0">Agent Scorecards</div>
+      <button class="btn btn-sm" onclick="refreshScorecards()">↻ Refresh</button>
+    </div>
+    <div id="scorecard-stats" class="grid4" style="margin-bottom:16px">
+</div>
+    <div id="scorecard-leaderboard" style="margin-bottom:16px">
+</div>
+    <div id="scorecard-cards" class="grid3">
+</div>
+  </div>
+
+  <!-- Budget -->
+  <div id="panel-budget" class="panel">
+    <div class="row-sb" style="margin-bottom:14px">
+      <div class="sec-title" style="margin:0">Budget Tracker</div>
+      <button class="btn btn-sm" onclick="runBudgetCFO()">💼 CFO Analysis</button>
+    </div>
+    <div class="card" style="padding:0">
+      <div style="padding:10px 12px;display:grid;grid-template-columns:160px 110px 110px 1fr 80px 80px 80px;gap:8px;border-bottom:1px solid var(--bd2)">
+        <span style="font-size:11px;color:var(--tx3);font-weight:600">DEPARTMENT</span>
+        <span style="font-size:11px;color:var(--tx3);font-weight:600">ALLOCATED</span>
+        <span style="font-size:11px;color:var(--tx3);font-weight:600">SPENT</span>
+        <span style="font-size:11px;color:var(--tx3);font-weight:600">PROGRESS</span>
+        <span style="font-size:11px;color:var(--tx3);font-weight:600">VARIANCE</span>
+        <span style="font-size:11px;color:var(--tx3);font-weight:600">STATUS</span>
+        <span style="font-size:11px;color:var(--tx3);font-weight:600">
+</span>
+      </div>
+      <div id="budget-rows" style="padding:0 12px">
+</div>
+    </div>
+    <div id="budget-ai-output">
+</div>
+  </div>
+
+  <!-- Calendar -->
+  <div id="panel-calendar" class="panel">
+    <div class="row-sb" style="margin-bottom:14px">
+      <div class="sec-title" style="margin:0">Company Calendar</div>
+      <div class="row" style="gap:8px">
+        <button class="btn btn-sm" onclick="genQPlan()">🗓 Generate Q-Plan</button>
+        <button class="btn btn-sm btn-gr" onclick="openAddEventModal()">+ Add Event</button>
+      </div>
+    </div>
+    <div id="cal-list">
+</div>
+    <div id="cal-ai-output">
+</div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal" id="modal-content" onclick="event.stopPropagation()">
+</div>
+</div>
+
+<script>
+// ─── Utilities ───────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const ls = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+const uid = ()=>Math.random().toString(36).slice(2,9);
+const fmt$ = n=>n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+(n/1e3).toFixed(0)+'K':'$'+n;
+const fmtN = (n,u)=>u==='$'?fmt$(n):n+u;
+
+function saveApiKey(){
+  const k=$('apiKeyInput').value.trim();
+  if(k){ls.set('company-os-api-key',k);$('apiKeyInput').value='';alert('API key saved.');}
+}
+
+function getMemoryContext(){
+  try{
+    const mems=JSON.parse(localStorage.getItem('company-os-memories')||'[]');
+    if(!mems.length) return '';
+    const recent=mems.slice(-10).map(m=>`[${m.agent||''}] ${m.content||m.text||''}`).join('\
+');
+    return '\
+\
+## Company Memory Context (recent agent interactions):\
+'+recent;
+  }catch{return '';}
+}
+
+async function callClaude(systemPrompt, userMsg, btn){
+  const key=ls.get('company-os-api-key','');
+  if(!key){alert('Please enter your Anthropic API key first.');return null;}
+  const sys=systemPrompt+getMemoryContext();
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner">
+</span>Thinking…';}
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json',
+                'anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,
+        messages:[{role:'user',content:userMsg}],
+        system:sys})
+    });
+    const data=await res.json();
+    if(data.content&&data.content[0]){return data.content[0].text;}
+    return 'Error: '+JSON.stringify(data);
+  }catch(e){return 'Error: '+e.message;}
+  finally{if(btn){btn.disabled=false;btn.textContent=btn.dataset.label||'Analyze';}}
+}
+
+function switchTab(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  $('panel-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+function openModal(html){
+  $('modal-content').innerHTML=html;
+  $('modal-overlay').style.display='flex';
+}
+function closeModal(e){
+  if(!e||e.target===$('modal-overlay')) $('modal-overlay').style.display='none';
+}
+
+// ─── OKRs ────────────────────────────────────────────────────────────────────
+const OKR_KEY='company-os-okrs';
+function getOKRs(){return ls.get(OKR_KEY,[]);}
+function saveOKRs(d){ls.set(OKR_KEY,d);}
+
+function pct(cur,tgt){if(!tgt||tgt===0)return 0;return Math.min(100,Math.round((cur/tgt)*100));}
+function okrStatusTag(p){
+  if(p>=70)return '<span class="tag tag-gr">On Track</span>';
+  if(p>=40)return '<span class="tag tag-am">At Risk</span>';
+  return '<span class="tag tag-rd">Behind</span>';
+}
+function barColor(p){return p>=70?'var(--gr)':p>=40?'var(--am)':'var(--rd)';}
+
+function renderOKRs(){
+  const objs=getOKRs();
+  const el=$('okr-list');
+  if(!objs.length){el.innerHTML='<div class="card" style="color:var(--tx3);text-align:center;padding:40px">No objectives yet. Add one or generate with AI.</div>';return;}
+  el.innerHTML=objs.map((obj,oi)=>{
+    const krPcts=obj.krs.map(kr=>pct(kr.current,kr.target));
+    const avgPct=krPcts.length?Math.round(krPcts.reduce((a,b)=>a+b,0)/krPcts.length):0;
+    return `<div class="card okr-obj">
+      <div class="row-sb" style="margin-bottom:10px">
+        <div>
+          <div style="font-size:14px;font-weight:600">${obj.title}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">${obj.description||''}</div>
+        </div>
+        <div class="row" style="gap:8px">
+          ${okrStatusTag(avgPct)}
+          <span style="font-size:13px;font-weight:600;color:var(--tx)">${avgPct}%</span>
+          <button class="btn btn-sm btn-ghost" onclick="openEditObjectiveModal(${oi})">Edit</button>
+          <button class="btn btn-sm btn-rd btn-sm" onclick="deleteObjective(${oi})">✕</button>
+        </div>
+      </div>
+      <div class="progress-wrap" style="margin-bottom:12px">
+<div class="progress-bar" style="width:${avgPct}%;background:${barColor(avgPct)}">
+</div>
+</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Key Results</div>
+      ${obj.krs.map((kr,ki)=>{
+        const p=pct(kr.current,kr.target);
+        return `<div class="kr-row">
+          <div>
+<div style="font-size:12px;color:var(--tx)">${kr.description}</div>
+<div style="font-size:10px;color:var(--tx3)">${kr.owner}</div>
+</div>
+          <div style="font-size:12px;color:var(--tx);text-align:right">${fmtN(kr.current,kr.unit)}</div>
+          <div style="font-size:12px;color:var(--tx3);text-align:right">/ ${fmtN(kr.target,kr.unit)}</div>
+          <div>
+<div class="progress-wrap">
+<div class="progress-bar" style="width:${p}%;background:${barColor(p)}">
+</div>
+</div>
+<div style="font-size:10px;color:var(--tx3);text-align:right;margin-top:2px">${p}%</div>
+</div>
+          <div>${okrStatusTag(p)}</div>
+          <div class="row" style="gap:4px">
+            <button class="btn btn-sm btn-ghost" style="padding:3px 7px" onclick="openEditKRModal(${oi},${ki})">✎</button>
+            <button class="btn btn-sm btn-rd" style="padding:3px 7px" onclick="deleteKR(${oi},${ki})">✕</button>
+          </div>
+        </div>`;
+      }).join('')}
+      <button class="btn btn-sm btn-ghost" style="margin-top:8px" onclick="openAddKRModal(${oi})">+ Add Key Result</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteObjective(oi){if(!confirm('Delete objective?'))return;const d=getOKRs();d.splice(oi,1);saveOKRs(d);renderOKRs();}
+function deleteKR(oi,ki){const d=getOKRs();d[oi].krs.splice(ki,1);saveOKRs(d);renderOKRs();}
+
+function openAddObjectiveModal(){
+  openModal(`<div class="modal-title">Add Objective</div>
+    <div class="form-group">
+<label>Title</label>
+<input id="m-obj-title" placeholder="e.g. Scale Revenue to $10M ARR">
+</div>
+    <div class="form-group">
+<label>Description</label>
+<input id="m-obj-desc" placeholder="Brief context">
+</div>
+    <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-sm" onclick="saveNewObjective()">Save</button>
+    </div>`);
+}
+
+function saveNewObjective(){
+  const t=$('m-obj-title').value.trim();
+  if(!t)return;
+  const d=getOKRs();
+  d.push({id:uid(),title:t,description:$('m-obj-desc').value.trim(),krs:[]});
+  saveOKRs(d);closeModal();renderOKRs();
+}
+
+function openEditObjectiveModal(oi){
+  const obj=getOKRs()[oi];
+  openModal(`<div class="modal-title">Edit Objective</div>
+    <div class="form-group">
+<label>Title</label>
+<input id="m-obj-title" value="${obj.title}">
+</div>
+    <div class="form-group">
+<label>Description</label>
+<input id="m-obj-desc" value="${obj.description||''}">
+</div>
+    <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-sm" onclick="saveEditObjective(${oi})">Save</button>
+    </div>`);
+}
+function saveEditObjective(oi){
+  const d=getOKRs();
+  d[oi].title=$('m-obj-title').value.trim();
+  d[oi].description=$('m-obj-desc').value.trim();
+  saveOKRs(d);closeModal();renderOKRs();
+}
+
+function krModalHTML(oi,kr){
+  return `<div class="form-group">
+<label>Description</label>
+<input id="m-kr-desc" value="${kr?kr.description:''}" placeholder="e.g. Increase ARR">
+</div>
+    <div class="grid2">
+      <div class="form-group">
+<label>Owner / Dept</label>
+<input id="m-kr-owner" value="${kr?kr.owner:''}" placeholder="Engineering">
+</div>
+      <div class="form-group">
+<label>Unit</label>
+        <select id="m-kr-unit">
+          ${['%','$','#','x'].map(u=>`<option ${kr&&kr.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="form-group">
+<label>Current Value</label>
+<input id="m-kr-cur" type="number" value="${kr?kr.current:0}">
+</div>
+      <div class="form-group">
+<label>Target Value</label>
+<input id="m-kr-tgt" type="number" value="${kr?kr.target:100}">
+</div>
+    </div>`;
+}
+
+function openAddKRModal(oi){
+  openModal(`<div class="modal-title">Add Key Result</div>${krModalHTML(oi,null)}
+    <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-sm" onclick="saveNewKR(${oi})">Save</button>
+    </div>`);
+}
+function saveNewKR(oi){
+  const d=getOKRs();
+  d[oi].krs.push({id:uid(),description:$('m-kr-desc').value.trim(),owner:$('m-kr-owner').value.trim(),
+    unit:$('m-kr-unit').value,current:parseFloat($('m-kr-cur').value)||0,target:parseFloat($('m-kr-tgt').value)||100});
+  saveOKRs(d);closeModal();renderOKRs();
+}
+function openEditKRModal(oi,ki){
+  const kr=getOKRs()[oi].krs[ki];
+  openModal(`<div class="modal-title">Edit Key Result</div>${krModalHTML(oi,kr)}
+    <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-sm" onclick="saveEditKR(${oi},${ki})">Save</button>
+    </div>`);
+}
+function saveEditKR(oi,ki){
+  const d=getOKRs();
+  d[oi].krs[ki]={...d[oi].krs[ki],description:$('m-kr-desc').value.trim(),owner:$('m-kr-owner').value.trim(),
+    unit:$('m-kr-unit').value,current:parseFloat($('m-kr-cur').value)||0,target:parseFloat($('m-kr-tgt').value)||100};
+  saveOKRs(d);closeModal();renderOKRs();
+}
+
+function openOKRAIModal(){
+  openModal(`<div class="modal-title">✨ Generate OKRs with AI</div>
+    <div class="form-group">
+<label>Company Context (stage, industry, goals)</label>
+      <textarea id="m-ai-ctx" placeholder="e.g. B2B SaaS startup, Series A, $2M ARR, targeting $8M ARR, 20 employees, main focus: growth and product-market fit">
+</textarea>
+    </div>
+    <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-sm" id="m-ai-btn" data-label="Generate OKRs" onclick="generateOKRsAI()">Generate OKRs</button>
+    </div>`);
+}
+
+async function generateOKRsAI(){
+  const ctx=$('m-ai-ctx').value.trim();
+  if(!ctx)return;
+  const btn=$('m-ai-btn');
+  const result=await callClaude(
+    'You are a world-class CEO. You help companies set ambitious, measurable OKRs. Be concise.',
+    `Given this company context: "${ctx}"\
+\
+Suggest exactly 3 Objectives each with 3-4 Key Results. Format as JSON array:\
+[{title,description,krs:[{description,owner,unit,current,target}]}]`,
+    btn);
+  closeModal();
+  if(!result)return;
+  try{
+    const json=result.match(/\\[[\\s\\S]*\\]/);
+    if(json){
+      const objs=JSON.parse(json[0]);
+      const d=getOKRs();
+      objs.forEach(o=>{d.push({id:uid(),title:o.title,description:o.description,krs:(o.krs||[]).map(k=>({id:uid(),...k}))});});
+      saveOKRs(d);renderOKRs();
+    }
+  }catch{
+    $('okr-ai-output').innerHTML=`<div class="ai-output">${result}</div>`;
+  }
+}
+
+// ─── KPIs ─────────────────────────────────────────────────────────────────────
+const KPI_KEY='company-os-kpis';
+const KPI_DEFAULTS={
+  Revenue:[
+    {id:'arr',label:'ARR',unit:'$',current:2000000,target:8000000,trend:'up'},
+    {id:'mrr',label:'MRR',unit:'$',current:166667,target:666667,trend:'up'},
+    {id:'nrr',label:'NRR',unit:'%',current:108,target:120,trend:'flat'},
+    {id:'churn',label:'Churn Rate',unit:'%',current:3.2,target:2,trend:'down'}
+  ],
+  Growth:[
+    {id:'newcust',label:'New Customers/mo',unit:'#',current:12,target:30,trend:'up'},
+    {id:'cac',label:'CAC',unit:'$',current:4200,target:3000,trend:'down'},
+    {id:'ltv',label:'LTV',unit:'$',current:28000,target:40000,trend:'up'},
+    {id:'ltvcac',label:'LTV:CAC Ratio',unit:'x',current:6.7,target:10,trend:'up'}
+  ],
+  Product:[
+    {id:'dau',label:'DAU',unit:'#',current:840,target:2000,trend:'up'},
+    {id:'mau',label:'MAU',unit:'#',current:3200,target:8000,trend:'up'},
+    {id:'dmratio',label:'D/M Ratio',unit:'%',current:26,target:40,trend:'flat'}
+  ],
+  Operations:[
+    {id:'burn',label:'Burn Rate/mo',unit:'$',current:320000,target:300000,trend:'up'},
+    {id:'runway',label:'Cash Runway',unit:'#',current:18,target:24,trend:'down'}
+  ],
+  Sales:[
+    {id:'pipeline',label:'Pipeline Value',unit:'$',current:1400000,target:3000000,trend:'up'},
+    {id:'winrate',label:'Win Rate',unit:'%',current:22,target:35,trend:'flat'},
+    {id:'dealsize',label:'Avg Deal Size',unit:'$',current:18000,target:25000,trend:'up'}
+  ],
+  Team:[
+    {id:'headcount',label:'Headcount',unit:'#',current:22,target:40,trend:'up'},
+    {id:'openreqs',label:'Open Reqs',unit:'#',current:7,target:0,trend:'up'},
+    {id:'oar',label:'Offer Accept Rate',unit:'%',current:74,target:85,trend:'flat'}
+  ]
+};
+
+function getKPIs(){return ls.get(KPI_KEY,KPI_DEFAULTS);}
+function saveKPIs(d){ls.set(KPI_KEY,d);}
+
+function trendIcon(t,id){
+  // for metrics where lower is better (churn, cac, burn)
+  const lowerBetter=['churn','cac','burn','openreqs'];
+  const isLower=lowerBetter.includes(id);
+  if(t==='up')return isLower?'<span class="trend-dn">▲</span>':'<span class="trend-up">▲</span>';
+  if(t==='down')return isLower?'<span class="trend-up">▼</span>':'<span class="trend-dn">▼</span>';
+  return '<span class="trend-fl">—</span>';
+}
+
+function kpiColor(kpi){
+  const p=pct(kpi.current,kpi.target);
+  const lowerBetter=['churn','cac','burn','openreqs'];
+  if(lowerBetter.includes(kpi.id)){
+    return kpi.current<=kpi.target?'var(--gr)':kpi.current<=kpi.target*1.2?'var(--am)':'var(--rd)';
+  }
+  return p>=70?'var(--gr)':p>=40?'var(--am)':'var(--rd)';
+}
+
+function renderKPIs(){
+  const data=getKPIs();
+  const el=$('kpi-dashboard');
+  el.innerHTML=Object.entries(data).map(([grp,kpis])=>`
+    <div class="kpi-group">
+      <div class="sec-title">${grp}</div>
+      <div class="kpi-grid">
+        ${kpis.map((k,ki)=>`
+          <div class="kpi-card">
+            <div class="kpi-label">${k.label} ${trendIcon(k.trend,k.id)}</div>
+            <div class="kpi-val" style="color:${kpiColor(k)}" title="Click to edit" onclick="editKPIInline('${grp}',${ki},this)">
+              ${k.unit==='$'?fmt$(k.current):k.current+k.unit}
+            </div>
+            <div class="kpi-target">Target: ${k.unit==='$'?fmt$(k.target):k.target+k.unit}</div>
+            <div class="progress-wrap" style="margin-top:6px">
+              <div class="progress-bar" style="width:${Math.min(100,pct(k.current,k.target))}%;background:${kpiColor(k)}">
+</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function editKPIInline(grp,ki,el){
+  const data=getKPIs();
+  const k=data[grp][ki];
+  const inp=document.createElement('input');
+  inp.type='number';inp.value=k.current;inp.style.cssText='width:80px;font-size:14px;font-weight:700;background:var(--bg4);color:var(--tx);border:1px solid var(--pu);border-radius:6px;padding:2px 6px';
+  el.replaceWith(inp);inp.focus();
+  const save=()=>{
+    data[grp][ki].current=parseFloat(inp.value)||0;
+    saveKPIs(data);renderKPIs();
+  };
+  inp.addEventListener('blur',save);inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
+}
+
+async function runCFOAnalysis(){
+  const data=getKPIs();
+  const summary=Object.entries(data).map(([g,ks])=>`${g}: `+ks.map(k=>`${k.label}=${k.current}${k.unit}(target:${k.target}${k.unit})`).join(', ')).join('\
+');
+  const btn=document.querySelector('#panel-kpis .btn');
+  btn.dataset.label=btn.textContent;
+  const result=await callClaude('You are the CFO of a fast-growing startup. Give a concise financial health assessment in 5-8 bullet points.',
+    `Here are our current KPIs:\
+${summary}\
+\
+Provide a CFO-level health assessment. Highlight risks, positives, and 3 priority actions.`,btn);
+  if(result) $('kpi-ai-output').innerHTML=`<div class="ai-output" style="margin-top:12px">
+<strong style="color:var(--bl)">CFO Analysis</strong>\
+\
+${result}</div>`;
+}
+
+// ─── Decisions ───────────────────────────────────────────────────────────────
+const DEC_KEY='company-os-decisions';
+const AGENTS=['👔 CEO','🧮 CFO','⚙️ CTO','📦 CPO','📣 CMO','🤝 CRO','🧑‍💼 Chief of Staff','📊 Head of Data','🛡 CISO'];
+function getDecisions(){return ls.get(DEC_KEY,[]);}
+function saveDecisions(d){ls.set(DEC_KEY,d);}
+
+function outcomeTag(o){
+  const map={Pending:'tag-bl',Positive:'tag-gr',Negative:'tag-rd',Mixed:'tag-am'};
+  return `<span class="tag ${map[o]||'tag-bl'}">${o}</span>`;
+}
+
+function renderDecisions(){
+  let data=getDecisions();
+  const fo=$('dec-filter-outcome').value;
+  const fa=$('dec-filter-agent').value;
+  const ff=$('dec-filter-from').value;
+  const ft=$('dec-filter-to').value;
+  if(fo)data=data.filter(d=>d.outcome===fo);
+  if(fa)data=data.filter(d=>d.agent===fa);
+  if(ff)data=data.filter(d=>d.date>=ff);
+  if(ft)data=data.filter(d=>d.date<=ft);
+  data.sort((a,b)=>b.date.localeCompare(a.date));
+
+  const agents=[...new Set(getDecisions().map(d=>d.agent))];
+  const sel=$('dec-filter-agent');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">All Agents</option>'+agents.map(a=>`<option ${a===cur?'selected':''}>${a}</option>`).join('');
+
+  const tb=$('dec-tbody');
+  if(!data.length){tb.innerHTML=`<tr>
+<td colspan="5" style="text-align:center;color:var(--tx3);padding:30px">No decisions logged yet.</td>
+</tr>`;return;}
+  tb.innerHTML=data.map((d,i)=>`
+    <tr class="decision-row" onclick="toggleDecisionDetail(${i})">
+      <td style="color:var(--tx);font-weight:500">${d.title}</td>
+      <td>${d.date}</td>
+      <td>${d.agent}</td>
+      <td>${outcomeTag(d.outcome)}</td>
+      <td>
+<div class="row" style="gap:4px">
+        <button class="btn btn-sm btn-ghost" style="padding:3px 7px" onclick="event.stopPropagation();openEditDecModal('${d.id}')">✎</button>
+        <button class="btn btn-sm btn-rd" style="padding:3px 7px" onclick="event.stopPropagation();deleteDecision('${d.id}')">✕</button>
+      </div>
+</td>
+    </tr>
+    <tr id="dec-detail-${i}" style="display:none">
+      <td colspan="5" style="padding:0">
+        <div class="decision-detail">
+          <strong>Summary:</strong> ${d.summary||'—'}<br>
+          <strong>Alternatives:</strong> ${d.alternatives||'—'}<br>
+          <strong>Rationale:</strong> ${d.rationale||'—'}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function toggleDecisionDetail(i){
+  const el=$('dec-detail-'+i);
+  if(el)el.style.display=el.style.display==='none'?'table-row':'none';
+}
+function deleteDecision(id){
+  if(!confirm('Delete this decision?'))return;
+  const d=getDecisions().filter(x=>x.id!==id);
+  saveDecisions(d);renderDecisions();
+}
+
+function decModalHTML(d){
+  return `
+    <div class="form-group">
+<label>Title</label>
+<input id="m-dec-title" value="${d?d.title:''}" placeholder="Decision title">
+</div>
+    <div class="grid2">
+      <div class="form-group">
+<label>Date</label>
+<input id="m-dec-date" type="date" value="${d?d.date:new Date().toISOString().slice(0,10)}">
+</div>
+      <div class="form-group">
+<label>Decision Maker</label>
+        <select id="m-dec-agent">${AGENTS.map(a=>`<option ${d&&d.agent===a?'selected':''}>${a}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-group">
+<label>Outcome</label>
+      <select id="m-dec-outcome">${['Pending','Positive','Negative','Mixed'].map(o=>`<option ${d&&d.outcome===o?'selected':''}>${o}</option>`).join('')}</select>
+    </div>
+    <div class="form-group">
+<label>Summary</label>
+<textarea id="m-dec-summary" placeholder="What was decided?">${d?d.summary:''}</textarea>
+</div>
+    <div class="form-group">
+<label>Alternatives Considered</label>
+<textarea id="m-dec-alt" placeholder="What else was considered?">${d?d.alternatives:''}</textarea>
+</div>
+    <div class="form-group">
+<label>Rationale</label>
+<textarea id="m-dec-rat" placeholder="Why this decision?">${d?d.rationale:''}</textarea>
+</div>`;
+}
+
+function openAddDecisionModal(){
+  openModal(`<div class="modal-title">Log Decision</div>${decModalHTML(null)}
+    <div class="row" style="gap:8px;justify-content:space-between;margin-top:16px">
+      <button class="btn btn-sm btn-cy" id="m-dec-ai-btn" data-label="Ask Agent to Draft" onclick="askAgentDraft()">🤖 Ask Agent to Draft</button>
+      <div class="row" style="gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-sm" onclick="saveNewDecision()">Save</button>
+      </div>
+    </div>`);
+}
+
+async function askAgentDraft(){
+  const title=$('m-dec-title').value.trim();
+  const agent=$('m-dec-agent').value;
+  if(!title){alert('Enter a decision title first.');return;}
+  const btn=$('m-dec-ai-btn');
+  btn.dataset.label=btn.textContent;
+  const result=await callClaude(`You are the ${agent} of a startup. Draft a concise decision log entry.`,
+    `Draft a decision log for: "${title}"\
+Include: summary (2-3 sentences), alternatives considered (2 options), rationale (2-3 sentences).\
+Format as JSON: {summary,alternatives,rationale}`,btn);
+  if(!result)return;
+  try{
+    const json=result.match(/\\{[\\s\\S]*\\}/);
+    if(json){
+      const obj=JSON.parse(json[0]);
+      if($('m-dec-summary'))$('m-dec-summary').value=obj.summary||'';
+      if($('m-dec-alt'))$('m-dec-alt').value=obj.alternatives||'';
+      if($('m-dec-rat'))$('m-dec-rat').value=obj.rationale||'';
+    }
+  }catch{}
+}
+
+function saveNewDecision(){
+  const t=$('m-dec-title').value.trim();
+  if(!t)return;
+  const d=getDecisions();
+  d.push({id:uid(),title:t,date:$('m-dec-date').value,agent:$('m-dec-agent').value,
+    outcome:$('m-dec-outcome').value,summary:$('m-dec-summary').value,
+    alternatives:$('m-dec-alt').value,rationale:$('m-dec-rat').value});
+  saveDecisions(d);closeModal();renderDecisions();
+}
+
+function openEditDecModal(id){
+  const d=getDecisions().find(x=>x.id===id);
+  if(!d)return;
+  openModal(`<div class="modal-title">Edit Decision</div>${decModalHTML(d)}
+    <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-sm" onclick="saveEditDecision('${id}')">Save</button>
+    </div>`);
+}
+function saveEditDecision(id){
+  const d=getDecisions();
+  const i=d.findIndex(x=>x.id===id);
+  if(i===-1)return;
+  d[i]={...d[i],title:$('m-dec-title').value.trim(),date:$('m-dec-date').value,agent:$('m-dec-agent').value,
+    outcome:$('m-dec-outcome').value,summary:$('m-dec-summary').value,
+    alternatives:$('m-dec-alt').value,rationale:$('m-dec-rat').value};
+  saveDecisions(d);closeModal();renderDecisions();
+}
+
+// ─── Scorecards ──────────────────────────────────────────────────────────────
+function getTasks(){return ls.get('company-os-tasks',[]);}
+
+function computeScorecard(tasks){
+  const agents={};
+  tasks.forEach(t=>{
+    const k=t.agentName||'Unknown';
+    if(!agents[k])agents[k]={name:k,emoji:t.agentEmoji||'🤖',total:0,completed:0,flagged:0,approved:0,reviewed:0,times:[]};
+    agents[k].total++;
+    if(t.status==='completed')agents[k].completed++;
+    if(t.status==='flagged')agents[k].flagged++;
+    if(t.managerReview){
+      agents[k].reviewed++;
+      if(t.managerReview.approved)agents[k].approved++;
+    }
+    if(t.completedAt&&t.createdAt){
+      agents[k].times.push((new Date(t.completedAt)-new Date(t.createdAt))/(1000*3600));
+    }
+  });
+  return Object.values(agents).map(a=>{
+    a.approvalRate=a.reviewed>0?Math.round((a.approved/a.reviewed)*100):null;
+    a.avgTime=a.times.length?Math.round(a.times.reduce((x,y)=>x+y,0)/a.times.length):null;
+    a.grade=a.approvalRate===null?'—':a.approvalRate>=85?'A':a.approvalRate>=70?'B':a.approvalRate>=50?'C':'D';
+    return a;
+  }).sort((a,b)=>(b.approvalRate||0)-(a.approvalRate||0));
+}
+
+function gradeColor(g){return{A:'var(--gr)',B:'var(--bl)',C:'var(--am)',D:'var(--rd)'}[g]||'var(--tx3)';}
+
+function renderScorecards(){
+  const tasks=getTasks();
+  const agents=computeScorecard(tasks);
+  const totalAgents=agents.length;
+  const totalTasks=tasks.length;
+  const totalApproved=tasks.filter(t=>t.managerReview&&t.managerReview.approved).length;
+  const totalReviewed=tasks.filter(t=>t.managerReview).length;
+  const overallRate=totalReviewed>0?Math.round((totalApproved/totalReviewed)*100):0;
+
+  $('scorecard-stats').innerHTML=[
+    {n:totalTasks,l:'Total Tasks',s:'across all agents'},
+    {n:totalAgents,l:'Active Agents',s:'with tasks'},
+    {n:overallRate+'%',l:'Overall Approval',s:`${totalApproved}/${totalReviewed} reviewed`},
+    {n:tasks.filter(t=>t.status==='completed').length,l:'Completed',s:`${tasks.filter(t=>t.status==='flagged').length} flagged`}
+  ].map(s=>`<div class="card">
+<div class="stat-num">${s.n}</div>
+<div class="stat-label">${s.l}</div>
+<div class="stat-sub">${s.s}</div>
+</div>`).join('');
+
+  if(!agents.length){
+    $('scorecard-leaderboard').innerHTML='';
+    $('scorecard-cards').innerHTML='<div class="card" style="color:var(--tx3);text-align:center;padding:30px;grid-column:1/-1">No tasks found in localStorage key <code>company-os-tasks</code>.</div>';
+    return;
+  }
+
+  $('scorecard-leaderboard').innerHTML=`<div class="card" style="padding:0;overflow:hidden">
+    <table class="table">
+<thead>
+<tr>
+      <th>Rank</th>
+<th>Agent</th>
+<th>Tasks</th>
+<th>Completed</th>
+<th>Flagged</th>
+<th>Approval Rate</th>
+<th>Avg Time</th>
+<th>Grade</th>
+<th>
+</th>
+    </tr>
+</thead>
+<tbody>
+    ${agents.map((a,i)=>`<tr>
+      <td style="color:var(--tx3)">${i+1}</td>
+      <td style="color:var(--tx);font-weight:500">${a.emoji} ${a.name}</td>
+      <td>${a.total}</td>
+<td>${a.completed}</td>
+<td>${a.flagged}</td>
+      <td>
+<strong style="color:${gradeColor(a.grade)}">${a.approvalRate!==null?a.approvalRate+'%':'—'}</strong>
+</td>
+      <td>${a.avgTime!==null?a.avgTime+'h':'—'}</td>
+      <td>
+<strong style="color:${gradeColor(a.grade)}">${a.grade}</strong>
+</td>
+      <td>
+<button class="btn btn-sm btn-ghost" onclick="genPerfReview('${a.name}')">Review</button>
+</td>
+    </tr>`).join('')}
+    </tbody>
+</table>
+</div>`;
+
+  $('scorecard-cards').innerHTML=agents.map(a=>`
+    <div class="card">
+      <div class="row-sb" style="margin-bottom:10px">
+        <div class="row" style="gap:8px">
+          <span style="font-size:22px">${a.emoji}</span>
+          <div>
+<div style="font-size:13px;font-weight:600">${a.name}</div>
+          <div style="font-size:10px;color:var(--tx3)">${a.total} tasks</div>
+</div>
+        </div>
+        <span style="font-size:24px;font-weight:700;color:${gradeColor(a.grade)}">${a.grade}</span>
+      </div>
+      <div class="grid2" style="gap:8px;margin-bottom:10px">
+        ${[['Completed',a.completed,'var(--gr)'],['Flagged',a.flagged,'var(--rd)'],
+           ['Approved',a.approved,'var(--bl)'],['Approval Rate',a.approvalRate!==null?a.approvalRate+'%':'—','var(--pu)']
+          ].map(([l,v,c])=>`<div style="background:var(--bg3);border-radius:8px;padding:8px">
+<div style="font-size:16px;font-weight:700;color:${c}">${v}</div>
+<div style="font-size:10px;color:var(--tx3)">${l}</div>
+</div>`).join('')}
+      </div>
+      <button class="btn btn-sm btn-ghost" style="width:100%" onclick="genPerfReview('${a.name}')">Generate Performance Review</button>
+    </div>`).join('');
+}
+
+async function genPerfReview(name){
+  const tasks=getTasks();
+  const agents=computeScorecard(tasks);
+  const a=agents.find(x=>x.name===name);
+  if(!a)return;
+  const div=document.createElement('div');
+  div.className='card';div.style.marginTop='12px';
+  div.innerHTML=`<div class="row-sb">
+<strong style="font-size:13px">${a.emoji} ${a.name} — Performance Review</strong>
+<button class="btn btn-sm btn-ghost" onclick="this.closest('.card').remove()">✕</button>
+</div>
+<div class="ai-output" style="margin-top:8px">
+<span class="spinner">
+</span>Generating…</div>`;
+  $('scorecard-cards').after(div);
+  const btn=div.querySelector('button');
+  const result=await callClaude('You are an executive coach writing concise agent performance reviews.',
+    `Agent: ${a.emoji} ${a.name}\
+Total Tasks: ${a.total}\
+Completed: ${a.completed}\
+Flagged: ${a.flagged}\
+Approval Rate: ${a.approvalRate!==null?a.approvalRate+'%':'N/A'}\
+Avg Completion Time: ${a.avgTime!==null?a.avgTime+'h':'N/A'}\
+\
+Write a brief (3-4 sentences) performance review with strengths, areas for improvement, and one recommendation.`);
+  div.querySelector('.ai-output').textContent=result||'No response.';
+}
+
+function refreshScorecards(){renderScorecards();}
+
+// ─── Budget ───────────────────────────────────────────────────────────────────
+const BDG_KEY='company-os-budget';
+const BDG_DEPTS=['Strategy','Engineering','Product','Sales','Marketing','Customer','People','Finance','Legal','Data & AI','Security'];
+const BDG_DEFAULTS=BDG_DEPTS.map(d=>({dept:d,allocated:200000,spent:Math.floor(Math.random()*180000+20000)}));
+
+function getBudget(){return ls.get(BDG_KEY,BDG_DEPTS.map(d=>({dept:d,allocated:200000,spent:100000})));}
+function saveBudget(d){ls.set(BDG_KEY,d);syncBurnToKPIs(d);}
+function syncBurnToKPIs(data){
+  try{
+    const totS=data.reduce((s,r)=>s+(r.spent||0),0);
+    const kpis=JSON.parse(localStorage.getItem('company-os-kpis')||'{}');
+    if(kpis.Operations){const burn=kpis.Operations.find(k=>k.id==='burn');if(burn){burn.current=totS;burn.trend=totS>burn.target?'up':'flat';}localStorage.setItem('company-os-kpis',JSON.stringify(kpis));}
+  }catch(e){}
+}
+
+function budgetStatus(a,s){
+  const r=s/a;
+  if(r>1)return '<span class="tag tag-rd">Over</span>';
+  if(r>0.85)return '<span class="tag tag-am">On Track</span>';
+  return '<span class="tag tag-gr">Under</span>';
+}
+
+function renderBudget(){
+  const data=getBudget();
+  const totA=data.reduce((s,r)=>s+r.allocated,0);
+  const totS=data.reduce((s,r)=>s+r.spent,0);
+  $('budget-rows').innerHTML=data.map((r,i)=>{
+    const p=Math.min(100,Math.round((r.spent/r.allocated)*100));
+    const variance=r.allocated-r.spent;
+    return `<div class="budget-row">
+      <span style="font-size:12px;font-weight:500;color:var(--tx)">${r.dept}</span>
+      <span class="editable" onclick="editBudgetCell(${i},'allocated',this)">${fmt$(r.allocated)}</span>
+      <span class="editable" onclick="editBudgetCell(${i},'spent',this)">${fmt$(r.spent)}</span>
+      <div>
+<div class="progress-wrap">
+<div class="progress-bar" style="width:${p}%;background:${p>100?'var(--rd)':p>85?'var(--am)':'var(--gr)'}">
+</div>
+</div>
+</div>
+      <span style="font-size:12px;color:${variance<0?'var(--rd)':'var(--gr)'}">${variance<0?'-':'+'}${fmt$(Math.abs(variance))}</span>
+      ${budgetStatus(r.allocated,r.spent)}
+      <button class="btn btn-sm btn-ghost" style="padding:3px 7px" onclick="deleteBudgetRow(${i})">✕</button>
+    </div>`;
+  }).join('')+`<div class="budget-row total-row">
+    <span>TOTAL</span>
+    <span>${fmt$(totA)}</span>
+    <span style="color:${totS>totA?'var(--rd)':'var(--tx)'}">${fmt$(totS)}</span>
+    <div>
+<div class="progress-wrap">
+<div class="progress-bar" style="width:${Math.min(100,Math.round(totS/totA*100))}%;background:${totS>totA?'var(--rd)':'var(--gr)'}">
+</div>
+</div>
+</div>
+    <span style="color:${totA-totS<0?'var(--rd)':'var(--gr)'}">${totA-totS<0?'-':'+'}${fmt$(Math.abs(totA-totS))}</span>
+    ${budgetStatus(totA,totS)}
+    <span>
+</span>
+  </div>`;
+}
+
+function editBudgetCell(i,field,el){
+  const data=getBudget();
+  const inp=document.createElement('input');
+  inp.type='number';inp.value=data[i][field];inp.style.cssText='width:90px;font-size:12px;background:var(--bg4);color:var(--tx);border:1px solid var(--pu);border-radius:6px;padding:2px 6px';
+  el.replaceWith(inp);inp.focus();
+  const save=()=>{data[i][field]=parseFloat(inp.value)||0;saveBudget(data);renderBudget();};
+  inp.addEventListener('blur',save);inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
+}
+function deleteBudgetRow(i){if(!confirm('Remove department?'))return;const d=getBudget();d.splice(i,1);saveBudget(d);renderBudget();}
+
+async function runBudgetCFO(){
+  const data=getBudget();
+  const totA=data.reduce((s,r)=>s+r.allocated,0);
+  const totS=data.reduce((s,r)=>s+r.spent,0);
+  const summary=data.map(r=>`${r.dept}: allocated ${fmt$(r.allocated)}, spent ${fmt$(r.spent)}`).join('\
+');
+  const btn=document.querySelector('#panel-budget .btn');
+  btn.dataset.label=btn.textContent;
+  const result=await callClaude('You are a CFO analyzing company budget allocation and spend.',
+    `Budget summary:\
+${summary}\
+Total allocated: ${fmt$(totA)}, Total spent: ${fmt$(totS)}\
+\
+Provide a 5-bullet CFO commentary on budget health, risks, and recommendations.`,btn);
+  if(result) $('budget-ai-output').innerHTML=`<div class="ai-output" style="margin-top:12px">
+<strong style="color:var(--bl)">CFO Budget Analysis</strong>\
+\
+${result}</div>`;
+}
+
+// ─── Calendar ─────────────────────────────────────────────────────────────────
+const CAL_KEY='company-os-calendar';
+const CAL_CATS=['Product Launch','Board Meeting','Hiring Deadline','Sales Deadline','Team Event','Compliance'];
+const CAT_COLORS={'Product Launch':'tag-pu','Board Meeting':'tag-bl','Hiring Deadline':'tag-am','Sales Deadline':'tag-gr','Team Event':'tag-cy','Compliance':'tag-rd'};
+
+function getEvents(){return ls.get(CAL_KEY,[]);}
+function saveEvents(d){ls.set(CAL_KEY,d);}
+
+function renderCalendar(){
+  const data=getEvents().sort((a,b)=>a.date.localeCompare(b.date));
+  const today=new Date().toISOString().slice(0,10);
+  const in30=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+  const el=$('cal-list');
+  if(!data.length){el.innerHTML='<div class="card" style="color:var(--tx3);text-align:center;padding:40px">No events. Add one or generate a Q-plan.</div>';return;}
+
+  const upcoming=data.filter(e=>e.date>=today&&e.date<=in30);
+  const rest=data.filter(e=>e.date<today||e.date>in30);
+
+  let html='';
+  if(upcoming.length){
+    html+=`<div class="card" style="margin-bottom:12px">
+<div class="sec-title" style="margin-bottom:10px;color:var(--am)">Upcoming (Next 30 Days)</div>`;
+    html+=upcoming.map(e=>eventHTML(e,true)).join('');
+    html+='</div>';
+  }
+  if(rest.length){
+    html+=`<div class="card">
+<div class="sec-title" style="margin-bottom:10px">All Other Events</div>`;
+    html+=rest.map(e=>eventHTML(e,false)).join('');
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+function eventHTML(e,upcoming){
+  const d=new Date(e.date+'T00:00:00');
+  const mo=d.toLocaleString('default',{month:'short'});
+  return `<div class="cal-event ${upcoming?'cal-upcoming':''}">
+    <div class="cal-date-box">
+<div class="cal-day">${d.getDate()}</div>
+<div class="cal-mo">${mo} ${d.getFullYear()}</div>
+</div>
+    <div style="flex:1">
+      <div class="row-sb">
+        <div>
+          <span style="font-size:13px;font-weight:500;color:var(--tx)">${e.title}</span>
+          <span class="tag ${CAT_COLORS[e.category]||'tag-bl'}" style="margin-left:8px">${e.category}</span>
+        </div>
+        <div class="row" style="gap:4px">
+          <button class="btn btn-sm btn-ghost" style="padding:3px 7px" onclick="deleteEvent('${e.id}')">✕</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:3px">${e.owner||''} ${e.description?'· '+e.description:''}</div>
+    </div>
+  </div>`;
+}
+
+function deleteEvent(id){if(!confirm('Delete event?'))return;saveEvents(getEvents().filter(e=>e.id!==id));renderCalendar();}
+
+function openAddEventModal(){
+  openModal(`<div class="modal-title">Add Event</div>
+    <div class="form-group">
+<label>Title</label>
+<input id="m-ev-title" placeholder="Event title">
+</div>
+    <div class="grid2">
+      <div class="form-group">
+<label>Date</label>
+<input id="m-ev-date" type="date" value="${new Date().toISOString().slice(0,10)}">
+</div>
+      <div class="form-group">
+<label>Category</label>
+        <select id="m-ev-cat">${CAL_CATS.map(c=>`<option>${c}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-group">
+<label>Owner / Agent</label>
+<input id="m-ev-owner" placeholder="e.g. 👔 CEO">
+</div>
+    <div class="form-group">
+<label>Description</label>
+<textarea id="m-ev-desc" placeholder="Optional details">
+</textarea>
+</div>
+    <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-sm" onclick="saveNewEvent()">Save</button>
+    </div>`);
+}
+function saveNewEvent(){
+  const t=$('m-ev-title').value.trim();
+  if(!t)return;
+  const d=getEvents();
+  d.push({id:uid(),title:t,date:$('m-ev-date').value,category:$('m-ev-cat').value,owner:$('m-ev-owner').value,description:$('m-ev-desc').value});
+  saveEvents(d);closeModal();renderCalendar();
+}
+
+async function genQPlan(){
+  const today=new Date();
+  const qStart=new Date(today.getFullYear(),Math.floor(today.getMonth()/3)*3,1).toISOString().slice(0,10);
+  const qEnd=new Date(today.getFullYear(),Math.floor(today.getMonth()/3)*3+3,0).toISOString().slice(0,10);
+  const btn=document.querySelector('#panel-calendar .btn');
+  btn.dataset.label=btn.textContent;
+  const result=await callClaude('You are the Chief of Staff. Suggest a practical quarterly company calendar.',
+    `Generate a quarterly calendar plan from ${qStart} to ${qEnd}.\
+Suggest 8-10 key company events across categories: Product Launch, Board Meeting, Hiring Deadline, Sales Deadline, Team Event, Compliance.\
+Format as JSON array: [{title,date(YYYY-MM-DD),category,owner,description}]`,btn);
+  if(!result)return;
+  try{
+    const json=result.match(/\\[[\\s\\S]*\\]/);
+    if(json){
+      const events=JSON.parse(json[0]);
+      const d=getEvents();
+      events.forEach(e=>{d.push({id:uid(),...e});});
+      saveEvents(d);renderCalendar();
+    }
+  }catch{
+    $('cal-ai-output').innerHTML=`<div class="ai-output" style="margin-top:12px">${result}</div>`;
+  }
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  const k=ls.get('company-os-api-key','');
+  if(k)$('apiKeyInput').placeholder='API key saved ✓';
+  renderOKRs();
+  renderKPIs();
+  renderDecisions();
+  renderScorecards();
+  renderBudget();
+  renderCalendar();
+});
+
+
+// ==AGENT-PANEL-INJECTED==
+(function(){
+const AP_KEY='company-os-agent-tasks';
+const AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+let apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+window.apGetAll=apGetAll;
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function openAgentPanel(name,emoji,role){
+  const a=emoji?{name,emoji,role}:AP_AGENTS.find(x=>x.name===name)||{name,emoji:'🤖',dept:'',role:''};
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(t=>{
+    document.getElementById('ap-tab-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('ap-tc-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const done=tasks.filter(t=>t.done).length,open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';return;}
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item" id="ap-ti-${i}">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-expand" onclick="apToggleOutput(${i})">▸ Show AI output</div><div class="ap-task-output" id="ap-to-${i}">${t.output.replace(/</g,'&lt;')}</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function apToggleOutput(idx){
+  const out=document.getElementById('ap-to-'+idx);
+  const exp=out?.previousElementSibling;
+  if(!out)return;
+  const open=out.classList.toggle('open');
+  if(exp)exp.textContent=open?'▾ Hide AI output':'▸ Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(t=>t.output&&t.output.length>0).reverse();
+  const list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet. Use "Run AI Task" to generate output.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ap-history-item">
+      <div class="ap-history-date">${new Date(t.completedAt||t.createdAt).toLocaleString()}</div>
+      <div class="ap-history-prompt">${t.title.replace(/</g,'&lt;')}</div>
+      <div class="ap-history-output">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent)return;
+  const inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title)return;
+  const all=apGetAll();
+  if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent)return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt)return;
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first (in Settings or the API key field in this module).');return;}
+  const btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent'}. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    const all=apGetAll();
+    if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history')apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message;out.style.display='block';
+  }
+  inner.textContent='▶ Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// Export
+function apExportTasks(){
+  const all=apGetAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+// Picker
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  const q=document.getElementById('ap-picker-search').value.toLowerCase();
+  const all=apGetAll();
+  const agents=q?AP_AGENTS.filter(a=>a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q)):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(a=>{
+    const tasks=(all[a.name]||[]),done=tasks.filter(t=>t.done).length;
+    const badge=tasks.length?`<span class="ap-picker-item-tasks">${done}/${tasks.length}✓</span>`:'';
+    return `<div class="ap-picker-item" onclick="apPickerSelect('${a.name.replace(/'/g,"'")}')">
+      <span class="ap-picker-item-emoji">${a.emoji}</span>
+      <div style="flex:1;min-width:0"><div class="ap-picker-item-name">${a.name}</div><div class="ap-picker-item-dept">${a.dept}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  const a=AP_AGENTS.find(x=>x.name===name);
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+// Bulk Run
+let apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  const grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(a=>`
+    <div class="ap-bulk-agent-item ${apBulkSelected.has(a.name)?'selected':''}" onclick="apBulkToggle('${a.name.replace(/'/g,"'")}')">
+      <input type="checkbox" ${apBulkSelected.has(a.name)?'checked':''} onclick="event.stopPropagation();apBulkToggle('${a.name.replace(/'/g,"'")}')">
+      <span>${a.emoji}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+    </div>`).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(a=>a.name)):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  const prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-bulk-run-btn');
+  const prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  const agents=AP_AGENTS.filter(a=>apBulkSelected.has(a.name));
+  const all=apGetAll();
+  let done=0;
+  for(const a of agents){
+    prog.textContent=`Running ${a.emoji} ${a.name}… (${done}/${agents.length})`;
+    const sys=`You are ${a.name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||'Error';
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent=`✅ Done! Ran ${done} agents.`;
+  btn.disabled=false;
+  if(apCurrentAgent)apRenderTasks();apRenderStats();apRenderHistory();
+}
+window.apRunBulk=apRunBulk;
+})();
+
+</script>
+
+
+<!-- ==PANEL-ENHANCED== -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">⚡</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">📋 Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">📜 History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything — runs against this agent's system prompt and auto-saves…"></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">▶ Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">📤 Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>📋 Agent Tasks — Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">✕</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="🔍 Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>⚡ Bulk Run — Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer" onclick="apCloseBulk()">✕</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 priorities this quarter?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">⚡ Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

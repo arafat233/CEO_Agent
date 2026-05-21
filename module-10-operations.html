@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Module 10 — Operations Hub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;
+  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;
+  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;
+  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;
+  --pu:#a78bfa;--cy:#22d3ee;--or:#fb923c;
+  --r:10px;--rl:14px;
+  --font:system-ui,-apple-system,sans-serif;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--font);min-height:100vh}
+.app{max-width:1400px;margin:0 auto;padding:20px 24px}
+.topbar{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.topbar h1{font-size:20px;font-weight:700}
+.topbar h1 span{background:linear-gradient(135deg,var(--cy),var(--bl));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar p{font-size:12px;color:var(--tx3);margin-top:2px}
+.module-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;background:#22d3ee18;color:var(--cy);border:1px solid #22d3ee44;font-weight:500}
+.key-input{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:7px 12px;color:var(--tx);font-size:12px;width:240px;margin-left:auto}
+.tabs{display:flex;gap:3px;margin-bottom:16px;flex-wrap:wrap;background:var(--bg2);padding:4px;border-radius:var(--rl);border:1px solid var(--bd)}
+.tab{padding:8px 16px;font-size:12px;font-weight:500;border-radius:var(--r);border:1px solid transparent;color:var(--tx3);cursor:pointer;transition:all .15s;background:transparent}
+.tab.active{background:var(--bg3);border-color:var(--bd2);color:var(--tx)}
+.tab:hover:not(.active){color:var(--tx2)}
+.pane{display:none}.pane.active{display:block}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:12px}
+.card-sm{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:8px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1;min-width:280px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+label{font-size:11px;color:var(--tx3);display:block;margin-bottom:3px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:8px 12px;color:var(--tx);font-size:13px;font-family:var(--font);outline:none;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--pu)}
+textarea{resize:vertical;min-height:80px}
+.btn{padding:8px 16px;border-radius:var(--r);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-primary{background:var(--pu);color:#fff}
+.btn-primary:hover{opacity:.88}
+.btn-secondary{background:var(--bg3);border:1px solid var(--bd2);color:var(--tx2)}
+.btn-secondary:hover{border-color:var(--pu);color:var(--tx)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-danger{background:#ef444420;border:1px solid var(--rd)44;color:var(--rd)}
+.stat{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;text-align:center}
+.stat-n{font-size:24px;font-weight:700}
+.stat-l{font-size:11px;color:var(--tx3);margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:14px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-gr{background:#22c55e20;color:var(--gr);border:1px solid #22c55e40}
+.badge-am{background:#f59e0b20;color:var(--am);border:1px solid #f59e0b40}
+.badge-rd{background:#ef444420;color:var(--rd);border:1px solid #ef444440}
+.badge-bl{background:#60a5fa20;color:var(--bl);border:1px solid #60a5fa40}
+.badge-pu{background:#a78bfa20;color:var(--pu);border:1px solid #a78bfa40}
+.badge-cy{background:#22d3ee20;color:var(--cy);border:1px solid #22d3ee40}
+.badge-or{background:#fb923c20;color:var(--or);border:1px solid #fb923c40}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--tx3);border-bottom:1px solid var(--bd);background:var(--bg3)}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.tbl tr:hover td{background:var(--bg3)}
+.output-box{background:#0d1117;border:1px solid var(--bd2);border-radius:var(--r);padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;margin-top:10px}
+.prog{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s}
+/* Roadmap */
+.sprint-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sprint-col{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px;min-height:200px}
+.sprint-col-hdr{font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+.sprint-item{background:var(--bg2);border:1px solid var(--bd2);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;cursor:pointer}
+.sprint-item:hover{border-color:var(--pu)}
+/* CRM kanban */
+.crm-board{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;overflow-x:auto}
+.crm-col{min-width:140px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:8px}
+.crm-col-hdr{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;text-align:center}
+.deal-card{background:var(--bg2);border:1px solid var(--bd2);border-radius:8px;padding:8px;margin-bottom:6px;font-size:11px;cursor:pointer}
+.deal-card:hover{border-color:var(--bl)}
+.deal-co{font-weight:600;font-size:12px;margin-bottom:2px}
+.deal-val{color:var(--gr);font-size:11px;font-weight:600}
+/* Templates */
+.tmpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.tmpl-card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .15s}
+.tmpl-card:hover{border-color:var(--pu)}
+.tmpl-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.tmpl-desc{font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.5}
+.tmpl-agent{font-size:10px;color:var(--pu)}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--rl);padding:24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
+.modal h3{margin-bottom:12px}
+/* Incident */
+.inc-card{border-radius:var(--r);padding:12px 14px;margin-bottom:8px;border:1px solid}
+.inc-p1{border-color:var(--rd);background:#ef444410}
+.inc-p2{border-color:var(--am);background:#f59e0b10}
+.inc-p3{border-color:var(--bl);background:#60a5fa10}
+.inc-p4{border-color:var(--bd2);background:var(--bg3)}
+/* Doc library */
+.doc-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.doc-item:last-child{border-bottom:none}
+
+/* ==AGENT-PANEL-INJECTED== */
+
+/* ==PANEL-ENHANCED== */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;title:'Bulk Run'}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px}
+.ap-float-btn:hover{opacity:.85}
+
+</style>
+</head>
+<body>
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;font-family:system-ui,sans-serif">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+
+  <button class="ap-float-btn" onclick="apOpenPicker()">📋 Agent Tasks</button>
+</nav>
+
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="module-badge">Module 10 — Operations Hub</div>
+      <h1>Operations Hub <span>·</span></h1>
+      <p>Roadmap · Hiring · CRM · Templates · Incidents · Docs</p>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input class="key-input" type="password" id="api-key" placeholder="sk-ant-... Anthropic key" oninput="saveKey(this.value)">
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('roadmap',this)">🗺️ Roadmap</button>
+    <button class="tab" onclick="switchTab('hiring',this)">👥 Hiring</button>
+    <button class="tab" onclick="switchTab('crm',this)">💼 CRM</button>
+    <button class="tab" onclick="switchTab('templates',this)">📚 Templates</button>
+    <button class="tab" onclick="switchTab('incidents',this)">🚨 Incidents</button>
+    <button class="tab" onclick="switchTab('docs',this)">📄 Docs</button>
+  </div>
+
+  <!-- ══════════════════ ROADMAP ══════════════════ -->
+  <div class="pane active" id="pane-roadmap">
+    <div class="stats" id="rm-stats"></div>
+    <div class="row">
+      <div class="col" style="max-width:340px">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <b style="font-size:14px">Add backlog item</b>
+          </div>
+          <label>Title</label><input id="rm-title" placeholder="Feature or epic name">
+          <label>Type</label>
+          <select id="rm-type"><option value="feature">Feature</option><option value="bug">Bug</option><option value="tech-debt">Tech Debt</option><option value="research">Research</option></select>
+          <label>Priority</label>
+          <select id="rm-pri"><option value="P0">P0 — Critical</option><option value="P1">P1 — High</option><option value="P2" selected>P2 — Medium</option><option value="P3">P3 — Low</option></select>
+          <label>Story points</label>
+          <select id="rm-pts"><option>1</option><option>2</option><option>3</option><option value="5" selected>5</option><option>8</option><option>13</option></select>
+          <label>Assigned to</label><input id="rm-assignee" placeholder="Agent name">
+          <button class="btn btn-primary" onclick="addBacklogItem()" style="width:100%;margin-top:12px">+ Add to backlog</button>
+          <div style="margin-top:12px;border-top:1px solid var(--bd);padding-top:12px">
+            <label style="margin-top:0">AI: describe product to generate backlog</label>
+            <textarea id="rm-ai-ctx" placeholder="e.g. B2B SaaS analytics platform for e-commerce..." rows="2"></textarea>
+            <button class="btn btn-secondary btn-sm" onclick="aiGenerateBacklog()" style="margin-top:6px">🤖 Generate backlog items</button>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <b>Current Sprint: </b>
+            <input id="rm-sprint-name" placeholder="Sprint name" style="width:160px;font-size:12px;padding:4px 8px">
+            <button class="btn btn-secondary btn-sm" onclick="aiPlanSprint()">🤖 Plan sprint</button>
+          </div>
+          <div class="sprint-cols">
+            <div class="sprint-col"><div class="sprint-col-hdr">Backlog</div><div id="col-backlog"></div></div>
+            <div class="sprint-col"><div class="sprint-col-hdr">In Sprint</div><div id="col-sprint"></div></div>
+            <div class="sprint-col"><div class="sprint-col-hdr">In Review</div><div id="col-review"></div></div>
+            <div class="sprint-col"><div class="sprint-col-hdr">Done</div><div id="col-done"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <b>Releases</b>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <input id="rel-ver" placeholder="v1.0.0" style="width:100px">
+        <input type="date" id="rel-date" style="width:150px">
+        <input id="rel-desc" placeholder="Release description" style="flex:1">
+        <button class="btn btn-secondary btn-sm" onclick="addRelease()">+ Add</button>
+      </div>
+      <div id="releases-list" style="margin-top:10px"></div>
+    </div>
+    <div class="card" id="rm-ai-output" style="display:none"><b>AI Output</b><div class="output-box" id="rm-ai-text"></div></div>
+  </div>
+
+  <!-- ══════════════════ HIRING ══════════════════ -->
+  <div class="pane" id="pane-hiring">
+    <div class="stats" id="hiring-stats"></div>
+    <div class="row">
+      <div class="col" style="max-width:320px">
+        <div class="card">
+          <b>Open Role</b>
+          <label>Job Title</label><input id="h-title" placeholder="e.g. Senior Backend Engineer">
+          <label>Department</label>
+          <select id="h-dept"><option>Engineering</option><option>Product</option><option>Sales</option><option>Marketing</option><option>Customer Success</option><option>People</option><option>Finance</option><option>Legal</option><option>Data & AI</option><option>Security</option></select>
+          <label>Level</label>
+          <select id="h-level"><option>IC2</option><option>IC3</option><option>IC4</option><option>IC5</option><option>IC6</option><option>IC7</option><option>Manager</option><option>Sr Manager</option><option>Director</option><option>VP</option></select>
+          <label>Target Start</label><input type="date" id="h-start">
+          <button class="btn btn-primary" onclick="addRole()" style="width:100%;margin-top:12px">+ Add Role</button>
+        </div>
+        <div class="card">
+          <b>Add Candidate</b>
+          <label>For Role</label><select id="h-role-sel" style=""></select>
+          <label>Name</label><input id="h-cand-name" placeholder="Candidate name">
+          <label>Current Company</label><input id="h-cand-co" placeholder="Current employer">
+          <label>Stage</label>
+          <select id="h-stage"><option value="applied">Applied</option><option value="screen">Phone Screen</option><option value="technical">Technical</option><option value="final">Final Round</option><option value="offer">Offer</option><option value="hired">Hired</option><option value="rejected">Rejected</option></select>
+          <button class="btn btn-primary" onclick="addCandidate()" style="width:100%;margin-top:12px">+ Add Candidate</button>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+            <b>Roles</b>
+            <select id="h-filter" onchange="renderHiring()" style="width:auto;font-size:12px;padding:4px 8px">
+              <option value="">All roles</option>
+            </select>
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="aiWriteJD()">🤖 Write JD</button>
+              <button class="btn btn-secondary btn-sm" onclick="aiInterviewQs()">🤖 Interview Qs</button>
+            </div>
+          </div>
+          <div id="hiring-roles"></div>
+        </div>
+        <div class="card" id="h-cands-card" style="display:none">
+          <b id="h-cands-title">Candidates</b>
+          <div id="hiring-candidates" style="margin-top:10px"></div>
+        </div>
+        <div class="card" id="h-ai-card" style="display:none"><div class="output-box" id="h-ai-text"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ CRM ══════════════════ -->
+  <div class="pane" id="pane-crm">
+    <div class="stats" id="crm-stats"></div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:140px"><label style="margin-top:0">Company</label><input id="crm-co" placeholder="Company name"></div>
+        <div style="width:120px"><label style="margin-top:0">Deal value ($)</label><input id="crm-val" placeholder="50000" type="number"></div>
+        <div style="flex:1;min-width:120px"><label style="margin-top:0">Contact</label><input id="crm-contact" placeholder="Name & title"></div>
+        <div style="flex:1;min-width:120px"><label style="margin-top:0">Owner</label><input id="crm-owner" placeholder="Agent / rep name"></div>
+        <div><label style="margin-top:0">Stage</label>
+          <select id="crm-stage"><option value="prospect">Prospect</option><option value="discovery">Discovery</option><option value="demo">Demo</option><option value="proposal">Proposal</option><option value="negotiation">Negotiation</option><option value="won">Won</option><option value="lost">Lost</option></select>
+        </div>
+        <button class="btn btn-primary" onclick="addDeal()" style="align-self:flex-end">+ Add Deal</button>
+      </div>
+    </div>
+    <div class="card" style="padding:12px;overflow-x:auto">
+      <div class="crm-board" id="crm-board"></div>
+    </div>
+    <div id="crm-detail-card" class="card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <b id="crm-det-title">Deal Detail</b>
+        <button class="btn btn-secondary btn-sm" onclick="closeCrmDetail()">✕ Close</button>
+      </div>
+      <div id="crm-det-body"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="aiDraftOutreach()">🤖 Draft outreach</button>
+        <button class="btn btn-secondary btn-sm" onclick="aiWriteProposal()">🤖 Write proposal</button>
+      </div>
+      <div class="output-box" id="crm-ai-out" style="display:none;margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ TEMPLATES ══════════════════ -->
+  <div class="pane" id="pane-templates">
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <input id="tmpl-search" placeholder="🔍 Search templates..." oninput="renderTemplates()" style="width:260px">
+      <select id="tmpl-cat-filter" onchange="renderTemplates()" style="width:180px">
+        <option value="">All categories</option>
+        <option>🚀 Product Launch</option><option>💼 Sales</option><option>📣 Marketing</option>
+        <option>👥 People</option><option>⚖️ Legal</option><option>💰 Finance</option><option>🔧 Engineering</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="openCustomTmpl()">+ Custom template</button>
+    </div>
+    <div class="tmpl-grid" id="tmpl-grid"></div>
+    <!-- Modal for using template -->
+    <div class="modal-overlay" id="tmpl-modal" style="display:none" onclick="if(event.target===this)closeTmplModal()">
+      <div class="modal">
+        <h3 id="tmpl-modal-title">Use Template</h3>
+        <p style="font-size:12px;color:var(--tx3);margin-bottom:12px" id="tmpl-modal-agent"></p>
+        <div id="tmpl-modal-fields"></div>
+        <label>Filled prompt preview</label>
+        <textarea id="tmpl-preview" rows="5" style="font-size:12px"></textarea>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="runTmplWithAI()">▶ Run with AI</button>
+          <button class="btn btn-secondary" onclick="copyTmpl()">📋 Copy prompt</button>
+          <button class="btn btn-secondary" onclick="closeTmplModal()">Cancel</button>
+        </div>
+        <div class="output-box" id="tmpl-ai-out" style="display:none;margin-top:10px"></div>
+      </div>
+    </div>
+    <!-- Custom template modal -->
+    <div class="modal-overlay" id="custom-tmpl-modal" style="display:none" onclick="if(event.target===this)closeCustomTmpl()">
+      <div class="modal">
+        <h3>Create Custom Template</h3>
+        <label>Title</label><input id="ct-title" placeholder="Template title">
+        <label>Category</label><input id="ct-cat" placeholder="e.g. Sales">
+        <label>Description</label><input id="ct-desc" placeholder="What this template does">
+        <label>Suggested agent</label><input id="ct-agent" placeholder="e.g. Product Manager">
+        <label>Prompt (use [placeholders] for variables)</label>
+        <textarea id="ct-prompt" rows="5" placeholder="Write a [document type] for [company name] targeting [audience]..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary" onclick="saveCustomTmpl()">Save template</button>
+          <button class="btn btn-secondary" onclick="closeCustomTmpl()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ INCIDENTS ══════════════════ -->
+  <div class="pane" id="pane-incidents">
+    <div class="card" style="margin-bottom:12px;background:#ef444410;border-color:var(--rd)44">
+      <b style="font-size:13px">Escalation Matrix</b>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:10px;font-size:12px">
+        <div><span class="badge badge-rd">P1 Critical</span><div style="color:var(--tx2);margin-top:4px">Immediate: CEO + CTO + COO + Security</div></div>
+        <div><span class="badge badge-am">P2 High</span><div style="color:var(--tx2);margin-top:4px">Within 30min: CTO + DevOps + Security</div></div>
+        <div><span class="badge badge-bl">P3 Medium</span><div style="color:var(--tx2);margin-top:4px">Within 4hr: DevOps + PM</div></div>
+        <div><span class="badge">P4 Low</span><div style="color:var(--tx2);margin-top:4px">Next business day: DevOps</div></div>
+      </div>
+    </div>
+    <div class="stats" id="inc-stats"></div>
+    <div class="row">
+      <div class="col" style="max-width:320px">
+        <div class="card">
+          <b>New Incident</b>
+          <label>Title</label><input id="inc-title" placeholder="Brief incident description">
+          <label>Severity</label>
+          <select id="inc-sev"><option value="P1">P1 — Critical (system down)</option><option value="P2">P2 — High (major degradation)</option><option value="P3" selected>P3 — Medium (partial impact)</option><option value="P4">P4 — Low (minor issue)</option></select>
+          <label>Category</label>
+          <select id="inc-cat"><option value="infra">Infrastructure</option><option value="security">Security Breach</option><option value="data">Data Loss</option><option value="perf">Performance</option><option value="api">API Failure</option><option value="billing">Billing</option><option value="other">Other</option></select>
+          <label>Impact description</label><textarea id="inc-impact" rows="2" placeholder="Who is affected and how?"></textarea>
+          <button class="btn btn-primary" onclick="addIncident()" style="width:100%;margin-top:12px">🚨 Create Incident</button>
+        </div>
+      </div>
+      <div class="col">
+        <div id="incidents-list"></div>
+        <div class="card" id="inc-detail" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <b id="inc-det-title">Incident Detail</b>
+            <button class="btn btn-secondary btn-sm" onclick="closeIncDetail()">✕</button>
+          </div>
+          <div id="inc-det-body"></div>
+          <div style="margin-top:10px">
+            <input id="inc-update-text" placeholder="Add timeline update..." style="margin-bottom:6px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-secondary btn-sm" onclick="addIncUpdate()">+ Add update</button>
+              <button class="btn btn-secondary btn-sm" onclick="aiIncidentPlan()">🤖 Response plan</button>
+              <button class="btn btn-secondary btn-sm" onclick="aiPostMortem()">📝 Post-mortem</button>
+              <button class="btn btn-primary btn-sm" onclick="resolveIncident()">✅ Resolve</button>
+            </div>
+            <div class="output-box" id="inc-ai-out" style="display:none;margin-top:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ DOCS ══════════════════ -->
+  <div class="pane" id="pane-docs">
+    <div class="row">
+      <div class="col" style="max-width:360px">
+        <div class="card">
+          <b>Generate Document</b>
+          <label>Document type</label>
+          <select id="doc-type" onchange="renderDocForm()">
+            <option value="prd">Product Requirements Doc (PRD)</option>
+            <option value="board">Board Deck Outline</option>
+            <option value="pressrelease">Press Release</option>
+            <option value="jd">Job Description</option>
+            <option value="nda">NDA Key Clauses Summary</option>
+            <option value="meetingnotes">Meeting Notes</option>
+            <option value="sprintreport">Sprint Report</option>
+            <option value="investorupdate">Investor Update</option>
+            <option value="techspec">Technical Specification</option>
+            <option value="casestudy">Customer Case Study</option>
+          </select>
+          <div id="doc-form" style="margin-top:10px"></div>
+          <button class="btn btn-primary" onclick="generateDoc()" style="width:100%;margin-top:12px" id="doc-gen-btn">🤖 Generate</button>
+        </div>
+        <div class="card">
+          <b>Saved Documents</b>
+          <div id="doc-library" style="margin-top:10px"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" id="doc-output-card" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+            <b id="doc-output-title">Generated Document</b>
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="copyDoc()">📋 Copy</button>
+              <button class="btn btn-secondary btn-sm" onclick="downloadDoc()">⬇ Download</button>
+              <button class="btn btn-primary btn-sm" onclick="saveDocToLibrary()">💾 Save</button>
+            </div>
+          </div>
+          <textarea id="doc-output-text" rows="20" style="font-size:12px;line-height:1.7"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Utilities ────────────────────────────────────────────────────────────────
+function getKey(){return document.getElementById('api-key')?.value||localStorage.getItem('company-os-api-key')||'';}
+function saveKey(v){if(v) localStorage.setItem('company-os-api-key',v);}
+
+function ls(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+function lss(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+function switchTab(id,el){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='roadmap') renderRoadmap();
+  if(id==='hiring'){renderHiring();populateRoleSelect();}
+  if(id==='crm') renderCRM();
+  if(id==='templates') renderTemplates();
+  if(id==='incidents') renderIncidents();
+  if(id==='docs'){renderDocForm();renderDocLibrary();}
+}
+
+function getMemoryContext(){
+  try{
+    const mems=JSON.parse(localStorage.getItem('company-os-memories')||'[]');
+    if(!mems.length) return '';
+    const recent=mems.slice(-10).map(m=>`[${m.agent||''}] ${m.content||m.text||''}`).join('\n');
+    return '\n\n## Company Memory Context (recent agent interactions):\n'+recent;
+  }catch{return '';}
+}
+
+async function callClaude(systemPrompt,userMsg,maxTokens=600){
+  const key=getKey();
+  if(!key) return '⚠️ No API key set.';
+  const sys=systemPrompt+getMemoryContext();
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,
+        system:sys,messages:[{role:'user',content:userMsg}]})
+    });
+    const d=await r.json();
+    return d.content?.[0]?.text||JSON.stringify(d.error||d);
+  }catch(e){return 'Error: '+e.message;}
+}
+
+function fmtDate(ts){return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function uid(){return '_'+Math.random().toString(36).slice(2,9);}
+
+// ── Restore API key ───────────────────────────────────────────────────────────
+const savedKey=localStorage.getItem('company-os-api-key');
+if(savedKey) document.getElementById('api-key').value=savedKey;
+
+// ══════════════════ ROADMAP ══════════════════════════════════════════════════
+let ROADMAP=ls('company-os-roadmap')||{backlog:[],releases:[]};
+function saveRoadmap(){lss('company-os-roadmap',ROADMAP);}
+
+function renderRoadmap(){
+  const cols={backlog:[],sprint:[],review:[],done:[]};
+  (ROADMAP.backlog||[]).forEach(item=>{
+    const col=cols[item.status]||cols.backlog;
+    col.push(item);
+  });
+  const typeColors={feature:'badge-pu',bug:'badge-rd','tech-debt':'badge-am',research:'badge-bl'};
+  const priColors={P0:'badge-rd',P1:'badge-am',P2:'badge-bl',P3:''};
+  ['backlog','sprint','review','done'].forEach(s=>{
+    const el=document.getElementById('col-'+s);
+    if(!el) return;
+    el.innerHTML=cols[s].map(i=>`<div class="sprint-item" onclick="cycleStatus('${i.id}')">
+      <div style="display:flex;gap:4px;margin-bottom:4px">
+        <span class="badge ${typeColors[i.type]||''}" style="font-size:9px">${i.type}</span>
+        <span class="badge ${priColors[i.priority]||''}" style="font-size:9px">${i.priority}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--tx3)">${i.pts}pt</span>
+      </div>
+      <div style="font-size:12px;font-weight:500">${i.title}</div>
+      ${i.assignee?`<div style="font-size:10px;color:var(--tx3);margin-top:2px">→ ${i.assignee}</div>`:''}
+    </div>`).join('');
+  });
+  // Stats
+  const total=ROADMAP.backlog.length;
+  const done=(ROADMAP.backlog.filter(i=>i.status==='done')).length;
+  const inSprint=(ROADMAP.backlog.filter(i=>i.status==='sprint')).length;
+  document.getElementById('rm-stats').innerHTML=`
+    <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Backlog Items</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--bl)">${inSprint}</div><div class="stat-l">In Sprint</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--gr)">${done}</div><div class="stat-l">Done</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--pu)">${(ROADMAP.releases||[]).length}</div><div class="stat-l">Releases</div></div>`;
+  renderReleases();
+}
+
+function cycleStatus(id){
+  const order=['backlog','sprint','review','done'];
+  const item=ROADMAP.backlog.find(i=>i.id===id);
+  if(!item) return;
+  const idx=order.indexOf(item.status);
+  item.status=order[(idx+1)%order.length];
+  saveRoadmap();renderRoadmap();
+}
+
+function addBacklogItem(){
+  const title=document.getElementById('rm-title').value.trim();
+  if(!title) return;
+  ROADMAP.backlog.push({id:uid(),title,type:document.getElementById('rm-type').value,priority:document.getElementById('rm-pri').value,pts:document.getElementById('rm-pts').value,assignee:document.getElementById('rm-assignee').value,status:'backlog',createdAt:Date.now()});
+  saveRoadmap();renderRoadmap();document.getElementById('rm-title').value='';document.getElementById('rm-assignee').value='';
+}
+
+async function aiGenerateBacklog(){
+  const ctx=document.getElementById('rm-ai-ctx').value.trim();
+  if(!ctx) return;
+  document.getElementById('rm-ai-output').style.display='block';
+  document.getElementById('rm-ai-text').textContent='Generating backlog items…';
+  const out=await callClaude('You are an elite Product Manager (MIT CS + Sloan MBA, ex-Google PM, ex-Meta). Apply Amazon Working Backwards.','Generate 8 concrete product backlog items for: '+ctx+'. Format each as: TITLE | TYPE (feature/bug/tech-debt/research) | PRIORITY (P0-P3) | POINTS (1-13) | RATIONALE (1 sentence). Number them 1-8.',500);
+  document.getElementById('rm-ai-text').textContent=out;
+  // Parse and add items
+  out.split('\n').forEach(line=>{
+    const m=line.match(/\d+\.\s*(.+?)\s*\|\s*(\w[\w-]*)\s*\|\s*(P\d)\s*\|\s*(\d+)\s*\|/i);
+    if(m) ROADMAP.backlog.push({id:uid(),title:m[1].trim(),type:m[2].toLowerCase().replace(' ','-'),priority:m[3],pts:m[4],assignee:'',status:'backlog',createdAt:Date.now()});
+  });
+  saveRoadmap();renderRoadmap();
+}
+
+async function aiPlanSprint(){
+  const backlogItems=ROADMAP.backlog.filter(i=>i.status==='backlog').map(i=>i.priority+' '+i.pts+'pt: '+i.title).join('\n');
+  if(!backlogItems){alert('No backlog items to plan.');return;}
+  const out=await callClaude('You are an elite Scrum Master (IIT Delhi + MIT Sloan, ex-Amazon Agile Coach, ex-Google SM). Use velocity-based sprint planning.','Select the best sprint from this backlog for a 2-week sprint targeting ~40 story points. List selected items and explain the sprint goal.\n\nBacklog:\n'+backlogItems,400);
+  document.getElementById('rm-ai-output').style.display='block';
+  document.getElementById('rm-ai-text').textContent=out;
+}
+
+function addRelease(){
+  const ver=document.getElementById('rel-ver').value.trim();
+  const date=document.getElementById('rel-date').value;
+  const desc=document.getElementById('rel-desc').value.trim();
+  if(!ver||!date) return;
+  if(!ROADMAP.releases) ROADMAP.releases=[];
+  ROADMAP.releases.push({id:uid(),version:ver,date,description:desc,status:'planned',createdAt:Date.now()});
+  saveRoadmap();renderReleases();
+  document.getElementById('rel-ver').value='';document.getElementById('rel-desc').value='';
+}
+
+function renderReleases(){
+  const list=document.getElementById('releases-list');
+  if(!list) return;
+  const releases=ROADMAP.releases||[];
+  if(!releases.length){list.innerHTML='<div style="color:var(--tx3);font-size:12px">No releases yet.</div>';return;}
+  list.innerHTML=releases.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">
+    <span class="badge badge-pu">${r.version}</span>
+    <span style="font-size:12px;color:var(--tx2)">${r.date}</span>
+    <span style="flex:1;font-size:12px">${r.description}</span>
+    <button class="btn btn-danger btn-sm" onclick="deleteRelease('${r.id}')">✕</button>
+  </div>`).join('');
+}
+
+function deleteRelease(id){ROADMAP.releases=ROADMAP.releases.filter(r=>r.id!==id);saveRoadmap();renderReleases();}
+
+// ══════════════════ KPI SYNC ═════════════════════════════════════════════════
+function syncKPIsFromCRM(){
+  try{
+    const deals=CRM.deals||[];
+    const kpis=JSON.parse(localStorage.getItem('company-os-kpis')||'{}');
+    const closedDeals=deals.filter(d=>['won','lost'].includes(d.stage));
+    const pipeline=deals.filter(d=>!['won','lost'].includes(d.stage)).reduce((s,d)=>s+(+d.value||0),0);
+    const winRate=closedDeals.length?Math.round(deals.filter(d=>d.stage==='won').length/closedDeals.length*100):0;
+    const avgDeal=deals.length?Math.round(deals.reduce((s,d)=>s+(+d.value||0),0)/deals.length):0;
+    if(kpis.Sales){
+      const p=kpis.Sales.find(k=>k.id==='pipeline');if(p){p.current=pipeline;p.trend=pipeline>p.target?'up':pipeline<p.target*0.5?'down':'flat';}
+      const w=kpis.Sales.find(k=>k.id==='winrate');if(w){w.current=winRate;w.trend=winRate>w.current?'up':winRate<w.current?'down':'flat';}
+      const a=kpis.Sales.find(k=>k.id==='dealsize');if(a){a.current=avgDeal;a.trend=avgDeal>a.target?'up':'flat';}
+      localStorage.setItem('company-os-kpis',JSON.stringify(kpis));
+    }
+  }catch(e){}
+}
+function syncKPIsFromHiring(){
+  try{
+    const roles=HIRING.roles||[];const cands=HIRING.candidates||[];
+    const kpis=JSON.parse(localStorage.getItem('company-os-kpis')||'{}');
+    const openReqs=roles.filter(r=>r.status==='open').length;
+    const hired=cands.filter(c=>c.stage==='hired').length;
+    const offers=cands.filter(c=>c.stage==='offer').length;
+    const oar=offers+hired>0?Math.round(hired/(offers+hired)*100):0;
+    if(kpis.Team){
+      const o=kpis.Team.find(k=>k.id==='openreqs');if(o){o.current=openReqs;}
+      const r=kpis.Team.find(k=>k.id==='oar');if(r&&oar>0){r.current=oar;}
+      localStorage.setItem('company-os-kpis',JSON.stringify(kpis));
+    }
+  }catch(e){}
+}
+
+// ══════════════════ HIRING ═══════════════════════════════════════════════════
+let HIRING=ls('company-os-hiring')||{roles:[],candidates:[]};
+function saveHiring(){lss('company-os-hiring',HIRING);syncKPIsFromHiring();}
+let selectedRole=null;
+
+function renderHiring(){
+  const roles=HIRING.roles||[];
+  const filter=document.getElementById('h-filter')?.value||'';
+  const filtered=filter?roles.filter(r=>r.id===filter):roles;
+  document.getElementById('hiring-stats').innerHTML=`
+    <div class="stat"><div class="stat-n" style="color:var(--rd)">${roles.filter(r=>r.status==='open').length}</div><div class="stat-l">Open Roles</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--bl)">${(HIRING.candidates||[]).length}</div><div class="stat-l">Total Candidates</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--am)">${(HIRING.candidates||[]).filter(c=>c.stage==='offer').length}</div><div class="stat-l">Offers Out</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--gr)">${(HIRING.candidates||[]).filter(c=>c.stage==='hired').length}</div><div class="stat-l">Hired</div></div>`;
+  const statusBadge={open:'badge-gr',interviewing:'badge-bl','offer-out':'badge-am',closed:'',hold:'badge-or'};
+  document.getElementById('hiring-roles').innerHTML=filtered.length?filtered.map(r=>`<div class="card-sm" style="cursor:pointer" onclick="selectRole('${r.id}')">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${r.title}</div><div style="font-size:11px;color:var(--tx3)">${r.dept} · ${r.level} · Start: ${r.startDate||'TBD'}</div></div>
+      <span class="badge ${statusBadge[r.status]||''}">${r.status}</span>
+      <span style="font-size:11px;color:var(--tx3)">${(HIRING.candidates||[]).filter(c=>c.roleId===r.id).length} candidates</span>
+      <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteRole('${r.id}')">✕</button>
+    </div></div>`).join(''):'<div style="color:var(--tx3);font-size:12px;padding:10px">No roles yet.</div>';
+}
+
+function populateRoleSelect(){
+  const sel=document.getElementById('h-role-sel');
+  const fil=document.getElementById('h-filter');
+  if(!sel) return;
+  const opts='<option value="">— select role —</option>'+(HIRING.roles||[]).map(r=>`<option value="${r.id}">${r.title}</option>`).join('');
+  sel.innerHTML=opts;
+  if(fil) fil.innerHTML='<option value="">All roles</option>'+(HIRING.roles||[]).map(r=>`<option value="${r.id}">${r.title}</option>`).join('');
+}
+
+function addRole(){
+  const title=document.getElementById('h-title').value.trim();
+  if(!title) return;
+  const role={id:uid(),title,dept:document.getElementById('h-dept').value,level:document.getElementById('h-level').value,startDate:document.getElementById('h-start').value,status:'open',createdAt:Date.now()};
+  HIRING.roles.push(role);saveHiring();renderHiring();populateRoleSelect();
+  document.getElementById('h-title').value='';
+}
+
+function deleteRole(id){HIRING.roles=HIRING.roles.filter(r=>r.id!==id);HIRING.candidates=(HIRING.candidates||[]).filter(c=>c.roleId!==id);saveHiring();renderHiring();populateRoleSelect();}
+
+function selectRole(id){
+  selectedRole=id;
+  const role=HIRING.roles.find(r=>r.id===id);
+  const candidates=(HIRING.candidates||[]).filter(c=>c.roleId===id);
+  const stageOrder=['applied','screen','technical','final','offer','hired','rejected'];
+  const card=document.getElementById('h-cands-card');card.style.display='block';
+  document.getElementById('h-cands-title').textContent=`Candidates — ${role?.title||''}`;
+  document.getElementById('hiring-candidates').innerHTML=candidates.length?`<table class="tbl"><thead><tr><th>Name</th><th>Company</th><th>Stage</th><th></th></tr></thead><tbody>${candidates.map(c=>`<tr><td>${c.name}</td><td>${c.company||'—'}</td><td><span class="badge ${c.stage==='hired'?'badge-gr':c.stage==='offer'?'badge-am':c.stage==='rejected'?'badge-rd':'badge-bl'}">${c.stage}</span></td><td><select style="font-size:11px;padding:3px 6px" onchange="updateCandStage('${c.id}',this.value)">${stageOrder.map(s=>`<option value="${s}" ${c.stage===s?'selected':''}>${s}</option>`).join('')}</select><button class="btn btn-danger btn-sm" onclick="deleteCandidate('${c.id}')">✕</button></td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--tx3);font-size:12px">No candidates yet for this role.</div>';
+}
+
+function addCandidate(){
+  const roleId=document.getElementById('h-role-sel').value;
+  const name=document.getElementById('h-cand-name').value.trim();
+  if(!name||!roleId) return;
+  HIRING.candidates.push({id:uid(),roleId,name,company:document.getElementById('h-cand-co').value,stage:document.getElementById('h-stage').value,createdAt:Date.now()});
+  saveHiring();renderHiring();if(selectedRole===roleId) selectRole(roleId);
+  document.getElementById('h-cand-name').value='';document.getElementById('h-cand-co').value='';
+}
+
+function updateCandStage(id,stage){const c=(HIRING.candidates||[]).find(x=>x.id===id);if(c){c.stage=stage;saveHiring();renderHiring();if(selectedRole) selectRole(selectedRole);}}
+function deleteCandidate(id){HIRING.candidates=HIRING.candidates.filter(c=>c.id!==id);saveHiring();if(selectedRole) selectRole(selectedRole);}
+
+async function aiWriteJD(){
+  const roleId=selectedRole||document.getElementById('h-role-sel').value;
+  const role=HIRING.roles.find(r=>r.id===roleId);
+  if(!role){alert('Select a role first.');return;}
+  const card=document.getElementById('h-ai-card');card.style.display='block';
+  document.getElementById('h-ai-text').textContent='Writing JD…';
+  const out=await callClaude('You are a world-class Recruiter (Cambridge BA Psychology, Cornell ILR, ex-Google Technical Recruiting Lead, ex-Meta). Write compelling JDs that attract top 5% candidates.',`Write a complete job description for: ${role.title}, ${role.dept} department, ${role.level} level. Include: role summary, responsibilities (8 bullet points), requirements (must-have and nice-to-have), what success looks like in 90 days, and compensation philosophy. Tone: ambitious but human.`,800);
+  document.getElementById('h-ai-text').textContent=out;
+}
+
+async function aiInterviewQs(){
+  const roleId=selectedRole||document.getElementById('h-role-sel').value;
+  const role=HIRING.roles.find(r=>r.id===roleId);
+  if(!role){alert('Select a role first.');return;}
+  const card=document.getElementById('h-ai-card');card.style.display='block';
+  document.getElementById('h-ai-text').textContent='Generating questions…';
+  const out=await callClaude('You are a world-class Recruiter with structured interview expertise.','Generate 15 interview questions for a '+role.title+' role ('+role.level+'). Include: 4 behavioral (STAR format prompts), 4 technical/domain, 4 situational, 2 culture-fit, and 1 work-style. For each question, note what it assesses.',600);
+  document.getElementById('h-ai-text').textContent=out;
+}
+
+// ══════════════════ CRM ══════════════════════════════════════════════════════
+let CRM=ls('company-os-crm')||{deals:[]};
+function saveCRM(){lss('company-os-crm',CRM);syncKPIsFromCRM();}
+let selectedDeal=null;
+
+const STAGES=['prospect','discovery','demo','proposal','negotiation','won','lost'];
+const STAGE_LABELS={prospect:'Prospect',discovery:'Discovery',demo:'Demo',proposal:'Proposal',negotiation:'Negotiation',won:'Won',lost:'Lost'};
+
+function renderCRM(){
+  const deals=CRM.deals||[];
+  const totalPipe=deals.filter(d=>!['won','lost'].includes(d.stage)).reduce((s,d)=>s+(+d.value||0),0);
+  const won=deals.filter(d=>d.stage==='won').reduce((s,d)=>s+(+d.value||0),0);
+  const winRate=deals.length?Math.round(deals.filter(d=>d.stage==='won').length/deals.filter(d=>['won','lost'].includes(d.stage)).length*100)||0:0;
+  const avgDeal=deals.length?Math.round(deals.reduce((s,d)=>s+(+d.value||0),0)/deals.length):0;
+  document.getElementById('crm-stats').innerHTML=`
+    <div class="stat"><div class="stat-n" style="color:var(--bl)">$${(totalPipe/1000).toFixed(0)}K</div><div class="stat-l">Open Pipeline</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--gr)">$${(won/1000).toFixed(0)}K</div><div class="stat-l">Won ARR</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--am)">${winRate}%</div><div class="stat-l">Win Rate</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--pu)">$${(avgDeal/1000).toFixed(0)}K</div><div class="stat-l">Avg Deal</div></div>
+    <div class="stat"><div class="stat-n">${deals.length}</div><div class="stat-l">Total Deals</div></div>`;
+  const board=document.getElementById('crm-board');
+  board.innerHTML=STAGES.map(stage=>{
+    const col=deals.filter(d=>d.stage===stage);
+    const colVal=col.reduce((s,d)=>s+(+d.value||0),0);
+    return `<div class="crm-col">
+      <div class="crm-col-hdr">${STAGE_LABELS[stage]}<br><span style="color:var(--gr);font-size:10px">$${(colVal/1000).toFixed(0)}K</span></div>
+      ${col.map(d=>`<div class="deal-card" onclick="openDeal('${d.id}')">
+        <div class="deal-co">${d.company}</div>
+        <div class="deal-val">$${(+d.value||0).toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:2px">${d.contact||''}</div>
+        <div style="font-size:10px;color:var(--tx3)">${d.owner||''}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function addDeal(){
+  const company=document.getElementById('crm-co').value.trim();
+  if(!company) return;
+  CRM.deals.push({id:uid(),company,value:document.getElementById('crm-val').value,contact:document.getElementById('crm-contact').value,owner:document.getElementById('crm-owner').value,stage:document.getElementById('crm-stage').value,notes:[],createdAt:Date.now(),daysInStage:0});
+  saveCRM();renderCRM();
+  document.getElementById('crm-co').value='';document.getElementById('crm-val').value='';document.getElementById('crm-contact').value='';
+}
+
+function openDeal(id){
+  selectedDeal=id;
+  const d=CRM.deals.find(x=>x.id===id);if(!d) return;
+  const card=document.getElementById('crm-detail-card');card.style.display='block';card.scrollIntoView({behavior:'smooth'});
+  document.getElementById('crm-det-title').textContent=d.company;
+  document.getElementById('crm-ai-out').style.display='none';
+  document.getElementById('crm-det-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;font-size:13px">
+      <div><div style="color:var(--tx3);font-size:11px">Value</div><div style="font-weight:700;color:var(--gr);font-size:16px">$${(+d.value||0).toLocaleString()}</div></div>
+      <div><div style="color:var(--tx3);font-size:11px">Stage</div><div style="font-weight:600">${STAGE_LABELS[d.stage]}</div></div>
+      <div><div style="color:var(--tx3);font-size:11px">Owner</div><div>${d.owner||'—'}</div></div>
+    </div>
+    <div style="font-size:12px;margin-bottom:8px"><b>Contact:</b> ${d.contact||'—'}</div>
+    <div style="margin-top:10px"><b style="font-size:12px">Stage</b>
+      <select style="font-size:12px;margin-top:4px" onchange="updateDealStage('${d.id}',this.value)">${STAGES.map(s=>`<option value="${s}" ${d.stage===s?'selected':''}>${STAGE_LABELS[s]}</option>`).join('')}</select>
+    </div>
+    <div style="margin-top:12px"><b style="font-size:12px">Notes (${(d.notes||[]).length})</b>
+      <div style="max-height:150px;overflow-y:auto;margin-top:6px">${(d.notes||[]).map(n=>`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--bd);color:var(--tx2)">${n.text}<span style="color:var(--tx3);font-size:10px;margin-left:8px">${fmtDate(n.time)}</span></div>`).join('')||'<div style="color:var(--tx3);font-size:12px">No notes yet.</div>'}</div>
+      <div style="display:flex;gap:6px;margin-top:8px"><input id="deal-note" placeholder="Add note…" style="flex:1;font-size:12px"><button class="btn btn-secondary btn-sm" onclick="addDealNote('${d.id}')">+ Add</button></div>
+    </div>`;
+}
+
+function addDealNote(id){const d=CRM.deals.find(x=>x.id===id);const txt=document.getElementById('deal-note').value.trim();if(!d||!txt) return;if(!d.notes)d.notes=[];d.notes.push({text:txt,time:Date.now()});saveCRM();openDeal(id);document.getElementById('deal-note').value='';}
+function updateDealStage(id,stage){const d=CRM.deals.find(x=>x.id===id);if(d){d.stage=stage;saveCRM();renderCRM();openDeal(id);}}
+function closeCrmDetail(){document.getElementById('crm-detail-card').style.display='none';}
+
+async function aiDraftOutreach(){
+  const d=CRM.deals.find(x=>x.id===selectedDeal);if(!d) return;
+  document.getElementById('crm-ai-out').style.display='block';document.getElementById('crm-ai-out').textContent='Drafting…';
+  const out=await callClaude('You are an elite B2B Sales professional (Harvard MBA Baker Scholar, ex-Google Cloud $80M quota, ex-Salesforce President\'s Club 4x). Use Challenger Sale methodology.','Write a personalized cold outreach email for '+d.company+' (contact: '+d.contact+', deal value: $'+d.value+'). Use Challenger Sale framework: teach an insight, tailor to their situation, take control with a clear CTA. Subject line + 5-sentence email. Be specific and non-generic.',400);
+  document.getElementById('crm-ai-out').textContent=out;
+}
+
+async function aiWriteProposal(){
+  const d=CRM.deals.find(x=>x.id===selectedDeal);if(!d) return;
+  document.getElementById('crm-ai-out').style.display='block';document.getElementById('crm-ai-out').textContent='Writing proposal…';
+  const out=await callClaude('You are an elite VP Sales (Harvard MBA, ex-Google Cloud, ex-Salesforce). Write proposals that win deals.','Write a proposal outline for '+d.company+' ($'+d.value+' deal, '+d.stage+' stage). Include: executive summary, problem statement, proposed solution, implementation timeline, investment summary, ROI justification, and next steps. Make it specific and compelling.',600);
+  document.getElementById('crm-ai-out').textContent=out;
+}
+
+// ══════════════════ TEMPLATES ════════════════════════════════════════════════
+const BUILTIN_TEMPLATES=[
+  {id:'t1',cat:'🚀 Product Launch',title:'Press Release',desc:'Announce a new product or feature launch',agent:'Product Marketer',prompt:'Write a press release announcing [product name] by [company name]. Target audience: [audience]. Key value prop: [value proposition]. Include headline, dateline, 3 paragraphs, quote from CEO, boilerplate, and contact info.'},
+  {id:'t2',cat:'🚀 Product Launch',title:'GTM Plan',desc:'Go-to-market strategy for a new product',agent:'Product Marketer',prompt:'Create a GTM plan for [product name]. Company: [company name]. Target customer: [ICP]. Competition: [main competitors]. Include: positioning, channels, launch phases (pre/launch/post), KPIs, and first 90-day action plan.'},
+  {id:'t3',cat:'🚀 Product Launch',title:'Launch Checklist',desc:'Pre-launch readiness checklist',agent:'Product Manager',prompt:'Create a comprehensive launch checklist for [product name]. Cover: Engineering readiness, QA/testing, Marketing materials, Sales enablement, Support preparation, Legal/compliance, Analytics/tracking, and Post-launch monitoring. Format as actionable checklist with owner roles.'},
+  {id:'t4',cat:'🚀 Product Launch',title:'Demo Script',desc:'Sales demo script for a new product',agent:'Sales Agent',prompt:'Write a 20-minute demo script for [product name] targeting [buyer persona]. Include: opening hook (pain acknowledgment), agenda, 3 key feature demos with "so what" statements, objection handling, and closing ask. Make it conversational, not a lecture.'},
+  {id:'t5',cat:'🚀 Product Launch',title:'App Store Description',desc:'App store listing copy',agent:'Product Marketer',prompt:'Write an App Store / Google Play description for [app name]. Category: [category]. Key features: [top 3 features]. Tone: [tone]. Include: headline (80 chars max), short description (80 chars), long description (4000 chars with sections), and 5 keyword suggestions.'},
+  {id:'t6',cat:'🚀 Product Launch',title:'Announcement Email',desc:'Product launch email to existing users',agent:'Email Marketer',prompt:'Write a product announcement email for [product/feature name]. Sending to: [audience segment]. Key benefit: [main benefit]. Secondary benefits: [2-3 benefits]. Include: subject line (2 variants), preview text, personalized opening, body (benefit-led), social proof, CTA, and PS line.'},
+  {id:'t7',cat:'💼 Sales',title:'Cold Outreach Email',desc:'Personalized cold email to a prospect',agent:'SDR',prompt:'Write a cold email to [contact name] at [company]. Their pain: [pain point]. Our solution: [solution]. Proof point: [one specific result]. Use the format: insight → pain → proof → frictionless CTA. Subject line (5 words max), 4-sentence body, PS line.'},
+  {id:'t8',cat:'💼 Sales',title:'Battle Card',desc:'Competitive comparison vs a specific competitor',agent:'Sales Agent',prompt:'Create a sales battle card for [our product] vs [competitor name]. Include: 1-line positioning, 3 areas we win, 3 areas they win (be honest), win strategies for each competitor strength, top 3 FUD they spread and how to counter, and a recommended discovery question to surface our advantages.'},
+  {id:'t9',cat:'💼 Sales',title:'Discovery Call Script',desc:'Framework for a first discovery call',agent:'Sales Agent',prompt:'Write a discovery call script for [product] selling to [buyer persona] in [industry]. Include: opener (2 variants), rapport-building question, 5 MEDDIC-aligned discovery questions, active listening prompts, qualification criteria, next step close, and admin close. 30-minute call structure.'},
+  {id:'t10',cat:'💼 Sales',title:'Objection Handling Guide',desc:'Responses to the top sales objections',agent:'Sales Enablement',prompt:'Create an objection handling guide for [product]. List the top 8 objections with: the objection (verbatim), the underlying concern, the reframe strategy, the response (3-4 sentences), a proof point to include, and a follow-up question. Focus on: price, "not now", "we use [competitor]", and "need to think about it".'},
+  {id:'t11',cat:'💼 Sales',title:'Case Study Outline',desc:'Customer success story structure',agent:'Content',prompt:'Create a case study outline for [customer name] using [product]. Include: headline (outcome-first), executive summary, customer profile, challenge (before state with metrics), solution (what they implemented), results (quantified with before/after), customer quote, and CTA. Length: 800 words. Tone: [tone].'},
+  {id:'t12',cat:'📣 Marketing',title:'Blog Post',desc:'SEO-optimized thought leadership post',agent:'Content',prompt:'Write a blog post outline and introduction for: [topic]. Target keyword: [keyword]. Audience: [audience]. Angle: [unique POV]. Include: H1 (with keyword), meta description (155 chars), introduction (hook + problem + promise), 5 H2 sections with key points, conclusion with CTA, and 3 internal link opportunities.'},
+  {id:'t13',cat:'📣 Marketing',title:'Email Nurture Sequence',desc:'Multi-email drip campaign',agent:'Email Marketer',prompt:'Write a 5-email nurture sequence for [product] targeting [buyer persona] who downloaded [lead magnet]. Sequence goal: [conversion goal]. Email 1 (Day 0): deliver the asset + surprise value. Email 2 (Day 3): education. Email 3 (Day 7): social proof. Email 4 (Day 10): address main objection. Email 5 (Day 14): direct CTA. For each: subject line, preview text, body (150 words max).'},
+  {id:'t14',cat:'📣 Marketing',title:'PR Pitch',desc:'Media pitch for a news story',agent:'PR',prompt:'Write a PR pitch for [story angle] from [company name]. Target publication: [publication]. Key journalist hook: [what makes this newsworthy]. Include: subject line (clickbait-adjacent but honest), opening hook (1-2 sentences), news angle (why now), key facts/data points, what you can offer (interview/exclusive/data), and a strong closing. Max 200 words total.'},
+  {id:'t15',cat:'📣 Marketing',title:'SEO Content Brief',desc:'Brief for an SEO-optimized article',agent:'SEO',prompt:'Create an SEO content brief for an article targeting the keyword "[target keyword]". Include: search intent analysis, recommended title tag (60 chars), meta description (155 chars), suggested URL slug, word count target, 5 H2 sections, 5 related semantic keywords to include, 3 questions to answer (from People Also Ask), internal linking opportunities, and CTA recommendation.'},
+  {id:'t16',cat:'👥 People',title:'Job Description',desc:'Full JD for any role',agent:'Recruiter',prompt:'Write a complete job description for [job title] at [company name]. Seniority: [level]. Department: [department]. Key skills needed: [top 3 skills]. Include: role summary (3 sentences), what you\'ll do (8 bullets), what we\'re looking for (must-haves vs nice-to-haves), what we offer (compensation philosophy + benefits), and company culture blurb. Tone: [ambitious/startup/enterprise].'},
+  {id:'t17',cat:'👥 People',title:'Onboarding Checklist',desc:'30/60/90 day plan for a new hire',agent:'L&D',prompt:'Create a 30/60/90 day onboarding plan for a [job title] at [company]. Include for each period: learning goals, key people to meet, deliverables, success metrics, and manager check-in agenda. Make it specific enough that the new hire knows exactly what "good" looks like at each milestone.'},
+  {id:'t18',cat:'👥 People',title:'Performance Review Framework',desc:'Structured review template',agent:'HR / People Ops',prompt:'Create a performance review framework for [company name]. Include: rating scale (with definitions for each level), 5 core competencies to evaluate (with behavioral indicators at each level), self-assessment prompts (5 questions), manager assessment prompts (5 questions), growth conversation guide, and calibration guidance. Role type: [individual contributor/manager].'},
+  {id:'t19',cat:'👥 People',title:'Compensation Philosophy',desc:'Company compensation policy document',agent:'Comp & Benefits',prompt:'Write a compensation philosophy document for [company name] (stage: [seed/series A/series B/public]). Cover: guiding principles, market positioning (percentile targets by level), pay components (base, bonus, equity), how we determine pay, pay transparency policy, equity refresh policy, and how performance connects to compensation. Tone: direct and honest.'},
+  {id:'t20',cat:'⚖️ Legal',title:'Privacy Policy Sections',desc:'Key privacy policy clauses',agent:'Data Privacy Officer',prompt:'Write the key sections of a privacy policy for [company name], a [product type] company operating in [jurisdictions]. Cover: data collected and why, legal basis for processing (GDPR), how data is used, third parties, retention periods, user rights (access/delete/portability), cookies, contact information. Plain language, legally sound. Flag any sections that require legal review.'},
+  {id:'t21',cat:'⚖️ Legal',title:'NDA Key Clauses',desc:'Non-disclosure agreement analysis',agent:'Legal Advisor',prompt:'Review and summarize the key clauses in an NDA for [company name]. For each clause category (definition of confidential information, exclusions, term, obligations, remedies, governing law), explain: what to look for, what is standard, what is red flag, and a suggested fallback position. Audience: business person without legal training.'},
+  {id:'t22',cat:'⚖️ Legal',title:'Compliance Checklist',desc:'Regulatory compliance requirements',agent:'Compliance Officer',prompt:'Create a compliance checklist for [company name] that handles [type of data] and operates in [jurisdictions]. Cover requirements for: [regulation, e.g. GDPR/CCPA/SOC2/HIPAA]. For each requirement: what it requires, what you need to implement (technical + policy), who owns it, and how to evidence compliance. Prioritize by: critical / high / medium.'},
+  {id:'t23',cat:'⚖️ Legal',title:'IP Assignment Clause',desc:'Intellectual property assignment language',agent:'IP Attorney',prompt:'Write an IP assignment clause for [context: employee agreement/contractor agreement/partnership]. Company: [company name]. Scope: [scope of work]. Include: assignment of work product, carve-outs for pre-existing IP, moral rights waiver where applicable, representations and warranties, and a simple explanation of what this means in plain language. Note any jurisdictional variations for [relevant countries].'},
+  {id:'t24',cat:'💰 Finance',title:'Unit Economics Model',desc:'Key SaaS/business unit economics',agent:'Finance / CFO',prompt:'Build a unit economics framework for [company name], a [business model] company. Include: key metrics and how to calculate them (ARR, MRR, CAC, LTV, Payback Period, Gross Margin, NRR, Magic Number), current vs target benchmarks for [stage: seed/series A/B/C], formulas and data sources needed, and the 3 most important metrics to improve first based on typical patterns for this stage.'},
+  {id:'t25',cat:'💰 Finance',title:'Investor Update',desc:'Monthly/quarterly investor update',agent:'Investor Relations',prompt:'Write a monthly investor update template for [company name]. Month: [month]. Include sections for: headline metrics (ARR, MoM growth, cash), top 3 wins, top 3 challenges (be honest), key hires, product milestones, customer highlights, next month priorities, and asks from investors. Tone: transparent, concise, confidence-building. Show numbers with context (vs last month, vs plan).'},
+  {id:'t26',cat:'💰 Finance',title:'Board Deck Outline',desc:'Quarterly board presentation structure',agent:'Finance / CFO',prompt:'Create a board presentation outline for [company name] for Q[quarter] [year]. Include slide titles, what to cover on each slide, and key metrics/charts to include. Sections: Company snapshot, Q[quarter] highlights, financial performance (vs plan), product & engineering update, GTM & sales update, team update, risks & mitigations, Q[quarter+1] plan, ask. Target: 20 slides, 60-minute meeting.'},
+  {id:'t27',cat:'🔧 Engineering',title:'RFC Template',desc:'Request for Comment for engineering decisions',agent:'Architect',prompt:'Write an RFC (Request for Comments) for [system change/new system]. Author: [author]. Include: Problem statement (why this RFC exists), Current state, Proposed solution (detailed), Alternatives considered (with pros/cons of each), Implementation plan (phases + timeline), Rollback plan, Open questions, and Decision (TBD). Format for Confluence/Notion. Make it specific and technical.'},
+  {id:'t28',cat:'🔧 Engineering',title:'Incident Post-Mortem',desc:'Post-incident review document',agent:'DevOps',prompt:'Write a post-mortem for an incident at [company]. Incident: [brief description]. Duration: [start] to [end]. Impact: [user/revenue impact]. Sections: Incident summary, Timeline (detection → response → resolution), Root cause analysis (5 Whys), Contributing factors, What went well, What went wrong, Action items (each with owner + deadline + priority), and Communication to affected users. Tone: blameless, systemic focus.'},
+  {id:'t29',cat:'🔧 Engineering',title:'Technical Specification',desc:'Engineering spec for a new feature',agent:'Developer',prompt:'Write a technical specification for [feature name]. Product context: [what it does]. Include: Overview, Goals & non-goals, System design (components + data flow), API design (endpoints + request/response schemas), Data model changes, Error handling, Testing strategy, Performance requirements, Security considerations, Deployment plan, and Open questions. Format for engineering team review.'},
+  {id:'t30',cat:'🔧 Engineering',title:'API Documentation Outline',desc:'Structure for API reference docs',agent:'Tech Writer',prompt:'Create an API documentation outline for [API name]. Include: Overview (what the API does, authentication, base URL, versioning), Quick Start (5-minute hello world), Core Concepts (2-4 key concepts), Endpoints (grouped by resource: path, method, params, request body, response, errors, example), Error Reference (all error codes), Rate Limits, SDKs & Libraries, Changelog, and Support. Target audience: [developer type].'},
+];
+
+let CUSTOM_TEMPLATES=ls('company-os-custom-templates')||[];
+let activeTmpl=null;
+
+function getAllTemplates(){return [...BUILTIN_TEMPLATES,...CUSTOM_TEMPLATES];}
+
+function renderTemplates(){
+  const search=(document.getElementById('tmpl-search')?.value||'').toLowerCase();
+  const cat=document.getElementById('tmpl-cat-filter')?.value||'';
+  let templates=getAllTemplates();
+  if(search) templates=templates.filter(t=>t.title.toLowerCase().includes(search)||t.desc.toLowerCase().includes(search)||t.cat.toLowerCase().includes(search));
+  if(cat) templates=templates.filter(t=>t.cat===cat);
+  const grid=document.getElementById('tmpl-grid');
+  if(!grid) return;
+  grid.innerHTML=templates.map(t=>`<div class="tmpl-card" onclick="openTmpl('${t.id}')">
+    <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">${t.cat}</div>
+    <div class="tmpl-title">${t.title}</div>
+    <div class="tmpl-desc">${t.desc}</div>
+    <div class="tmpl-agent">→ ${t.agent}${t.id.startsWith('_')?'  <span style="color:var(--am)">custom</span>':''}</div>
+  </div>`).join('');
+}
+
+function openTmpl(id){
+  const t=getAllTemplates().find(x=>x.id===id);if(!t) return;
+  activeTmpl=t;
+  document.getElementById('tmpl-modal-title').textContent=t.title;
+  document.getElementById('tmpl-modal-agent').textContent='Suggested agent: '+t.agent+' · '+t.cat;
+  // Extract placeholders
+  const placeholders=[...new Set((t.prompt.match(/\[([^\]]+)\]/g)||[]).map(p=>p.slice(1,-1)))];
+  const fields=document.getElementById('tmpl-modal-fields');
+  fields.innerHTML=placeholders.map(p=>`<label style="margin-top:8px">${p}</label><input id="ph_${p.replace(/[^a-z0-9]/gi,'_')}" placeholder="Enter ${p.toLowerCase()}">`).join('');
+  fields.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',updateTmplPreview));
+  document.getElementById('tmpl-preview').value=t.prompt;
+  document.getElementById('tmpl-ai-out').style.display='none';
+  document.getElementById('tmpl-modal').style.display='flex';
+}
+
+function updateTmplPreview(){
+  if(!activeTmpl) return;
+  let prompt=activeTmpl.prompt;
+  const placeholders=[...new Set((prompt.match(/\[([^\]]+)\]/g)||[]).map(p=>p.slice(1,-1)))];
+  placeholders.forEach(p=>{
+    const val=document.getElementById('ph_'+p.replace(/[^a-z0-9]/gi,'_'))?.value;
+    if(val) prompt=prompt.replace(new RegExp('\\['+p.replace(/[[\]]/g,'\\$&')+'\\]','g'),val);
+  });
+  document.getElementById('tmpl-preview').value=prompt;
+}
+
+async function runTmplWithAI(){
+  if(!activeTmpl) return;
+  const prompt=document.getElementById('tmpl-preview').value;
+  const out=document.getElementById('tmpl-ai-out');out.style.display='block';out.textContent='Running with '+activeTmpl.agent+'…';
+  const result=await callClaude('You are '+activeTmpl.agent+', an elite specialist with Harvard/MIT/IIT credentials and FAANG experience. Produce expert-level output.',prompt,1000);
+  out.textContent=result;
+}
+
+function copyTmpl(){navigator.clipboard?.writeText(document.getElementById('tmpl-preview').value);alert('Copied!');}
+function closeTmplModal(){document.getElementById('tmpl-modal').style.display='none';activeTmpl=null;}
+
+function openCustomTmpl(){document.getElementById('custom-tmpl-modal').style.display='flex';}
+function closeCustomTmpl(){document.getElementById('custom-tmpl-modal').style.display='none';}
+
+function saveCustomTmpl(){
+  const title=document.getElementById('ct-title').value.trim();
+  const prompt=document.getElementById('ct-prompt').value.trim();
+  if(!title||!prompt) return;
+  const tmpl={id:uid(),cat:document.getElementById('ct-cat').value||'Custom',title,desc:document.getElementById('ct-desc').value,agent:document.getElementById('ct-agent').value||'CEO',prompt};
+  CUSTOM_TEMPLATES.push(tmpl);lss('company-os-custom-templates',CUSTOM_TEMPLATES);
+  closeCustomTmpl();renderTemplates();
+  document.getElementById('ct-title').value='';document.getElementById('ct-prompt').value='';document.getElementById('ct-desc').value='';document.getElementById('ct-agent').value='';
+}
+
+// ══════════════════ INCIDENTS ═════════════════════════════════════════════════
+let INCIDENTS=ls('company-os-incidents')||[];
+function saveIncidents(){lss('company-os-incidents',INCIDENTS);}
+let selectedInc=null;
+
+function renderIncidents(){
+  const open=INCIDENTS.filter(i=>i.status!=='resolved');
+  const resolved=INCIDENTS.filter(i=>i.status==='resolved');
+  const p1=INCIDENTS.filter(i=>i.severity==='P1'&&i.status!=='resolved').length;
+  document.getElementById('inc-stats').innerHTML=`
+    <div class="stat"><div class="stat-n" style="color:var(--rd)">${p1}</div><div class="stat-l">P1 Active</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--am)">${open.length}</div><div class="stat-l">Open</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--gr)">${resolved.length}</div><div class="stat-l">Resolved</div></div>
+    <div class="stat"><div class="stat-n">${INCIDENTS.length}</div><div class="stat-l">All Time</div></div>`;
+  const list=document.getElementById('incidents-list');
+  if(!INCIDENTS.length){list.innerHTML='<div class="card-sm" style="color:var(--tx3);text-align:center;padding:20px">No incidents recorded. All systems operational ✅</div>';return;}
+  list.innerHTML=INCIDENTS.sort((a,b)=>b.createdAt-a.createdAt).map(inc=>{
+    const sevClass={P1:'inc-p1',P2:'inc-p2',P3:'inc-p3',P4:'inc-p4'}[inc.severity]||'inc-p4';
+    return `<div class="inc-card ${sevClass}" onclick="openIncident('${inc.id}')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span class="badge ${inc.severity==='P1'?'badge-rd':inc.severity==='P2'?'badge-am':inc.severity==='P3'?'badge-bl':''}">${inc.severity}</span>
+        <b style="font-size:13px;flex:1">${inc.title}</b>
+        <span class="badge ${inc.status==='resolved'?'badge-gr':'badge-am'}">${inc.status}</span>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteInc('${inc.id}')">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--tx2)">${inc.impact||''}</div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px">Detected: ${fmtDate(inc.createdAt)} · ${(inc.updates||[]).length} updates</div>
+    </div>`;
+  }).join('');
+}
+
+function addIncident(){
+  const title=document.getElementById('inc-title').value.trim();
+  if(!title) return;
+  const inc={id:uid(),title,severity:document.getElementById('inc-sev').value,category:document.getElementById('inc-cat').value,impact:document.getElementById('inc-impact').value,status:'detected',updates:[],createdAt:Date.now(),resolvedAt:null};
+  INCIDENTS.push(inc);saveIncidents();renderIncidents();
+  document.getElementById('inc-title').value='';document.getElementById('inc-impact').value='';
+}
+
+function deleteInc(id){INCIDENTS=INCIDENTS.filter(i=>i.id!==id);saveIncidents();renderIncidents();if(selectedInc===id){document.getElementById('inc-detail').style.display='none';selectedInc=null;}}
+
+function openIncident(id){
+  selectedInc=id;
+  const inc=INCIDENTS.find(i=>i.id===id);if(!inc) return;
+  const card=document.getElementById('inc-detail');card.style.display='block';card.scrollIntoView({behavior:'smooth'});
+  document.getElementById('inc-det-title').textContent=inc.title;
+  document.getElementById('inc-ai-out').style.display='none';
+  document.getElementById('inc-det-body').innerHTML=`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="badge ${inc.severity==='P1'?'badge-rd':inc.severity==='P2'?'badge-am':'badge-bl'}">${inc.severity}</span>
+      <span class="badge badge-or">${inc.category}</span>
+      <span class="badge ${inc.status==='resolved'?'badge-gr':'badge-am'}">${inc.status}</span>
+    </div>
+    <div style="font-size:13px;margin-bottom:10px"><b>Impact:</b> ${inc.impact||'Not specified'}</div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Detected: ${fmtDate(inc.createdAt)}${inc.resolvedAt?' | Resolved: '+fmtDate(inc.resolvedAt)+' | MTTR: '+Math.round((inc.resolvedAt-inc.createdAt)/60000)+'min':''}</div>
+    <b style="font-size:12px">Timeline</b>
+    <div style="max-height:180px;overflow-y:auto;margin-top:6px">${(inc.updates||[]).map(u=>`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--bd);color:var(--tx2)"><span style="color:var(--tx3);font-size:10px">${fmtDate(u.time)}</span> — ${u.text}</div>`).join('')||'<div style="color:var(--tx3);font-size:12px">No updates yet.</div>'}</div>`;
+  document.getElementById('inc-update-text').value='';
+}
+
+function addIncUpdate(){
+  const inc=INCIDENTS.find(i=>i.id===selectedInc);const txt=document.getElementById('inc-update-text').value.trim();
+  if(!inc||!txt) return;if(!inc.updates) inc.updates=[];
+  inc.updates.push({text:txt,time:Date.now()});
+  if(inc.status==='detected') inc.status='investigating';
+  else if(inc.status==='investigating') inc.status='mitigating';
+  saveIncidents();openIncident(selectedInc);renderIncidents();
+}
+
+function resolveIncident(){
+  const inc=INCIDENTS.find(i=>i.id===selectedInc);if(!inc) return;
+  inc.status='resolved';inc.resolvedAt=Date.now();
+  if(!inc.updates) inc.updates=[];inc.updates.push({text:'Incident resolved.',time:Date.now()});
+  saveIncidents();openIncident(selectedInc);renderIncidents();
+}
+
+function closeIncDetail(){document.getElementById('inc-detail').style.display='none';}
+
+async function aiIncidentPlan(){
+  const inc=INCIDENTS.find(i=>i.id===selectedInc);if(!inc) return;
+  const out=document.getElementById('inc-ai-out');out.style.display='block';out.textContent='Generating response plan…';
+  const agent=inc.category==='security'?'You are a world-class Security Engineer (MIT CSAIL, ex-Google Project Zero, ex-Facebook Security).':'You are an elite SRE (IIT Delhi Gold Medal, ex-Google SRE, ex-Amazon AWS). Apply Google SRE book practices.';
+  const result=await callClaude(agent,'Create an incident response plan for: '+inc.title+' ('+inc.severity+', '+inc.category+'). Impact: '+inc.impact+'. Provide: immediate containment steps (first 15 minutes), investigation checklist, mitigation actions, communication template (internal + external), and escalation triggers. Be specific and actionable.',700);
+  out.textContent=result;
+}
+
+async function aiPostMortem(){
+  const inc=INCIDENTS.find(i=>i.id===selectedInc);if(!inc) return;
+  const updates=(inc.updates||[]).map(u=>fmtDate(u.time)+': '+u.text).join('\n');
+  const out=document.getElementById('inc-ai-out');out.style.display='block';out.textContent='Writing post-mortem…';
+  const result=await callClaude('You are an elite SRE (IIT Delhi Gold Medal, ex-Google SRE, ex-Amazon SRE). Write blameless post-mortems that prevent recurrence.','Write a post-mortem for: '+inc.title+' ('+inc.severity+'). Impact: '+inc.impact+'. Timeline:\n'+updates+'\n\nInclude: incident summary, impact, timeline, root cause (5 Whys), contributing factors, what went well, what went wrong, 5 action items with owners + due dates, and lessons learned.',700);
+  out.textContent=result;
+}
+
+// ══════════════════ DOCS ══════════════════════════════════════════════════════
+const DOC_FORMS={
+  prd:[{id:'product',label:'Product name',ph:'e.g. Analytics Dashboard v2'},{id:'problem',label:'Problem being solved',ph:'1-2 sentences'},{id:'users',label:'Target users',ph:'e.g. Data analysts at mid-market SaaS companies'},{id:'goals',label:'Success metrics',ph:'e.g. Reduce report creation time by 50%'}],
+  board:[{id:'company',label:'Company name',ph:''},{id:'quarter',label:'Quarter & Year',ph:'e.g. Q3 2025'},{id:'metrics',label:'Key metrics to highlight',ph:'e.g. ARR $2.1M (+15% QoQ), NRR 112%'},{id:'ask',label:'Ask from board',ph:'e.g. Approve $500K marketing budget increase'}],
+  pressrelease:[{id:'company',label:'Company name',ph:''},{id:'news',label:'What is being announced',ph:''},{id:'ceo',label:'CEO name & quote',ph:''},{id:'date',label:'Release date & city',ph:'e.g. San Francisco, June 15, 2025'}],
+  jd:[{id:'role',label:'Job title',ph:''},{id:'dept',label:'Department',ph:''},{id:'level',label:'Level',ph:'e.g. Senior, Staff'},{id:'skills',label:'Top 3 required skills',ph:''}],
+  nda:[{id:'company',label:'Your company name',ph:''},{id:'counterparty',label:'Counterparty type',ph:'e.g. vendor, investor, employee'},{id:'purpose',label:'Purpose of the NDA',ph:'e.g. due diligence for potential acquisition'},{id:'term',label:'Desired term length',ph:'e.g. 2 years'}],
+  meetingnotes:[{id:'meeting',label:'Meeting name & date',ph:'e.g. Product Strategy, 2025-06-15'},{id:'attendees',label:'Attendees',ph:'comma-separated names'},{id:'agenda',label:'Agenda items discussed',ph:''},{id:'decisions',label:'Key decisions made',ph:''}],
+  sprintreport:[{id:'sprint',label:'Sprint name & number',ph:'e.g. Sprint 24 — May 26-June 6'},{id:'team',label:'Team members',ph:''},{id:'completed',label:'Completed items',ph:''},{id:'next',label:'Next sprint goals',ph:''}],
+  investorupdate:[{id:'company',label:'Company name',ph:''},{id:'month',label:'Month',ph:'e.g. May 2025'},{id:'metrics',label:'Key metrics',ph:'ARR, growth, burn'},{id:'asks',label:'Asks from investors',ph:'e.g. intros to enterprise CTOs'}],
+  techspec:[{id:'feature',label:'Feature name',ph:''},{id:'context',label:'Problem context',ph:'Why are we building this?'},{id:'scope',label:'In scope / out of scope',ph:''},{id:'api',label:'Key API endpoints needed',ph:''}],
+  casestudy:[{id:'customer',label:'Customer name',ph:''},{id:'challenge',label:'Challenge before (with metrics)',ph:'e.g. 40 hours/week on manual reporting'},{id:'solution',label:'Solution implemented',ph:''},{id:'results',label:'Results achieved (with metrics)',ph:'e.g. Saved 30 hrs/week, 3× faster reporting'}],
+};
+
+const DOC_AGENTS={
+  prd:'You are an elite Product Manager (MIT CS + Sloan MBA, ex-Google Maps Senior PM, ex-Meta Reels PM). Write PRDs using Amazon Working Backwards. Be specific about requirements and success metrics.',
+  board:'You are a world-class CFO (LSE Economics First Class, Wharton MBA, ex-Goldman Sachs VP, ex-Amazon Finance Director). Write board materials that give investors confidence without creating liability.',
+  pressrelease:'You are an elite Product Marketing Manager (Harvard AB + Cambridge MPhil, ex-Google PMM Director, ex-Apple Marketing). Write press releases that journalists actually read.',
+  jd:'You are a world-class Recruiter (Cambridge BA Psychology, Cornell ILR, ex-Google Technical Recruiting Lead, ex-Meta Recruiting Manager). Write JDs that attract top 5% candidates.',
+  nda:'You are a world-class startup Legal Counsel (Harvard Law JD, Order of the Coif, ex-Google Senior Legal Counsel, ex-Amazon Associate General Counsel). Give actionable legal guidance.',
+  meetingnotes:'You are a world-class Chief of Staff (Harvard MBA Baker Scholar, ex-Google Chief of Staff to VP Product). Write meeting notes that capture decisions and drive accountability.',
+  sprintreport:'You are an elite Scrum Master (IIT Delhi + MIT Sloan, ex-Amazon Agile Coach). Write sprint reports that are honest about progress and blockers.',
+  investorupdate:'You are an elite Investor Relations professional (Harvard AB Economics Magna Cum Laude, LSE MSc Finance, ex-Goldman Sachs VP). Write investor updates that build trust.',
+  techspec:'You are a world-class Software Architect (MIT CSAIL PhD, ex-Google Distinguished Engineer, ex-Amazon Principal Engineer). Write specs that engineers implement correctly on first read.',
+  casestudy:'You are an elite Content Strategist (Columbia MFA Journalism, ex-Netflix Content Strategy Lead). Write case studies that are specific, credible, and generate pipeline.',
+};
+
+let currentDoc='';
+let currentDocTitle='';
+
+function renderDocForm(){
+  const type=document.getElementById('doc-type').value;
+  const fields=DOC_FORMS[type]||[];
+  document.getElementById('doc-form').innerHTML=fields.map(f=>`<label>${f.label}</label><input id="docf_${f.id}" placeholder="${f.ph}">`).join('');
+}
+
+async function generateDoc(){
+  const type=document.getElementById('doc-type').value;
+  const fields=DOC_FORMS[type]||[];
+  const ctx=fields.map(f=>{const v=document.getElementById('docf_'+f.id)?.value;return v?f.label+': '+v:'';}).filter(Boolean).join('\n');
+  const sysPrompt=DOC_AGENTS[type]||'You are an expert document writer.';
+  const typeLabel=document.getElementById('doc-type').options[document.getElementById('doc-type').selectedIndex].text;
+  const btn=document.getElementById('doc-gen-btn');btn.textContent='⏳ Generating…';btn.disabled=true;
+  const result=await callClaude(sysPrompt,'Write a complete, professional '+typeLabel+' using this context:\n'+ctx+'\n\nProduce the full document — no placeholders, no outlines. Write the actual content.',1200);
+  btn.textContent='🤖 Generate';btn.disabled=false;
+  currentDoc=result;currentDocTitle=typeLabel;
+  document.getElementById('doc-output-card').style.display='block';
+  document.getElementById('doc-output-title').textContent=typeLabel;
+  document.getElementById('doc-output-text').value=result;
+  document.getElementById('doc-output-card').scrollIntoView({behavior:'smooth'});
+}
+
+function copyDoc(){navigator.clipboard?.writeText(document.getElementById('doc-output-text').value);alert('Copied to clipboard!');}
+
+function downloadDoc(){
+  const content=document.getElementById('doc-output-text').value;
+  const blob=new Blob([content],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(currentDocTitle||'document').replace(/[^a-z0-9]/gi,'-').toLowerCase()+'.txt';a.click();
+}
+
+function saveDocToLibrary(){
+  const content=document.getElementById('doc-output-text').value;
+  if(!content) return;
+  const name=prompt('Save as:',currentDocTitle+' — '+new Date().toLocaleDateString());
+  if(!name) return;
+  const docs=ls('company-os-docs')||[];
+  docs.push({id:uid(),name,type:currentDocTitle,content,savedAt:Date.now()});
+  lss('company-os-docs',docs);renderDocLibrary();
+  alert('Saved to library!');
+}
+
+function renderDocLibrary(){
+  const list=document.getElementById('doc-library');if(!list) return;
+  const docs=ls('company-os-docs')||[];
+  if(!docs.length){list.innerHTML='<div style="color:var(--tx3);font-size:12px">No saved docs yet.</div>';return;}
+  list.innerHTML=docs.sort((a,b)=>b.savedAt-a.savedAt).map(d=>`<div class="doc-item">
+    <div style="flex:1;cursor:pointer" onclick="openSavedDoc('${d.id}')">
+      <div style="font-size:13px;font-weight:500">${d.name}</div>
+      <div style="font-size:11px;color:var(--tx3)">${d.type} · ${fmtDate(d.savedAt)}</div>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}')">✕</button>
+  </div>`).join('');
+}
+
+function openSavedDoc(id){
+  const docs=ls('company-os-docs')||[];const d=docs.find(x=>x.id===id);if(!d) return;
+  currentDoc=d.content;currentDocTitle=d.name;
+  document.getElementById('doc-output-card').style.display='block';
+  document.getElementById('doc-output-title').textContent=d.name;
+  document.getElementById('doc-output-text').value=d.content;
+}
+
+function deleteDoc(id){
+  const docs=(ls('company-os-docs')||[]).filter(d=>d.id!==id);
+  lss('company-os-docs',docs);renderDocLibrary();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+renderRoadmap();
+renderTemplates();
+renderDocForm();
+renderDocLibrary();
+
+
+// ==AGENT-PANEL-INJECTED==
+(function(){
+const AP_KEY='company-os-agent-tasks';
+const AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+let apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+window.apGetAll=apGetAll;
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function openAgentPanel(name,emoji,role){
+  const a=emoji?{name,emoji,role}:AP_AGENTS.find(x=>x.name===name)||{name,emoji:'🤖',dept:'',role:''};
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(t=>{
+    document.getElementById('ap-tab-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('ap-tc-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const done=tasks.filter(t=>t.done).length,open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';return;}
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item" id="ap-ti-${i}">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-expand" onclick="apToggleOutput(${i})">▸ Show AI output</div><div class="ap-task-output" id="ap-to-${i}">${t.output.replace(/</g,'&lt;')}</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function apToggleOutput(idx){
+  const out=document.getElementById('ap-to-'+idx);
+  const exp=out?.previousElementSibling;
+  if(!out)return;
+  const open=out.classList.toggle('open');
+  if(exp)exp.textContent=open?'▾ Hide AI output':'▸ Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(t=>t.output&&t.output.length>0).reverse();
+  const list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet. Use "Run AI Task" to generate output.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ap-history-item">
+      <div class="ap-history-date">${new Date(t.completedAt||t.createdAt).toLocaleString()}</div>
+      <div class="ap-history-prompt">${t.title.replace(/</g,'&lt;')}</div>
+      <div class="ap-history-output">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent)return;
+  const inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title)return;
+  const all=apGetAll();
+  if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent)return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt)return;
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first (in Settings or the API key field in this module).');return;}
+  const btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent'}. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    const all=apGetAll();
+    if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history')apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message;out.style.display='block';
+  }
+  inner.textContent='▶ Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// Export
+function apExportTasks(){
+  const all=apGetAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+// Picker
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  const q=document.getElementById('ap-picker-search').value.toLowerCase();
+  const all=apGetAll();
+  const agents=q?AP_AGENTS.filter(a=>a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q)):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(a=>{
+    const tasks=(all[a.name]||[]),done=tasks.filter(t=>t.done).length;
+    const badge=tasks.length?`<span class="ap-picker-item-tasks">${done}/${tasks.length}✓</span>`:'';
+    return `<div class="ap-picker-item" onclick="apPickerSelect('${a.name.replace(/'/g,"\'")}')">
+      <span class="ap-picker-item-emoji">${a.emoji}</span>
+      <div style="flex:1;min-width:0"><div class="ap-picker-item-name">${a.name}</div><div class="ap-picker-item-dept">${a.dept}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  const a=AP_AGENTS.find(x=>x.name===name);
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+// Bulk Run
+let apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  const grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(a=>`
+    <div class="ap-bulk-agent-item ${apBulkSelected.has(a.name)?'selected':''}" onclick="apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <input type="checkbox" ${apBulkSelected.has(a.name)?'checked':''} onclick="event.stopPropagation();apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <span>${a.emoji}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+    </div>`).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(a=>a.name)):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  const prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-bulk-run-btn');
+  const prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  const agents=AP_AGENTS.filter(a=>apBulkSelected.has(a.name));
+  const all=apGetAll();
+  let done=0;
+  for(const a of agents){
+    prog.textContent=`Running ${a.emoji} ${a.name}… (${done}/${agents.length})`;
+    const sys=`You are ${a.name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||'Error';
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent=`✅ Done! Ran ${done} agents.`;
+  btn.disabled=false;
+  if(apCurrentAgent)apRenderTasks();apRenderStats();apRenderHistory();
+}
+window.apRunBulk=apRunBulk;
+})();
+
+</script>
+
+
+<!-- ==PANEL-ENHANCED== -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">⚡</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">📋 Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">📜 History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything — runs against this agent's system prompt and auto-saves…"></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">▶ Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">📤 Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>📋 Agent Tasks — Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">✕</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="🔍 Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>⚡ Bulk Run — Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer" onclick="apCloseBulk()">✕</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 priorities this quarter?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">⚡ Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

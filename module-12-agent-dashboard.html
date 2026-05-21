@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Global Agent Task Dashboard — Module 12</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;
+  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;
+  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;
+  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;--pu:#a78bfa;
+  --cy:#22d3ee;--or:#fb923c;
+  --r:10px;--rl:14px;
+}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+.app{max-width:1400px;margin:0 auto;padding:20px 24px}
+
+/* ---- HERO STATS ---- */
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.hero-box{background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:20px 24px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.hero-box::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(167,139,250,.06),rgba(96,165,250,.04));pointer-events:none}
+.hero-box:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.hero-n{font-size:2.4rem;font-weight:800;line-height:1;margin-bottom:4px}
+.hero-l{font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.hero-sub{font-size:.78rem;color:var(--tx2);margin-top:6px}
+
+/* ---- FILTER BAR ---- */
+.filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:10px 14px}
+.filter-bar input,.filter-bar select{background:var(--bg3);border:1px solid var(--bd2);color:var(--tx);border-radius:8px;padding:7px 11px;font-size:.83rem;outline:none;transition:border-color .15s}
+.filter-bar input{flex:1;min-width:160px}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--pu)}
+.filter-bar select{min-width:160px}
+.filter-status{display:flex;gap:4px;flex-wrap:wrap}
+.flt-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:.78rem;cursor:pointer;transition:all .15s}
+.flt-btn.active{background:var(--bg3);border-color:var(--pu);color:var(--pu)}
+.flt-btn:hover:not(.active){border-color:var(--bd3);color:var(--tx)}
+.export-top-btn{margin-left:auto;padding:7px 14px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.export-top-btn:hover{opacity:.85}
+
+/* ---- GRID ---- */
+.agent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1100px){.agent-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.agent-grid{grid-template-columns:1fr}.hero-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ---- AGENT CARD ---- */
+.agent-card{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:14px;cursor:pointer;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .15s;position:relative;overflow:hidden}
+.agent-card::after{content:'';position:absolute;inset:0;opacity:0;background:linear-gradient(135deg,rgba(167,139,250,.07),rgba(96,165,250,.05));transition:opacity .2s;pointer-events:none}
+.agent-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.45);border-color:var(--bd2)}
+.agent-card:hover::after{opacity:1}
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.card-emoji{font-size:1.6rem;line-height:1;flex-shrink:0}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:.92rem;font-weight:700;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-dept{display:inline-block;font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:5px;background:var(--bg4);color:var(--tx3);border:1px solid var(--bd2);margin-top:2px;white-space:nowrap;overflow:hidden;max-width:100%;text-overflow:ellipsis}
+.progress-track{background:var(--bg4);border-radius:4px;height:5px;overflow:hidden;margin-bottom:7px}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--pu),var(--bl));transition:width .6s cubic-bezier(.4,0,.2,1);width:0}
+.card-counts{font-size:.72rem;color:var(--tx2);margin-bottom:6px}
+.card-counts span{color:var(--gr);font-weight:700}
+.card-snippet{font-size:.72rem;color:var(--tx3);font-style:italic;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-empty{font-size:.72rem;color:var(--tx3);opacity:.5}
+.card-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dot-gr{background:var(--gr)}
+.dot-am{background:var(--am)}
+.dot-bd{background:var(--bd2)}
+
+/* ---- EMPTY STATE ---- */
+.no-agents{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--tx3)}
+.no-agents big{font-size:2.5rem;display:block;margin-bottom:10px}
+
+/* ---- AGENT PANEL ---- */
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(96vw,480px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.9rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1.02rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180}
+.ap-hdr-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ap-bulk-btn{padding:5px 10px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:7px;font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.ap-bulk-btn:hover{opacity:.85}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.ap-panel-close:hover{color:#ef4444;border-color:#ef4444}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.25rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-progress-wrap{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:10px 12px}
+.ap-prog-bar-track{background:#1a1e2e;border-radius:4px;height:6px;overflow:hidden;margin-top:6px}
+.ap-prog-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#a78bfa,#60a5fa);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ap-prog-label{font-size:.72rem;color:#4a5180;margin-top:4px;text-align:right}
+
+/* Panel tabs */
+.ap-tabs{display:flex;gap:0;border-bottom:1px solid #1e2236;flex-shrink:0;background:#12151f}
+.ap-tab{flex:1;padding:9px;font-size:.78rem;font-weight:600;color:#4a5180;background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.ap-tab.active{color:#a78bfa;border-bottom-color:#a78bfa}
+.ap-tab:hover:not(.active){color:#8890bb}
+
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236;animation:taskIn .2s ease}
+.ap-task-item:last-child{border-bottom:none}
+@keyframes taskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .2s cubic-bezier(.4,0,.2,1);background:transparent;color:transparent;user-select:none}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff;transform:scale(1.15)}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0;transition:transform .15s}
+.ap-add-btn:active{transform:scale(.9)}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
+.ap-run-btn:disabled{opacity:.55;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+
+/* History tab */
+.hist-item{background:#12151f;border:1px solid #1e2236;border-radius:9px;margin-bottom:8px;overflow:hidden}
+.hist-item-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;transition:background .12s}
+.hist-item-hdr:hover{background:#1a1e2e}
+.hist-title{flex:1;font-size:.82rem;color:#dde1f5;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-date{font-size:.65rem;color:#4a5180;flex-shrink:0}
+.hist-chevron{font-size:.7rem;color:#4a5180;flex-shrink:0;transition:transform .15s}
+.hist-chevron.open{transform:rotate(90deg)}
+.hist-body{display:none;padding:0 12px 10px;font-size:.78rem;color:#8890bb;line-height:1.65;white-space:pre-wrap;border-top:1px solid #1e2236;word-break:break-word}
+.hist-body.open{display:block}
+.hist-empty{font-size:.78rem;color:#4a5180;padding:10px 0}
+
+/* Panel footer */
+.ap-panel-footer{padding:10px 14px;border-top:1px solid #1e2236;background:#12151f;flex-shrink:0;display:flex;gap:8px}
+.ap-footer-btn{flex:1;padding:7px;border-radius:8px;border:1px solid #2d3354;background:transparent;color:#8890bb;font-size:.78rem;cursor:pointer;transition:all .15s;font-weight:600}
+.ap-footer-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+/* ---- BULK MODAL ---- */
+.bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.bulk-overlay.open{display:flex}
+.bulk-modal{background:#12151f;border:1px solid #2d3354;border-radius:16px;width:min(96vw,560px);max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.bulk-hdr{padding:16px 18px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.bulk-hdr-title{font-size:1rem;font-weight:700;color:#dde1f5}
+.bulk-close{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.bulk-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.bulk-label{font-size:.75rem;color:#8890bb;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.bulk-textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:9px;padding:10px 12px;font-size:.85rem;width:100%;min-height:80px;resize:none;font-family:inherit;outline:none}
+.bulk-textarea:focus{border-color:#a78bfa}
+.bulk-agents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;max-height:220px;overflow-y:auto;background:#1a1e2e;border:1px solid #2d3354;border-radius:9px;padding:8px}
+.bulk-agent-chk{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:6px;cursor:pointer;transition:background .1s;user-select:none}
+.bulk-agent-chk:hover{background:#222740}
+.bulk-agent-chk input[type=checkbox]{accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.bulk-agent-chk-label{font-size:.78rem;color:#dde1f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bulk-run-btn{background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:9px;padding:10px;font-size:.88rem;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s}
+.bulk-run-btn:disabled{opacity:.5;cursor:default}
+.bulk-progress{background:#12151f;border:1px solid #1e2236;border-radius:9px;padding:12px;font-size:.78rem;line-height:1.8;max-height:160px;overflow-y:auto;display:none}
+.bulk-sel-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bulk-sel-btn{padding:4px 9px;border-radius:5px;border:1px solid #2d3354;background:transparent;color:#8890bb;font-size:.72rem;cursor:pointer;transition:all .12s}
+.bulk-sel-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+/* ---- SPINNER ---- */
+.ap-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+
+/* ---- BOTTOM EXPORT ---- */
+.bottom-bar{margin-top:28px;padding:16px 20px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.bottom-bar-txt{font-size:.82rem;color:var(--tx2)}
+.export-btn{padding:8px 18px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:9px;font-size:.83rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.export-btn:hover{opacity:.85}
+
+/* ---- PAGE HEADER ---- */
+.page-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:14px;flex-wrap:wrap}
+.page-hdr-left{}
+.page-title{font-size:1.4rem;font-weight:800;color:var(--tx)}
+.page-sub{font-size:.8rem;color:var(--tx3);margin-top:3px}
+.page-hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{background:var(--bg3);border:1px solid var(--bd2);color:var(--pu);font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap}
+.api-input{background:var(--bg2);border:1px solid var(--bd);color:var(--tx);border-radius:var(--r);padding:6px 10px;font-size:.78rem;width:200px;outline:none}
+.api-input:focus{border-color:var(--bd2)}
+.api-save{background:var(--pu);color:#fff;border:none;border-radius:var(--r);padding:6px 12px;font-size:.78rem;cursor:pointer;transition:opacity .15s}
+.api-save:hover{opacity:.85}
+
+/* results count */
+.results-count{font-size:.78rem;color:var(--tx3);padding:0 4px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:6px;font-size:12px;font-family:system-ui,sans-serif;flex-wrap:wrap">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px;white-space:nowrap">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+</nav>
+
+<div class="app">
+
+  <!-- PAGE HEADER -->
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="page-title">📊 Global Agent Task Dashboard</div>
+      <div class="page-sub">Module 12 — Command-centre view across all 106 agents</div>
+    </div>
+    <div class="page-hdr-right">
+      <span class="badge">Module 12</span>
+      <input class="api-input" id="apiKeyInput" type="password" placeholder="Anthropic API key (sk-ant-…)" autocomplete="off">
+      <button class="api-save" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+
+  <!-- HERO STATS -->
+  <div class="hero-stats" id="heroStats">
+    <div class="hero-box">
+      <div class="hero-n" style="color:var(--pu)" id="h-agents">0</div>
+      <div class="hero-l">Agents with Tasks</div>
+      <div class="hero-sub">of 106 total agents</div>
+    </div>
+    <div class="hero-box">
+      <div class="hero-n" style="color:var(--bl)" id="h-total">0</div>
+      <div class="hero-l">Total Tasks</div>
+      <div class="hero-sub">across all agents</div>
+    </div>
+    <div class="hero-box">
+      <div class="hero-n" style="color:var(--gr)" id="h-done">0</div>
+      <div class="hero-l">Tasks Completed</div>
+      <div class="hero-sub" id="h-done-sub">—</div>
+    </div>
+    <div class="hero-box">
+      <div class="hero-n" style="color:var(--am)" id="h-pct">0%</div>
+      <div class="hero-l">Overall Progress</div>
+      <div class="hero-sub" id="h-open-sub">—</div>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <input type="search" id="searchInput" placeholder="🔍  Search agents or departments…" oninput="renderGrid()">
+    <select id="deptFilter" onchange="renderGrid()">
+      <option value="">All Departments</option>
+      <option>Strategy & Leadership</option>
+      <option>Product & Engineering</option>
+      <option>Finance & Operations</option>
+      <option>Sales & Revenue</option>
+      <option>Marketing & Growth</option>
+      <option>Customer</option>
+      <option>People & Culture</option>
+      <option>Coordination</option>
+      <option>Data & AI</option>
+      <option>Security & Web3</option>
+      <option>Platform & Infra</option>
+      <option>Product Design</option>
+      <option>C-Suite</option>
+      <option>Engineering Specialists</option>
+      <option>Legal & Compliance</option>
+      <option>Emerging Tech</option>
+    </select>
+    <div class="filter-status">
+      <button class="flt-btn active" data-status="all" onclick="setStatusFilter('all',this)">All</button>
+      <button class="flt-btn" data-status="has" onclick="setStatusFilter('has',this)">Has Tasks</button>
+      <button class="flt-btn" data-status="complete" onclick="setStatusFilter('complete',this)">Completed</button>
+      <button class="flt-btn" data-status="empty" onclick="setStatusFilter('empty',this)">Empty</button>
+    </div>
+    <span class="results-count" id="resultsCount"></span>
+    <button class="export-top-btn" onclick="exportJSON()">📤 Export JSON</button>
+  </div>
+
+  <!-- AGENT GRID -->
+  <div class="agent-grid" id="agentGrid"></div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <span class="bottom-bar-txt" id="bottomTxt">Loading dashboard…</span>
+    <button class="export-btn" onclick="exportJSON()">📤 Export all tasks as JSON</button>
+  </div>
+
+</div><!-- /app -->
+
+
+<!-- ============================================================
+     AGENT PANEL
+     ============================================================ -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji">🤖</span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name">Agent</div>
+      <div class="ap-panel-role" id="ap-role">Department</div>
+    </div>
+    <div class="ap-hdr-actions">
+      <button class="ap-bulk-btn" onclick="openBulkModal()">⚡ Bulk Run</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <!-- Panel tabs -->
+  <div class="ap-tabs">
+    <button class="ap-tab active" id="tab-tasks-btn" onclick="switchPanelTab('tasks')">Tasks</button>
+    <button class="ap-tab" id="tab-hist-btn" onclick="switchPanelTab('history')">History</button>
+  </div>
+  <div class="ap-body" id="ap-body">
+
+    <!-- STATS -->
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">% Done</div></div>
+      </div>
+      <div class="ap-progress-wrap" style="margin-top:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="ap-sec-title" style="margin:0">Progress</span>
+          <span id="ap-prog-pct" style="font-size:.7rem;color:#8890bb">0%</span>
+        </div>
+        <div class="ap-prog-bar-track"><div class="ap-prog-bar-fill" id="ap-prog-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- TASKS TAB CONTENT -->
+    <div id="tab-tasks-content">
+      <div>
+        <div class="ap-sec-title">Tasks</div>
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task…" onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-run-box">
+        <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+        <textarea id="ap-run-input" placeholder="Describe a task — Claude runs it as this agent and saves the output…"></textarea>
+        <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+          <span id="ap-run-inner">▶ Run</span>
+        </button>
+        <div class="ap-run-output" id="ap-run-output"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB CONTENT -->
+    <div id="tab-hist-content" style="display:none">
+      <div class="ap-sec-title">Completed Task History</div>
+      <div id="ap-hist-list"></div>
+    </div>
+
+  </div><!-- /ap-body -->
+  <div class="ap-panel-footer">
+    <button class="ap-footer-btn" onclick="exportJSON()">📤 Export all tasks</button>
+    <button class="ap-footer-btn" onclick="exportSummary()">📋 Export summary</button>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     BULK RUN MODAL
+     ============================================================ -->
+<div class="bulk-overlay" id="bulk-overlay">
+  <div class="bulk-modal">
+    <div class="bulk-hdr">
+      <span class="bulk-hdr-title">⚡ Bulk Run — Run a task across multiple agents</span>
+      <button class="bulk-close" onclick="closeBulkModal()">✕</button>
+    </div>
+    <div class="bulk-body">
+      <div>
+        <div class="bulk-label">Task prompt</div>
+        <textarea class="bulk-textarea" id="bulk-prompt" placeholder="What should all selected agents do? e.g. 'Draft a Q3 OKR focused on growth'"></textarea>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="bulk-label" style="margin:0">Select agents</div>
+          <div class="bulk-sel-row">
+            <button class="bulk-sel-btn" onclick="bulkSelectAll(true)">Select all</button>
+            <button class="bulk-sel-btn" onclick="bulkSelectAll(false)">None</button>
+            <button class="bulk-sel-btn" onclick="bulkSelectDept()">Current dept</button>
+          </div>
+        </div>
+        <div class="bulk-agents-grid" id="bulk-agents-grid"></div>
+      </div>
+      <button class="bulk-run-btn" id="bulk-run-btn" onclick="runBulk()">
+        <span id="bulk-run-inner">⚡ Run all selected</span>
+      </button>
+      <div class="bulk-progress" id="bulk-progress"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+const ALL_AGENTS = [
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+const AP_KEY = 'company-os-agent-tasks';
+let apCurrentAgent = null;
+let currentPanelTab = 'tasks';
+let statusFilter = 'all';
+
+// ── STORAGE ───────────────────────────────────────────────────
+function getAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+function saveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function getApiKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function saveApiKey(){
+  const v=document.getElementById('apiKeyInput').value.trim();
+  if(v){localStorage.setItem('company-os-api-key',v);document.getElementById('apiKeyInput').value='';alert('API key saved.');}
+}
+
+// ── HERO STATS ────────────────────────────────────────────────
+function updateHeroStats(){
+  const all=getAll();
+  let totalTasks=0,totalDone=0,agentsWithTasks=0;
+  for(const a of ALL_AGENTS){
+    const tasks=all[a.name]||[];
+    if(tasks.length>0) agentsWithTasks++;
+    totalTasks+=tasks.length;
+    totalDone+=tasks.filter(t=>t.done).length;
+  }
+  const pct=totalTasks?Math.round(totalDone/totalTasks*100):0;
+  animCount('h-agents',agentsWithTasks);
+  animCount('h-total',totalTasks);
+  animCount('h-done',totalDone);
+  document.getElementById('h-pct').textContent=pct+'%';
+  document.getElementById('h-done-sub').textContent=pct+'% completion rate';
+  document.getElementById('h-open-sub').textContent=(totalTasks-totalDone)+' tasks remaining';
+  document.getElementById('bottomTxt').textContent=`${agentsWithTasks} of 106 agents have tasks · ${totalDone} of ${totalTasks} tasks done · ${pct}% complete`;
+}
+
+function animCount(id,target){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const start=parseInt(el.textContent)||0;
+  const dur=400,step=16;
+  let t=0;
+  const iv=setInterval(()=>{
+    t+=step;
+    const p=Math.min(t/dur,1);
+    el.textContent=Math.round(start+(target-start)*p);
+    if(p>=1)clearInterval(iv);
+  },step);
+}
+
+// ── GRID ──────────────────────────────────────────────────────
+function setStatusFilter(v,btn){
+  statusFilter=v;
+  document.querySelectorAll('.flt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function renderGrid(){
+  const all=getAll();
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const dept=document.getElementById('deptFilter').value;
+  const grid=document.getElementById('agentGrid');
+
+  let agents=ALL_AGENTS.filter(a=>{
+    if(q && !a.name.toLowerCase().includes(q) && !a.dept.toLowerCase().includes(q)) return false;
+    if(dept && a.dept!==dept) return false;
+    const tasks=all[a.name]||[];
+    const done=tasks.filter(t=>t.done).length;
+    if(statusFilter==='has' && tasks.length===0) return false;
+    if(statusFilter==='complete' && (tasks.length===0||done<tasks.length)) return false;
+    if(statusFilter==='empty' && tasks.length>0) return false;
+    return true;
+  });
+
+  document.getElementById('resultsCount').textContent=agents.length===ALL_AGENTS.length?'':`${agents.length} agents`;
+
+  if(!agents.length){
+    grid.innerHTML='<div class="no-agents"><big>🔍</big>No agents match your filters.<br><small>Try adjusting the search or department filter.</small></div>';
+    return;
+  }
+
+  grid.innerHTML=agents.map(a=>{
+    const tasks=all[a.name]||[];
+    const done=tasks.filter(t=>t.done).length;
+    const pct=tasks.length?Math.round(done/tasks.length*100):0;
+    const lastOutput=tasks.slice().reverse().find(t=>t.output);
+    const snippet=lastOutput?lastOutput.output.slice(0,80).replace(/</g,'&lt;'):'';
+    let dotClass='dot-bd';
+    if(tasks.length>0) dotClass=pct===100?'dot-gr':'dot-am';
+    const safeName=a.name.replace(/'/g,"\\'");
+    return `<div class="agent-card" onclick="openAgentPanel('${safeName}','${a.emoji}','${a.dept.replace(/'/g,"\\'")}')">
+      <div class="card-top">
+        <div class="card-emoji">${a.emoji}</div>
+        <div class="card-info">
+          <div class="card-name">${a.name}</div>
+          <div class="card-dept">${a.dept}</div>
+        </div>
+        <div class="card-status-dot ${dotClass}"></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:0%" data-pct="${pct}"></div></div>
+      <div class="card-counts">${tasks.length?`<span>${done}</span> done / ${tasks.length} total`:'<span style="color:var(--tx3)">No tasks yet</span>'}</div>
+      ${snippet?`<div class="card-snippet">"${snippet}${snippet.length>=80?'…':''}"</div>`:'<div class="card-empty">Click to add tasks</div>'}
+    </div>`;
+  }).join('');
+
+  // animate progress bars after paint
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.progress-fill').forEach(bar=>{
+      const pct=bar.dataset.pct;
+      setTimeout(()=>{ bar.style.width=pct+'%'; },80);
+    });
+  });
+}
+
+// ── PANEL ─────────────────────────────────────────────────────
+function openAgentPanel(name,emoji,dept){
+  const agent=ALL_AGENTS.find(a=>a.name===name)||{name,emoji,dept};
+  apCurrentAgent=agent;
+  document.getElementById('ap-emoji').textContent=emoji||'🤖';
+  document.getElementById('ap-name').textContent=name;
+  document.getElementById('ap-role').textContent=dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  switchPanelTab('tasks');
+  apRenderStats();
+  apRenderTasks();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+  updateHeroStats();
+  renderGrid();
+}
+window.apClose=apClose;
+
+function switchPanelTab(tab){
+  currentPanelTab=tab;
+  document.getElementById('tab-tasks-btn').classList.toggle('active',tab==='tasks');
+  document.getElementById('tab-hist-btn').classList.toggle('active',tab==='history');
+  document.getElementById('tab-tasks-content').style.display=tab==='tasks'?'':'none';
+  document.getElementById('tab-hist-content').style.display=tab==='history'?'':'none';
+  if(tab==='history') apRenderHistory();
+}
+window.switchPanelTab=switchPanelTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent) return;
+  const all=getAll(), tasks=all[apCurrentAgent.name]||[];
+  const done=tasks.filter(t=>t.done).length;
+  const open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+  document.getElementById('ap-prog-pct').textContent=pct+'%';
+  setTimeout(()=>{document.getElementById('ap-prog-bar').style.width=pct+'%';},60);
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent) return;
+  const all=getAll(), tasks=all[apCurrentAgent.name]||[];
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){
+    list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';
+    return;
+  }
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-meta">AI: ${t.output.slice(0,70).replace(/</g,'&lt;')}…</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})" title="Delete">🗑</button>
+    </div>`).join('');
+}
+
+function apRenderHistory(){
+  if(!apCurrentAgent) return;
+  const all=getAll(), tasks=(all[apCurrentAgent.name]||[]).filter(t=>t.done&&t.output);
+  const list=document.getElementById('ap-hist-list');
+  if(!tasks.length){
+    list.innerHTML='<div class="hist-empty">No completed tasks with AI output yet.</div>';
+    return;
+  }
+  const sorted=[...tasks].reverse();
+  list.innerHTML=sorted.map((t,i)=>`
+    <div class="hist-item">
+      <div class="hist-item-hdr" onclick="toggleHist(${i})">
+        <span style="color:var(--gr);font-size:.8rem;flex-shrink:0">✓</span>
+        <span class="hist-title">${t.title.replace(/</g,'&lt;')}</span>
+        <span class="hist-date">${new Date(t.completedAt||t.createdAt).toLocaleDateString()}</span>
+        <span class="hist-chevron" id="hc-${i}">▶</span>
+      </div>
+      <div class="hist-body" id="hb-${i}">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function toggleHist(i){
+  const body=document.getElementById('hb-'+i);
+  const chev=document.getElementById('hc-'+i);
+  const open=body.classList.toggle('open');
+  chev.classList.toggle('open',open);
+}
+window.toggleHist=toggleHist;
+
+function apToggle(idx){
+  if(!apCurrentAgent) return;
+  const all=getAll(), tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks; saveAll(all);
+  apRenderTasks(); apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent) return;
+  const all=getAll(), tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);
+  all[apCurrentAgent.name]=tasks; saveAll(all);
+  apRenderTasks(); apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent) return;
+  const inp=document.getElementById('ap-new-task'), title=inp.value.trim();
+  if(!title) return;
+  const all=getAll();
+  if(!all[apCurrentAgent.name]) all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  saveAll(all); inp.value='';
+  apRenderTasks(); apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent) return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt) return;
+  const key=getApiKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-run-btn');
+  const inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';
+  btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.dept} specialist. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply; out.style.display='block';
+    const all=getAll();
+    if(!all[apCurrentAgent.name]) all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    saveAll(all); apRenderTasks(); apRenderStats();
+    if(currentPanelTab==='history') apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message; out.style.display='block';
+  }
+  inner.textContent='▶ Run'; btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// ── EXPORT ────────────────────────────────────────────────────
+function exportJSON(){
+  const all=getAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-tasks-export.json';
+  a.click();
+}
+window.exportJSON=exportJSON;
+
+function exportSummary(){
+  const all=getAll();
+  let lines=['Company OS — Agent Task Summary','Generated: '+new Date().toLocaleString(),'',''];
+  for(const a of ALL_AGENTS){
+    const tasks=all[a.name]||[];
+    if(!tasks.length) continue;
+    const done=tasks.filter(t=>t.done).length;
+    lines.push(`${a.emoji} ${a.name} (${a.dept})`);
+    lines.push(`  Progress: ${done}/${tasks.length} tasks done`);
+    tasks.forEach((t,i)=>lines.push(`  ${i+1}. [${t.done?'✓':' '}] ${t.title}`));
+    lines.push('');
+  }
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-tasks-summary.txt';
+  a.click();
+}
+window.exportSummary=exportSummary;
+
+// ── BULK RUN ──────────────────────────────────────────────────
+function openBulkModal(){
+  const grid=document.getElementById('bulk-agents-grid');
+  grid.innerHTML=ALL_AGENTS.map(a=>`
+    <label class="bulk-agent-chk">
+      <input type="checkbox" value="${a.name.replace(/"/g,'&quot;')}" ${apCurrentAgent&&a.name===apCurrentAgent.name?'checked':''}>
+      <span class="bulk-agent-chk-label">${a.emoji} ${a.name}</span>
+    </label>`).join('');
+  document.getElementById('bulk-progress').style.display='none';
+  document.getElementById('bulk-progress').innerHTML='';
+  document.getElementById('bulk-run-btn').disabled=false;
+  document.getElementById('bulk-run-inner').textContent='⚡ Run all selected';
+  document.getElementById('bulk-overlay').classList.add('open');
+}
+window.openBulkModal=openBulkModal;
+
+function closeBulkModal(){document.getElementById('bulk-overlay').classList.remove('open');}
+window.closeBulkModal=closeBulkModal;
+
+function bulkSelectAll(checked){
+  document.querySelectorAll('#bulk-agents-grid input[type=checkbox]').forEach(c=>c.checked=checked);
+}
+window.bulkSelectAll=bulkSelectAll;
+
+function bulkSelectDept(){
+  const dept=apCurrentAgent?apCurrentAgent.dept:'';
+  if(!dept) return;
+  document.querySelectorAll('#bulk-agents-grid input[type=checkbox]').forEach(c=>{
+    const a=ALL_AGENTS.find(x=>x.name===c.value);
+    c.checked=!!(a&&a.dept===dept);
+  });
+}
+window.bulkSelectDept=bulkSelectDept;
+
+async function runBulk(){
+  const prompt=document.getElementById('bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a task prompt first.');return;}
+  const key=getApiKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const selected=[...document.querySelectorAll('#bulk-agents-grid input[type=checkbox]:checked')].map(c=>c.value);
+  if(!selected.length){alert('Select at least one agent.');return;}
+
+  const btn=document.getElementById('bulk-run-btn');
+  const inner=document.getElementById('bulk-run-inner');
+  const progress=document.getElementById('bulk-progress');
+  btn.disabled=true;
+  progress.style.display='block';
+  progress.innerHTML='';
+
+  for(const name of selected){
+    const a=ALL_AGENTS.find(x=>x.name===name);
+    if(!a) continue;
+    const line=document.createElement('div');
+    line.textContent=`${a.emoji} ${name}… `;
+    line.style.color='#8890bb';
+    progress.appendChild(line);
+    progress.scrollTop=progress.scrollHeight;
+    const sys=`You are ${name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||JSON.stringify(d);
+      const all=getAll();
+      if(!all[name]) all[name]=[];
+      all[name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+      saveAll(all);
+      line.textContent=`${a.emoji} ${name} ✓`;
+      line.style.color='#22c55e';
+    }catch(e){
+      line.textContent=`${a.emoji} ${name} ✗ ${e.message}`;
+      line.style.color='#ef4444';
+    }
+    progress.scrollTop=progress.scrollHeight;
+  }
+
+  inner.textContent='✓ Done';
+  updateHeroStats();
+  renderGrid();
+  if(apCurrentAgent){apRenderTasks();apRenderStats();}
+}
+window.runBulk=runBulk;
+
+// ── INIT ──────────────────────────────────────────────────────
+function init(){
+  // restore API key placeholder
+  if(getApiKey()) document.getElementById('apiKeyInput').placeholder='API key saved ✓';
+  updateHeroStats();
+  renderGrid();
+}
+
+init();
+</script>
+</body>
+</html>

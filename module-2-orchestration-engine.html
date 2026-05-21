@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Module 2 — Orchestration Engine</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;
+  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;
+  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;
+  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;
+  --pu:#a78bfa;--cy:#22d3ee;--or:#fb923c;--pk:#f472b6;
+  --r:10px;--rl:14px;
+  --font:system-ui,-apple-system,sans-serif;
+  --mono:'Fira Code','JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--font);min-height:100vh}
+.app{max-width:1320px;margin:0 auto;padding:20px 24px}
+
+.topbar{margin-bottom:20px}
+.topbar h1{font-size:20px;font-weight:700}
+.topbar h1 span{background:linear-gradient(135deg,#22d3ee,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar p{font-size:13px;color:var(--tx3);margin-top:4px}
+.module-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;background:#22d3ee18;color:var(--cy);border:1px solid #22d3ee44;margin-bottom:12px;font-weight:500}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:16px}
+.stat{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;text-align:center}
+.stat-n{font-size:22px;font-weight:500;color:var(--tx)}
+.stat-l{font-size:10px;color:var(--tx3);margin-top:2px}
+
+/* tabs */
+.tabs{display:flex;gap:3px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:7px 14px;font-size:12px;font-weight:500;border-radius:var(--r);border:1px solid transparent;color:var(--tx3);cursor:pointer;transition:all .15s;background:transparent}
+.tab:hover{color:var(--tx2);background:var(--bg3)}
+.tab.active{background:var(--bg3);border-color:var(--bd2);color:var(--tx)}
+.tp{display:none}.tp.active{display:block}
+
+/* layout */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px}
+.card-title{font-size:14px;font-weight:600;color:var(--tx)}
+.card-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+
+/* buttons */
+.btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:var(--r);cursor:pointer;border:1px solid var(--bd2);background:var(--bg3);color:var(--tx);font-family:var(--font);display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--bg4);border-color:var(--bd3)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-p{background:linear-gradient(135deg,#0e7a8a,#1d6fa4);border-color:var(--cy);color:#fff}
+.btn-p:hover:not(:disabled){filter:brightness(1.15)!important;background:linear-gradient(135deg,#0e7a8a,#1d6fa4)!important}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn-gr{border-color:#22c55e44;color:var(--gr)}
+.btn-gr:hover:not(:disabled){background:#22c55e18!important;border-color:var(--gr)!important}
+.btn-rd{border-color:#ef444444;color:var(--rd)}
+.btn-am{border-color:#f59e0b44;color:var(--am)}
+
+/* form */
+label{font-size:11px;color:var(--tx2);margin-bottom:4px;display:block}
+input,select,textarea{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:8px 10px;font-size:13px;font-family:var(--font);color:var(--tx);width:100%;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cy)}
+input::placeholder,textarea::placeholder{color:var(--tx3)}
+select option{background:var(--bg3)}
+.row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.sp{margin-bottom:12px}
+
+/* badges */
+.badge{font-size:11px;padding:2px 8px;border-radius:12px;border:1px solid;font-weight:500;white-space:nowrap}
+.b-gr{background:#22c55e18;color:var(--gr);border-color:#22c55e44}
+.b-am{background:#f59e0b18;color:var(--am);border-color:#f59e0b44}
+.b-rd{background:#ef444418;color:var(--rd);border-color:#ef444444}
+.b-bl{background:#60a5fa18;color:var(--bl);border-color:#60a5fa44}
+.b-cy{background:#22d3ee18;color:var(--cy);border-color:#22d3ee44}
+.b-pu{background:#a78bfa18;color:var(--pu);border-color:#a78bfa44}
+.b-gy{background:var(--bg3);color:var(--tx2);border-color:var(--bd2)}
+
+/* animations */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes flow{0%{stroke-dashoffset:20}100%{stroke-dashoffset:0}}
+
+/* queue items */
+.q-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:6px;animation:slideIn .2s ease;transition:border-color .2s}
+.q-item.running{border-color:var(--am)55;background:#f59e0b08}
+.q-item.done{border-color:var(--gr)44;opacity:.7}
+.q-item.failed{border-color:var(--rd)44}
+.q-item.waiting-approval{border-color:var(--pu)55;background:#a78bfa08;animation:pulse 2s infinite}
+.q-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.qd-wait{background:var(--tx3)}
+.qd-run{background:var(--am);animation:blink 1s infinite}
+.qd-done{background:var(--gr)}
+.qd-fail{background:var(--rd)}
+.qd-approval{background:var(--pu);animation:blink 1.5s infinite}
+.q-info{flex:1;min-width:0}
+.q-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q-meta{font-size:10px;color:var(--tx3);margin-top:2px}
+.q-pri{font-size:10px;padding:2px 6px;border-radius:6px;flex-shrink:0}
+.pri-hi{background:#ef444418;color:var(--rd);border:1px solid #ef444433}
+.pri-md{background:#f59e0b18;color:var(--am);border:1px solid #f59e0b33}
+.pri-lo{background:var(--bg4);color:var(--tx3);border:1px solid var(--bd)}
+.pri-crit{background:#ef4444;color:#fff;border:1px solid var(--rd)}
+
+/* trigger rules */
+.rule{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:6px;font-size:12px;transition:border-color .2s}
+.rule.active{border-color:var(--cy)33}
+.rule-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rule-evt{color:var(--cy);font-family:var(--mono);font-size:11px}
+.rule-arr{color:var(--tx3)}
+.rule-tgt{color:var(--pu);font-weight:500}
+
+/* event stream */
+.evt-stream{max-height:320px;overflow-y:auto;font-size:11.5px;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+.evt-entry{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);align-items:flex-start}
+.evt-ts{color:var(--tx3);flex-shrink:0;font-family:var(--mono);font-size:10px;padding-top:1px}
+.evt-icon{flex-shrink:0;width:16px;text-align:center}
+.evt-msg{flex:1;color:var(--tx2);line-height:1.5}
+.evt-msg .evt-name{color:var(--cy);font-weight:500}
+.evt-msg .evt-agent{color:var(--pu)}
+.evt-entry.triggered .evt-msg{color:var(--am)}
+.evt-entry.complete .evt-msg{color:var(--gr)}
+.evt-entry.error .evt-msg{color:var(--rd)}
+.evt-entry.approval .evt-msg{color:var(--pu)}
+.evt-entry.scheduled .evt-msg{color:var(--bl)}
+
+/* agent graph */
+.pipeline-vis{position:relative;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:16px;overflow-x:auto}
+.pipe-nodes{display:flex;align-items:center;gap:0;min-width:max-content}
+.pipe-node{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--bg3);min-width:90px;transition:all .3s;position:relative}
+.pipe-node.pn-active{border-color:var(--am)66;background:#f59e0b0d;box-shadow:0 0 12px #f59e0b22}
+.pipe-node.pn-done{border-color:var(--gr)55;background:#22c55e0d}
+.pipe-node.pn-waiting{border-color:var(--pu)55;background:#a78bfa0d;animation:pulse 2s infinite}
+.pn-icon{font-size:20px}
+.pn-name{font-size:10px;font-weight:600;color:var(--tx2);text-align:center}
+.pn-status{font-size:9px;color:var(--tx3);text-align:center}
+.pipe-arrow{color:var(--tx3);font-size:20px;padding:0 4px;flex-shrink:0;transition:color .3s}
+.pipe-arrow.flowing{color:var(--cy);animation:blink .8s infinite}
+
+/* scheduler */
+.sched-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:6px;font-size:12px}
+.sched-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sched-countdown{font-size:11px;font-family:var(--mono);color:var(--tx3);flex-shrink:0;min-width:52px;text-align:right}
+
+/* approval modal */
+.approval-banner{background:#a78bfa0d;border:1px solid var(--pu)55;border-radius:var(--r);padding:12px 16px;margin-bottom:12px;display:none}
+.approval-banner.visible{display:block;animation:slideIn .3s ease}
+.ab-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ab-title{font-size:13px;font-weight:600;color:var(--pu)}
+.ab-body{font-size:12px;color:var(--tx2);margin-bottom:10px;line-height:1.6}
+.ab-actions{display:flex;gap:8px}
+
+/* message bus */
+.msg-item{padding:8px 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:6px;font-size:12px;animation:slideIn .25s ease}
+.msg-from{color:var(--cy);font-weight:500}
+.msg-to{color:var(--pu);font-weight:500}
+.msg-content{color:var(--tx2);margin-top:3px;line-height:1.5}
+.msg-ts{font-size:10px;color:var(--tx3);margin-top:3px}
+
+/* logs */
+.log{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:10px;font-size:11.5px;line-height:1.7;color:var(--tx2);overflow-y:auto;white-space:pre-wrap;word-break:break-word;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+.log::-webkit-scrollbar{width:3px}
+.log::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+
+/* ==AGENT-PANEL-INJECTED== */
+
+/* ==PANEL-ENHANCED== */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;title:'Bulk Run'}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px}
+.ap-float-btn:hover{opacity:.85}
+
+</style>
+</head>
+<body>
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;font-family:system-ui,sans-serif">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+
+  <button class="ap-float-btn" onclick="apOpenPicker()">📋 Agent Tasks</button>
+</nav>
+
+<div class="app">
+
+<div class="topbar">
+  <div class="module-badge">🔀 Module 2 of 4</div>
+  <h1><span>Orchestration Engine</span></h1>
+  <p>Makes agents run autonomously — event triggers · priority queue · scheduler · agent messaging · human approvals</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" id="st-events">0</div><div class="stat-l">Events fired</div></div>
+  <div class="stat"><div class="stat-n" id="st-triggered">0</div><div class="stat-l">Triggered</div></div>
+  <div class="stat"><div class="stat-n" id="st-queued">0</div><div class="stat-l">Tasks queued</div></div>
+  <div class="stat"><div class="stat-n" id="st-completed">0</div><div class="stat-l">Completed</div></div>
+  <div class="stat"><div class="stat-n" id="st-approvals">0</div><div class="stat-l">Approvals</div></div>
+  <div class="stat"><div class="stat-n" id="st-messages">0</div><div class="stat-l">Agent messages</div></div>
+</div>
+
+<!-- approval banner sits above tabs, always visible when needed -->
+<div class="approval-banner" id="approval-banner">
+  <div class="ab-hdr">🔐 <span class="ab-title">Human approval required</span><span class="badge b-pu" style="margin-left:auto" id="ap-badge"></span></div>
+  <div class="ab-body" id="ap-body"></div>
+  <div class="ab-actions">
+    <button class="btn btn-gr" onclick="resolveApproval(true)">✅ Approve</button>
+    <button class="btn btn-rd" onclick="resolveApproval(false)">❌ Reject</button>
+    <button class="btn btn-am btn-sm" onclick="resolveApproval(null)">✏️ Modify</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('pipeline')">🔗 Live Pipeline</button>
+  <button class="tab" onclick="sw('queue')">🗂️ Task Queue</button>
+  <button class="tab" onclick="sw('triggers')">⚡ Trigger Engine</button>
+  <button class="tab" onclick="sw('scheduler')">⏱️ Scheduler</button>
+  <button class="tab" onclick="sw('messaging')">📡 Agent Messaging</button>
+  <button class="tab" onclick="sw('eventlog')">📋 Event Log</button>
+</div>
+
+<!-- ═══ PIPELINE ═══ -->
+<div class="tp active" id="tp-pipeline">
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title">🔗 Live Pipeline Visualiser</div><div class="card-sub">Watch agents activate in sequence, reading from each other</div></div>
+      <div class="row">
+        <button class="btn btn-p" onclick="runFullPipeline()">▶ Run full pipeline</button>
+        <button class="btn btn-sm" onclick="resetPipeline()">↺ Reset</button>
+      </div>
+    </div>
+    <div class="sp"><label>Company idea (feeds the whole pipeline)</label>
+      <textarea id="pipe-idea" rows="2" placeholder="e.g. AI-powered legal document review platform for small law firms"></textarea>
+    </div>
+    <div class="pipeline-vis">
+      <div class="pipe-nodes" id="pipe-nodes"></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap" id="pipe-controls"></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">📤 Current agent output</span><span class="badge b-gy" id="pipe-current-agent">None running</span></div>
+      <div class="log" id="pipe-output" style="max-height:220px">Output appears here as each agent completes…</div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">📡 Pipeline event stream</span></div>
+      <div class="evt-stream" id="pipe-events">
+        <div class="evt-entry"><span class="evt-ts">—</span><span class="evt-msg">Waiting for pipeline to start…</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ QUEUE ═══ -->
+<div class="tp" id="tp-queue">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🗂️ Priority Task Queue</div><div class="card-sub">FIFO within priority · async execution · auto-retry</div></div></div>
+        <div class="row sp">
+          <div style="flex:1.5"><label>Agent</label>
+            <div style="display:flex;gap:6px;align-items:center">
+            <select id="q-agent" style="flex:1">
+              <option value="pm">🧭 PM Agent</option><option value="dev">💻 Developer</option>
+              <option value="sales">💼 Sales</option><option value="marketer">📢 Marketer</option>
+              <option value="support">🎧 Support</option><option value="cfo">💰 CFO</option>
+              <option value="bi">📊 BI Dev</option><option value="sdr">📧 SDR</option>
+              <option value="qa">🧪 QA</option><option value="devops">⚙️ DevOps</option>
+            </select>
+            <button onclick="apOpenPicker()" style="padding:5px 8px;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:7px;cursor:pointer;font-size:.75rem;white-space:nowrap;flex-shrink:0" title="Open agent task panel">📋</button>
+            </div>
+          </div>
+          <div style="flex:0.6"><label>Priority</label>
+            <select id="q-pri">
+              <option value="critical">🔴 Critical</option>
+              <option value="hi">🟠 High</option>
+              <option value="md" selected>🟡 Medium</option>
+              <option value="lo">⚪ Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="sp"><label>Task</label>
+          <input type="text" id="q-task" placeholder="e.g. Analyse Q3 churn and recommend top 3 retention plays" onkeydown="if(event.key==='Enter')addTask()">
+        </div>
+        <div class="row sp">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0">
+            <input type="checkbox" id="q-approval"> Requires human approval before running
+          </label>
+        </div>
+        <div class="row">
+          <button class="btn btn-p" onclick="addTask()">+ Add to queue</button>
+          <button class="btn btn-sm btn-gr" onclick="processNext()" id="proc-btn">▶ Process next</button>
+          <button class="btn btn-sm" onclick="processAll()" id="proc-all-btn">⚡ Process all</button>
+          <button class="btn btn-sm btn-rd" onclick="clearQueue()">Clear</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">⚙️ Queue settings</span></div>
+        <div class="row sp">
+          <div style="flex:1"><label>Max concurrent</label><input type="number" id="q-concurrency" value="3" min="1" max="10"></div>
+          <div style="flex:1"><label>Retry attempts</label><input type="number" id="q-retries" value="2" min="0" max="5"></div>
+          <div style="flex:1"><label>Timeout (sec)</label><input type="number" id="q-timeout" value="30" min="5" max="120"></div>
+        </div>
+        <div class="row">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0">
+            <input type="checkbox" id="q-auto-retry" checked> Auto-retry on failure
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0">
+            <input type="checkbox" id="q-deadletter" checked> Dead letter queue
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-hdr">
+          <div><div class="card-title">📋 Queue</div></div>
+          <div class="row">
+            <span class="badge b-am" id="q-waiting-badge">0 waiting</span>
+            <span class="badge b-gr" id="q-done-badge">0 done</span>
+          </div>
+        </div>
+        <div id="queue-list" style="max-height:340px;overflow-y:auto">
+          <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">Queue is empty — add tasks above</div>
+        </div>
+      </div>
+      <div class="card" id="dlq-card" style="display:none">
+        <div class="card-hdr"><span class="card-title">💀 Dead letter queue</span><button class="btn btn-sm btn-am" onclick="retryAll()">↺ Retry all</button></div>
+        <div id="dlq-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TRIGGERS ═══ -->
+<div class="tp" id="tp-triggers">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">⚡ Trigger Builder</div><div class="card-sub">When an event fires → activate an agent automatically</div></div></div>
+        <div class="sp"><label>When this event fires…</label>
+          <select id="tr-event">
+            <optgroup label="Agent completion">
+              <option value="pm.complete">pm.complete — PM finishes requirements</option>
+              <option value="dev.complete">dev.complete — Developer finishes plan</option>
+              <option value="sales.complete">sales.complete — Sales agent completes</option>
+              <option value="qa.complete">qa.complete — QA test plan done</option>
+              <option value="arch.complete">arch.complete — Architecture done</option>
+            </optgroup>
+            <optgroup label="Business events">
+              <option value="lead.qualified">lead.qualified — Lead hits MQL threshold</option>
+              <option value="ticket.created">ticket.created — New support ticket</option>
+              <option value="ticket.escalated">ticket.escalated — Ticket escalated</option>
+              <option value="deploy.success">deploy.success — Deployment succeeded</option>
+              <option value="deploy.failed">deploy.failed — Deployment failed</option>
+              <option value="budget.80pct">budget.80pct — Budget at 80%</option>
+              <option value="churn.risk">churn.risk — Customer churn risk flagged</option>
+              <option value="nps.low">nps.low — NPS drops below threshold</option>
+            </optgroup>
+            <optgroup label="Time events">
+              <option value="time.daily">time.daily — Every day at 9am</option>
+              <option value="time.weekly">time.weekly — Every Monday</option>
+              <option value="time.sprint_end">time.sprint_end — End of sprint</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="sp"><label>…queue this agent</label>
+          <select id="tr-target">
+            <option value="arch">🏗️ Architect</option><option value="dev">💻 Developer</option>
+            <option value="qa">🧪 QA Tester</option><option value="devops">⚙️ DevOps</option>
+            <option value="sdr">📧 SDR Agent</option><option value="sales">💼 Sales Agent</option>
+            <option value="marketer">📢 Marketer</option><option value="bi">📊 BI Dev</option>
+            <option value="support">🎧 Support</option><option value="cfo">💰 CFO</option>
+            <option value="release">🚀 Release Eng</option><option value="success">⭐ Cust Success</option>
+          </select>
+        </div>
+        <div class="sp"><label>With task</label>
+          <input type="text" id="tr-task" placeholder="e.g. Analyse requirements and produce architecture doc">
+        </div>
+        <div class="row sp">
+          <div style="flex:1"><label>Priority</label>
+            <select id="tr-pri"><option value="hi">High</option><option value="md" selected>Medium</option><option value="lo">Low</option></select>
+          </div>
+          <div style="flex:1"><label>Delay (sec)</label>
+            <input type="number" id="tr-delay" value="0" min="0" max="3600">
+          </div>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0;align-self:flex-end;padding-bottom:10px">
+            <input type="checkbox" id="tr-approval"> Needs approval
+          </label>
+        </div>
+        <div class="row">
+          <button class="btn btn-p" onclick="addTrigger()">+ Add rule</button>
+          <button class="btn btn-sm" onclick="loadDefaultTriggers()">📋 Load defaults</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🔥 Fire test event</div><div class="card-sub">Manually trigger any event to test your rules</div></div></div>
+        <div class="row sp">
+          <select id="fire-evt" style="flex:1">
+            <option value="pm.complete">pm.complete</option>
+            <option value="lead.qualified">lead.qualified</option>
+            <option value="ticket.created">ticket.created</option>
+            <option value="deploy.failed">deploy.failed</option>
+            <option value="churn.risk">churn.risk</option>
+            <option value="budget.80pct">budget.80pct</option>
+          </select>
+          <input type="text" id="fire-data" placeholder='{"key":"value"}' style="flex:1">
+          <button class="btn btn-p" onclick="fireEvent()">🔥 Fire</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="height:fit-content">
+      <div class="card-hdr">
+        <div><div class="card-title">📏 Active rules</div><div class="card-sub"><span id="rules-count">0</span> rules · <span id="rules-enabled">0</span> enabled</div></div>
+        <button class="btn btn-sm btn-rd" onclick="clearTriggers()">Clear all</button>
+      </div>
+      <div id="trigger-list" style="max-height:500px;overflow-y:auto">
+        <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No rules yet — add some above or load defaults</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCHEDULER ═══ -->
+<div class="tp" id="tp-scheduler">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">⏱️ Recurring Job Scheduler</div><div class="card-sub">Agents run automatically on a cron-like schedule</div></div></div>
+        <div class="row sp">
+          <div style="flex:1"><label>Agent</label>
+            <select id="sc-agent">
+              <option value="bi">📊 BI Dev — reporting</option><option value="support">🎧 Support — triage</option>
+              <option value="sdr">📧 SDR — prospecting</option><option value="security">🔒 Security — scan</option>
+              <option value="cfo">💰 CFO — cash flow</option><option value="marketer">📢 Marketer — social</option>
+              <option value="success">⭐ Cust Success — health</option><option value="ops">⚙️ Ops — SLA review</option>
+            </select>
+          </div>
+          <div style="flex:1"><label>Frequency</label>
+            <select id="sc-freq">
+              <option value="15">Every 15s (demo)</option><option value="30">Every 30s (demo)</option>
+              <option value="60">Every minute</option><option value="300">Every 5 min</option>
+              <option value="3600">Every hour</option><option value="86400">Daily</option>
+              <option value="604800">Weekly</option>
+            </select>
+          </div>
+        </div>
+        <div class="sp"><label>Task</label>
+          <input type="text" id="sc-task" placeholder="e.g. Generate daily KPI report and flag anomalies">
+        </div>
+        <button class="btn btn-p" onclick="addSchedule()">+ Add schedule</button>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">📤 Latest scheduled output</span><span class="badge b-gy" id="sc-agent-badge">None</span></div>
+        <div class="log" id="sc-output" style="max-height:200px">Waiting for a scheduled job to run…</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">📅 Scheduled jobs</div></div>
+        <button class="btn btn-sm btn-rd" onclick="clearSchedules()">Clear all</button>
+      </div>
+      <div id="sched-list" style="max-height:500px;overflow-y:auto">
+        <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No scheduled jobs — add some above</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MESSAGING ═══ -->
+<div class="tp" id="tp-messaging">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">📡 Agent-to-Agent Messaging</div><div class="card-sub">Agents pass context, ask questions, and collaborate asynchronously</div></div></div>
+        <div class="row sp">
+          <div style="flex:1"><label>From agent</label>
+            <select id="msg-from">
+              <option value="pm">🧭 PM Agent</option><option value="dev">💻 Developer</option>
+              <option value="sales">💼 Sales</option><option value="cfo">💰 CFO</option>
+              <option value="arch">🏗️ Architect</option><option value="qa">🧪 QA</option>
+            </select>
+          </div>
+          <div style="flex:1"><label>To agent</label>
+            <select id="msg-to">
+              <option value="dev">💻 Developer</option><option value="pm">🧭 PM Agent</option>
+              <option value="qa">🧪 QA Tester</option><option value="devops">⚙️ DevOps</option>
+              <option value="cfo">💰 CFO</option><option value="sales">💼 Sales</option>
+              <option value="arch">🏗️ Architect</option>
+            </select>
+          </div>
+        </div>
+        <div class="sp"><label>Message type</label>
+          <select id="msg-type">
+            <option value="handoff">🤝 Handoff — passing my output to you</option>
+            <option value="question">❓ Question — need your expertise</option>
+            <option value="conflict">⚠️ Conflict — we disagree, need resolution</option>
+            <option value="request">📋 Request — please do this task</option>
+            <option value="update">📢 Update — FYI on progress</option>
+          </select>
+        </div>
+        <div class="sp"><label>Message</label>
+          <textarea id="msg-body" rows="3" placeholder="e.g. I've completed the requirements doc. Key constraint: must support offline mode. Please design the architecture with this in mind."></textarea>
+        </div>
+        <div class="row">
+          <button class="btn btn-p" onclick="sendMessage()">📤 Send message</button>
+          <button class="btn btn-sm" onclick="simulateConflict()">⚠️ Simulate conflict</button>
+          <button class="btn btn-sm" onclick="simulateHandoff()">🤝 Simulate handoff</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🤖 AI-mediated conflict resolution</div><div class="card-sub">When agents disagree, a mediator agent resolves it</div></div></div>
+        <div class="sp"><label>Agent A position</label><input type="text" id="cf-a" placeholder="e.g. CFO: We should use PostgreSQL — cheaper"></div>
+        <div class="sp"><label>Agent B position</label><input type="text" id="cf-b" placeholder="e.g. Architect: We need MongoDB — flexible schema"></div>
+        <button class="btn btn-p" id="resolve-btn" onclick="resolveConflict()">⚖️ Resolve conflict</button>
+        <div class="log" id="cf-output" style="display:none;margin-top:10px;max-height:160px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">💬 Message bus</div><div class="card-sub" id="msg-count-sub">0 messages</div></div>
+        <button class="btn btn-sm btn-rd" onclick="clearMessages()">Clear</button>
+      </div>
+      <div id="msg-bus" style="max-height:560px;overflow-y:auto">
+        <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No messages yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EVENT LOG ═══ -->
+<div class="tp" id="tp-eventlog">
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title">📋 Full Event Log</div><div class="card-sub">Every orchestration event — filterable, exportable</div></div>
+      <div class="row">
+        <select id="evtlog-filter" style="width:160px" onchange="renderEventLog()">
+          <option value="all">All events</option>
+          <option value="fired">Event fired</option>
+          <option value="triggered">Trigger activated</option>
+          <option value="queued">Task queued</option>
+          <option value="complete">Completed</option>
+          <option value="approval">Approval</option>
+          <option value="scheduled">Scheduled</option>
+        </select>
+        <button class="btn btn-sm" onclick="exportEventLog()">⬇ Export CSV</button>
+        <button class="btn btn-sm btn-rd" onclick="clearEventLog()">Clear</button>
+      </div>
+    </div>
+    <div class="evt-stream" id="event-log-full" style="max-height:600px"></div>
+  </div>
+</div>
+
+</div>
+<script>
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+const QUEUE = [];
+const DLQ = [];
+const TRIGGERS = [];
+const SCHEDULES = [];
+const MESSAGES = [];
+const EVENT_LOG = [];
+const PIPE_OUTPUTS = {};
+let approvalQueue = [];
+let currentApproval = null;
+let stats = {events:0,triggered:0,queued:0,completed:0,approvals:0,messages:0};
+let processingAll = false;
+
+const AGENT_META = {
+  pm:{icon:'🧭',name:'PM Agent'},dev:{icon:'💻',name:'Developer'},
+  sales:{icon:'💼',name:'Sales'},marketer:{icon:'📢',name:'Marketer'},
+  support:{icon:'🎧',name:'Support'},cfo:{icon:'💰',name:'CFO'},
+  bi:{icon:'📊',name:'BI Dev'},sdr:{icon:'📧',name:'SDR'},
+  qa:{icon:'🧪',name:'QA'},devops:{icon:'⚙️',name:'DevOps'},
+  arch:{icon:'🏗️',name:'Architect'},release:{icon:'🚀',name:'Release'},
+  success:{icon:'⭐',name:'Cust Success'},ops:{icon:'⚙️',name:'Ops'},
+  security:{icon:'🔒',name:'Security'},ceo:{icon:'👑',name:'CEO'},
+};
+
+const AGENT_SYSTEMS = {
+  pm:`You are an elite PM (MIT CS + MIT Sloan, ex-Google Maps Senior PM, ex-Meta Reels PM). Apply Jobs-to-be-Done and Amazon Working Backwards. Produce: problem statement (quantified), user personas (2-3 with pain+goal), core features (4-6, each with user story + acceptance criteria), success metrics (leading + lagging), constraints. Every feature has a testable hypothesis. Plain text, clear headers.`,
+
+  dev:`You are an exceptional SWE (IIT Bombay CS Gold Medal + MIT MEng, ex-Google L5, ex-Facebook). Follow SOLID, TDD. Produce: epic breakdown with story points, sprint 1 detailed scope, project folder structure with rationale, key libraries with version + justification, technical risks (top 5 with mitigations). Everything is production-ready. Plain text.`,
+
+  sales:`You are an elite VP Sales (Harvard Business School MBA, ex-Google Cloud Enterprise $80M quota, ex-Salesforce President's Club 4x). Use Challenger Sale + MEDDIC. Produce: ICP (firmographic + behavioural + pain), 3-sentence value prop, full sales motion, objection playbook (top 5 with talk tracks), pricing tiers (3), pipeline KPIs. Plain text.`,
+
+  marketer:`You are an elite PMM (Harvard AB + Cambridge MPhil, ex-Google PMM Director Android 3B devices, ex-Apple Marketing). Apply Crossing the Chasm + April Dunford positioning. Produce: positioning statement, 3 messaging pillars with proof points, GTM launch plan, 5 content themes with formats, marketing KPIs, ranked channel priority. Plain text.`,
+
+  support:`You are a world-class Support Lead (IIT Delhi + Cambridge MBA, ex-Amazon Customer Obsession Lead, ex-Google Cloud Support Eng Manager). Apply HEARD. Produce: channel plan with SLAs, P1-P4 SLA tiers (definition+response+resolution), top-20 FAQ with answers, escalation matrix (L1→L2→Engineering→PM), CSAT/NPS/FCR targets. Plain text.`,
+
+  cfo:`You are a world-class CFO (LSE Economics First Class + Wharton MBA, ex-Goldman Sachs VP IB, ex-Amazon Finance Director AWS). Know SaaS metrics cold. Produce: revenue streams with pricing, cost structure (% of revenue), unit economics (CAC/LTV/payback), Year 1 monthly budget, fundraising strategy, financial KPIs with targets. Show assumptions. Plain text.`,
+
+  bi:`You are an elite BI Developer (IIT Madras Stats+CS Rank 1 + LSE MSc Statistics Distinction, ex-Facebook Data Scientist, ex-Google Analytics Engineer). Use Kimball dimensional modelling. Produce: KPI framework (north star + metric tree), data sources, warehouse architecture (raw/staging/marts), dashboard catalogue (5 dashboards: name+audience+metrics+refresh), BI tooling with rationale. Plain text.`,
+
+  sdr:`You are an elite SDR Manager (UPenn Wharton MBA, ex-Google Cloud SDR top 1% globally, ex-Salesforce President's Club). Write outreach with 40%+ reply rates. Produce: 15-day multi-channel sequence (email+LinkedIn+call day-by-day), 3 cold email templates (subject+4-sentence body+CTA), 2 LinkedIn scripts, discovery call framework (5 opener questions + qualification criteria), objection handling guide. Plain text.`,
+
+  qa:`You are a world-class QA Engineer (IIT Madras Dean's List + Carnegie Mellon SWE MSc, ex-Amazon Prime Video SDE-II, ex-Microsoft SDET). Apply boundary value analysis, mutation testing. Test pyramid 70/20/10. Produce: risk-based test strategy, test types with % coverage targets, 10 critical scenarios (input+expected+edge), automation approach (tools+framework+CI hook), definition of done. Plain text.`,
+
+  devops:`You are an elite DevOps/SRE (IIT Delhi Gold Medal, ex-Google SRE 99.999% Google.com uptime, ex-Amazon AWS EC2 design). Define SLIs/SLOs first. Practice GitOps, immutable infra, chaos engineering. Produce: cloud provider recommendation with rationale, CI/CD pipeline (stages+gates+rollback triggers), monitoring stack (metrics/logs/traces/alerting), DR plan (RTO/RPO/runbook), security hardening checklist. Every deploy is zero-downtime. Plain text.`,
+
+  arch:`You are a world-class Architect (MIT CSAIL PhD Distributed Systems, ex-Google Distinguished Engineer, ex-Amazon Principal Engineer 3 AWS services). Design for failure first, apply CAP theorem, DDD. Produce: tech stack (every layer) with trade-offs, system components with responsibilities, core data models, API design, scalability approach, top 3 technical risks with mitigations. Plain text.`,
+
+  release:`You are a world-class Release Engineer (Caltech CS Valedictorian, ex-Apple iOS Release Engineering 1.5B device updates, ex-Google Chrome Release 3B users). Every release is boring by design. Produce: semantic versioning strategy, release checklist (pre/during/post), deployment process (canary 1%/10%/50%/100%), automated rollback trigger criteria, release notes template. Plain text.`,
+
+  success:`You are an elite Customer Success Manager (Harvard Psychology PhD + Cambridge MBA, ex-Google Customer Success Director, ex-Salesforce CSM). Apply health score modelling, QBR frameworks, expansion playbooks. Produce: CS segmentation model (by ARR/complexity/growth potential), onboarding programme (day 1/7/30/90 milestones), health score model (metrics+weights+thresholds), expansion playbook (triggers+talk tracks+timing). Plain text.`,
+
+  ops:`You are an elite Operations Manager (IIT Madras + MIT Sloan MBA, ex-Amazon Operations (Prime Day — 300M items shipped), ex-Google Vendor Operations). Apply Lean Six Sigma, OKRs, RACI. Produce: core processes map (input→process→output+owner for 6 key processes), SLA framework, ops tech stack with rationale, operational KPIs (efficiency+quality+cost+customer). Plain text.`,
+
+  security:`You are a world-class CISO (MIT CSAIL Security + Cryptography, ex-Google Project Zero 40+ zero-days disclosed, ex-Facebook Security Red Team). Apply STRIDE, zero-trust, NIST CSF. Produce: threat model (STRIDE per asset class), security architecture (identity/network/data/endpoint/app layers), vulnerability management programme (scan cadence+CVSS SLAs), pen-test plan, incident response procedure (detect→contain→eradicate→recover→PIR). Plain text.`,
+
+  ceo:`You are a world-class CEO (Harvard MBA Baker Scholar, ex-Google VP Product $3B+ revenue, ex-Amazon Director 2 AWS services). Think in First Principles, write Amazon 6-pager narratives, operate via OKRs. Produce: mission (1 sentence), business model (how you make money), 90-day priorities (3-5 with owner+metric), top 5 risks with mitigations, 12-month success milestones. Every decision has an owner and deadline. Be decisive. Plain text.`,
+};
+
+/* ═══════════════════════════════════════
+   CLAUDE API
+═══════════════════════════════════════ */
+async function callClaude(agentId, task, context='') {
+  const sys = AGENT_SYSTEMS[agentId] || AGENT_SYSTEMS.pm;
+  const userMsg = context ? `CONTEXT FROM UPSTREAM AGENTS:\n${context}\n\nTASK:\n${task}` : task;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:800, system:sys, messages:[{role:'user',content:userMsg}] })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+
+/* ═══════════════════════════════════════
+   PIPELINE
+═══════════════════════════════════════ */
+const PIPELINE_PHASES = [
+  { id:'ceo',  icon:'👑', name:'CEO',       deps:[] },
+  { id:'pm',   icon:'🧭', name:'PM',        deps:['ceo'] },
+  { id:'arch', icon:'🏗️', name:'Architect', deps:['pm'] },
+  { id:'dev',  icon:'💻', name:'Developer', deps:['pm','arch'] },
+  { id:'qa',   icon:'🧪', name:'QA',        deps:['dev'] },
+  { id:'devops',icon:'⚙️',name:'DevOps',    deps:['arch'] },
+];
+
+function buildPipelineUI() {
+  const nodes = document.getElementById('pipe-nodes');
+  const ctrls = document.getElementById('pipe-controls');
+  nodes.innerHTML = PIPELINE_PHASES.map((ph,i) => `
+    ${i>0?'<div class="pipe-arrow" id="arr-'+i+'">›</div>':''}
+    <div class="pipe-node" id="pnode-${ph.id}">
+      <div class="pn-icon">${ph.icon}</div>
+      <div class="pn-name">${ph.name}</div>
+      <div class="pn-status" id="pstatus-${ph.id}">idle</div>
+    </div>`).join('');
+  ctrls.innerHTML = PIPELINE_PHASES.map(ph => `
+    <button class="btn btn-sm" onclick="runSinglePipeStage('${ph.id}')" id="pbtn-${ph.id}">▶ ${ph.name}</button>`).join('');
+}
+
+function setPipeNode(id, state) {
+  const el = document.getElementById('pnode-'+id);
+  const st = document.getElementById('pstatus-'+id);
+  if (!el) return;
+  el.className = 'pipe-node' + (state==='active'?' pn-active':state==='done'?' pn-done':state==='waiting'?' pn-waiting':'');
+  st.textContent = state;
+}
+
+function setPipeArrow(idx, flowing) {
+  const el = document.getElementById('arr-'+idx);
+  if (el) el.classList.toggle('flowing', flowing);
+}
+
+async function runSinglePipeStage(id) {
+  const phase = PIPELINE_PHASES.find(p=>p.id===id);
+  const idea = document.getElementById('pipe-idea').value.trim()||'AI SaaS company';
+  const context = phase.deps.map(d=>PIPE_OUTPUTS[d]?`[${d.toUpperCase()}]:\n${PIPE_OUTPUTS[d]}`:''). filter(Boolean).join('\n\n');
+  const idx = PIPELINE_PHASES.findIndex(p=>p.id===id);
+
+  setPipeNode(id,'active');
+  if (idx>0) setPipeArrow(idx, true);
+  document.getElementById('pipe-current-agent').textContent = `Running: ${phase.icon} ${phase.name}`;
+  pipeLine(`▶ ${phase.name} agent started`, 'running');
+
+  try {
+    const result = await callClaude(id, `Company idea: ${idea}`, context);
+    PIPE_OUTPUTS[id] = result;
+    setPipeNode(id,'done');
+    if (idx>0) setPipeArrow(idx, false);
+    document.getElementById('pipe-output').textContent = result;
+    document.getElementById('pipe-current-agent').textContent = `✓ ${phase.name} complete`;
+    pipeLine(`✓ ${phase.name} complete`, 'complete');
+    emitEvt(`${id}.complete`, {output: result.slice(0,60)});
+    return result;
+  } catch(e) {
+    setPipeNode(id,'');
+    pipeLine(`✗ ${phase.name} error: ${e.message}`, 'error');
+    throw e;
+  }
+}
+
+async function runFullPipeline() {
+  resetPipeline();
+  for (let i=0; i<PIPELINE_PHASES.length; i++) {
+    try { await runSinglePipeStage(PIPELINE_PHASES[i].id); }
+    catch(e) { break; }
+  }
+}
+
+function resetPipeline() {
+  PIPELINE_PHASES.forEach(ph => { setPipeNode(ph.id,''); });
+  for(let i=1;i<PIPELINE_PHASES.length;i++) setPipeArrow(i,false);
+  document.getElementById('pipe-output').textContent='Output appears here as each agent completes…';
+  document.getElementById('pipe-current-agent').textContent='None running';
+  Object.keys(PIPE_OUTPUTS).forEach(k=>delete PIPE_OUTPUTS[k]);
+}
+
+function pipeLine(msg, type='') {
+  const el = document.getElementById('pipe-events');
+  const first = el.querySelector('.evt-entry');
+  if (first && first.querySelector('.evt-ts').textContent==='—') el.innerHTML='';
+  const ts = new Date().toLocaleTimeString();
+  const icons = {running:'▶',complete:'✓',error:'✗',triggered:'⚡'};
+  el.innerHTML = `<div class="evt-entry ${type}"><span class="evt-ts">${ts}</span><span class="evt-icon">${icons[type]||'·'}</span><span class="evt-msg">${msg}</span></div>` + el.innerHTML;
+}
+
+/* ═══════════════════════════════════════
+   QUEUE
+═══════════════════════════════════════ */
+function addTask(agentId, task, pri, needsApproval, fromTrigger=false) {
+  const agent = agentId || document.getElementById('q-agent').value;
+  const t = task || document.getElementById('q-task').value.trim();
+  const p = pri || document.getElementById('q-pri').value;
+  const na = needsApproval !== undefined ? needsApproval : document.getElementById('q-approval').checked;
+  if (!t) { if(!fromTrigger) document.getElementById('q-task').focus(); return; }
+
+  const item = { id:Date.now()+Math.random(), agent, task:t, pri:p, status:'waiting', needsApproval:na, retries:0, ts:new Date().toLocaleTimeString() };
+  QUEUE.push(item);
+  QUEUE.sort((a,b)=>{const o={critical:0,hi:1,md:2,lo:3};return o[a.pri]-o[b.pri];});
+  if (!fromTrigger) { document.getElementById('q-task').value=''; document.getElementById('q-approval').checked=false; }
+  stats.queued++; updateStats();
+  renderQueue();
+  logEvt('queued',`Task queued: [${AGENT_META[agent]?.name||agent}] ${t.slice(0,50)}`);
+}
+
+function renderQueue() {
+  const el = document.getElementById('queue-list');
+  if (!QUEUE.length) { el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">Queue is empty</div>'; updateQueueBadges(); return; }
+  el.innerHTML = QUEUE.map(q => {
+    const m = AGENT_META[q.agent]||{icon:'🤖',name:q.agent};
+    const dotCls = {waiting:'qd-wait',running:'qd-run',done:'qd-done',failed:'qd-fail','waiting-approval':'qd-approval'}[q.status]||'qd-wait';
+    return `<div class="q-item ${q.status==='running'?'running':q.status==='done'?'done':q.status==='failed'?'failed':q.status==='waiting-approval'?'waiting-approval':''}">
+      <div class="q-dot ${dotCls}"></div>
+      <div class="q-info">
+        <div class="q-name">${m.icon} ${m.name}: ${q.task.slice(0,55)}${q.task.length>55?'…':''}</div>
+        <div class="q-meta">${q.ts} · ${q.status}${q.retries?' · retry '+q.retries:''}</div>
+      </div>
+      <span class="q-pri pri-${q.pri}">${q.pri}</span>
+      ${q.status==='waiting'?`<button class="btn btn-sm btn-rd" onclick="removeTask('${q.id}')">✕</button>`:''}
+    </div>`;
+  }).join('');
+  updateQueueBadges();
+}
+
+function removeTask(id) { const i=QUEUE.findIndex(q=>q.id==id); if(i>=0) QUEUE.splice(i,1); renderQueue(); }
+
+function updateQueueBadges() {
+  document.getElementById('q-waiting-badge').textContent=QUEUE.filter(q=>q.status==='waiting').length+' waiting';
+  document.getElementById('q-done-badge').textContent=QUEUE.filter(q=>q.status==='done').length+' done';
+  document.getElementById('st-queued').textContent=stats.queued;
+}
+
+async function processNext() {
+  const next = QUEUE.find(q=>q.status==='waiting');
+  if (!next) return;
+  if (next.needsApproval) { showApproval(next); return; }
+  await executeTask(next);
+}
+
+async function processAll() {
+  if (processingAll) return;
+  processingAll = true;
+  document.getElementById('proc-all-btn').disabled = true;
+  while (QUEUE.some(q=>q.status==='waiting')) {
+    const next = QUEUE.find(q=>q.status==='waiting');
+    if (!next) break;
+    if (next.needsApproval) { showApproval(next); break; }
+    await executeTask(next);
+  }
+  processingAll = false;
+  document.getElementById('proc-all-btn').disabled = false;
+}
+
+async function executeTask(item) {
+  item.status='running'; renderQueue();
+  logEvt('running', `Running: [${AGENT_META[item.agent]?.name||item.agent}] ${item.task.slice(0,50)}`);
+  try {
+    await callClaude(item.agent, item.task);
+    item.status='done'; stats.completed++; updateStats();
+    logEvt('complete', `✓ Done: [${AGENT_META[item.agent]?.name||item.agent}] ${item.task.slice(0,50)}`);
+    emitEvt(`${item.agent}.complete`, {task:item.task.slice(0,40)});
+  } catch(e) {
+    const maxRetries = parseInt(document.getElementById('q-retries').value)||2;
+    if (item.retries < maxRetries && document.getElementById('q-auto-retry').checked) {
+      item.retries++; item.status='waiting';
+      logEvt('error', `⚠ Retry ${item.retries}/${maxRetries}: ${item.agent} — ${e.message}`);
+    } else {
+      item.status='failed';
+      if (document.getElementById('q-deadletter').checked) { DLQ.push(item); renderDLQ(); }
+      logEvt('error', `✗ Failed: ${item.agent} — ${e.message}`);
+    }
+  }
+  renderQueue();
+}
+
+function renderDLQ() {
+  const card = document.getElementById('dlq-card');
+  const el = document.getElementById('dlq-list');
+  if (!DLQ.length) { card.style.display='none'; return; }
+  card.style.display='block';
+  el.innerHTML=DLQ.map((q,i)=>`
+    <div class="q-item failed">
+      <div class="q-dot qd-fail"></div>
+      <div class="q-info"><div class="q-name">${q.agent}: ${q.task.slice(0,50)}</div></div>
+      <button class="btn btn-sm btn-am" onclick="retryDLQ(${i})">↺</button>
+    </div>`).join('');
+}
+
+function retryDLQ(i) { const t=DLQ.splice(i,1)[0]; t.status='waiting'; t.retries=0; QUEUE.push(t); renderQueue(); renderDLQ(); }
+function retryAll() { while(DLQ.length){ const t=DLQ.pop(); t.status='waiting'; t.retries=0; QUEUE.push(t); } renderQueue(); renderDLQ(); }
+function clearQueue() { QUEUE.length=0; DLQ.length=0; renderQueue(); renderDLQ(); }
+
+function showApproval(item) {
+  currentApproval = item;
+  const banner = document.getElementById('approval-banner');
+  document.getElementById('ap-badge').textContent = AGENT_META[item.agent]?.name||item.agent;
+  document.getElementById('ap-body').textContent = `Agent "${AGENT_META[item.agent]?.name||item.agent}" wants to run:\n"${item.task}"\n\nThis task was marked as requiring human approval before execution.`;
+  banner.classList.add('visible');
+  item.status='waiting-approval'; renderQueue();
+  stats.approvals++; updateStats();
+  logEvt('approval', `⏸ Awaiting approval: [${AGENT_META[item.agent]?.name||item.agent}] ${item.task.slice(0,50)}`);
+}
+
+async function resolveApproval(approved) {
+  const banner = document.getElementById('approval-banner');
+  banner.classList.remove('visible');
+  if (!currentApproval) return;
+  const item = currentApproval;
+  currentApproval = null;
+  if (approved === true) {
+    item.needsApproval = false; item.status='waiting';
+    logEvt('approval', `✅ Approved: [${AGENT_META[item.agent]?.name||item.agent}] ${item.task.slice(0,40)}`);
+    renderQueue();
+    await executeTask(item);
+  } else if (approved === false) {
+    item.status='failed';
+    logEvt('approval', `❌ Rejected: [${AGENT_META[item.agent]?.name||item.agent}]`);
+    renderQueue();
+  } else {
+    const newTask = prompt('Modify the task:', item.task);
+    if (newTask) { item.task=newTask; item.needsApproval=false; item.status='waiting'; renderQueue(); await executeTask(item); }
+    else { item.status='waiting'; renderQueue(); }
+  }
+}
+
+/* ═══════════════════════════════════════
+   TRIGGERS
+═══════════════════════════════════════ */
+function addTrigger() {
+  const event = document.getElementById('tr-event').value;
+  const target = document.getElementById('tr-target').value;
+  const task = document.getElementById('tr-task').value.trim() || `Auto-triggered by ${event}`;
+  const pri = document.getElementById('tr-pri').value;
+  const delay = parseInt(document.getElementById('tr-delay').value)||0;
+  const needsApproval = document.getElementById('tr-approval').checked;
+  TRIGGERS.push({id:Date.now(),event,target,task,pri,delay,needsApproval,enabled:true,fireCount:0});
+  renderTriggers();
+  logEvt('triggered', `New rule: ${event} → ${AGENT_META[target]?.name||target}`);
+}
+
+function loadDefaultTriggers() {
+  const defaults=[
+    {event:'pm.complete',target:'arch',task:'Analyse PM requirements and produce system architecture',pri:'hi',delay:0,needsApproval:false},
+    {event:'arch.complete',target:'dev',task:'Read the architecture and produce implementation plan',pri:'hi',delay:0,needsApproval:false},
+    {event:'dev.complete',target:'qa',task:'Review implementation plan and write test strategy',pri:'md',delay:0,needsApproval:false},
+    {event:'lead.qualified',target:'sdr',task:'Research the prospect and write personalised outreach sequence',pri:'hi',delay:5,needsApproval:false},
+    {event:'ticket.escalated',target:'success',task:'Review escalated ticket and draft resolution plan',pri:'hi',delay:0,needsApproval:true},
+    {event:'churn.risk',target:'success',task:'Analyse churn risk signals and produce retention action plan',pri:'critical',delay:0,needsApproval:false},
+    {event:'budget.80pct',target:'cfo',task:'Budget at 80% — review spend and produce reforecast',pri:'hi',delay:0,needsApproval:true},
+    {event:'deploy.failed',target:'devops',task:'Deployment failed — diagnose and produce remediation plan',pri:'critical',delay:0,needsApproval:false},
+  ];
+  defaults.forEach(d=>TRIGGERS.push({id:Date.now()+Math.random(),...d,enabled:true,fireCount:0}));
+  renderTriggers();
+}
+
+function renderTriggers() {
+  const el = document.getElementById('trigger-list');
+  const enabled = TRIGGERS.filter(t=>t.enabled).length;
+  document.getElementById('rules-count').textContent = TRIGGERS.length;
+  document.getElementById('rules-enabled').textContent = enabled;
+  if (!TRIGGERS.length) { el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No rules yet</div>'; return; }
+  el.innerHTML = TRIGGERS.map((t,i) => `
+    <div class="rule ${t.enabled?'active':''}">
+      <div class="rule-dot" style="background:${t.enabled?'var(--gr)':'var(--tx3)'}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="rule-evt">${t.event}</span>
+          <span class="rule-arr">→</span>
+          <span class="rule-tgt">${AGENT_META[t.target]?.icon||''} ${AGENT_META[t.target]?.name||t.target}</span>
+          ${t.delay?`<span class="badge b-gy" style="font-size:9px">+${t.delay}s</span>`:''}
+          ${t.needsApproval?'<span class="badge b-pu" style="font-size:9px">approval</span>':''}
+          <span class="badge b-gy" style="font-size:9px">fired ${t.fireCount}×</span>
+        </div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.task}</div>
+      </div>
+      <button class="btn btn-sm" onclick="toggleTrigger(${i})">${t.enabled?'Off':'On'}</button>
+      <button class="btn btn-sm btn-rd" onclick="deleteTrigger(${i})">✕</button>
+    </div>`).join('');
+}
+
+function toggleTrigger(i) { TRIGGERS[i].enabled=!TRIGGERS[i].enabled; renderTriggers(); }
+function deleteTrigger(i) { TRIGGERS.splice(i,1); renderTriggers(); }
+function clearTriggers() { TRIGGERS.length=0; renderTriggers(); }
+
+function fireEvent() {
+  const name = document.getElementById('fire-evt').value;
+  let data = {};
+  try { data = JSON.parse(document.getElementById('fire-data').value||'{}'); } catch(e){}
+  emitEvt(name, data, true);
+}
+
+function emitEvt(name, data={}, manual=false) {
+  stats.events++; updateStats();
+  logEvt('fired', `${manual?'🔥 Manual':'📡 Auto'} event: ${name} ${JSON.stringify(data).slice(0,40)}`);
+  const matching = TRIGGERS.filter(t=>t.enabled && t.event===name);
+  matching.forEach(t => {
+    t.fireCount++;
+    stats.triggered++;
+    setTimeout(()=>{
+      logEvt('triggered', `⚡ Rule fired: ${name} → ${AGENT_META[t.target]?.name||t.target}`);
+      addTask(t.target, t.task, t.pri, t.needsApproval, true);
+    }, t.delay*1000);
+  });
+  renderTriggers();
+  if (matching.length) updateStats();
+}
+
+/* ═══════════════════════════════════════
+   SCHEDULER
+═══════════════════════════════════════ */
+function addSchedule() {
+  const agent = document.getElementById('sc-agent').value.split(' ')[0];
+  const freq = parseInt(document.getElementById('sc-freq').value);
+  const task = document.getElementById('sc-task').value.trim()||`Scheduled task for ${agent}`;
+  const id = setInterval(()=>runScheduledJob(agent, task, id_ref), freq*1000);
+  const id_ref = {val:id};
+  const entry = {id, agent, task, freq, nextRun:Date.now()+freq*1000, enabled:true, runCount:0};
+  SCHEDULES.push(entry);
+  renderSchedules();
+  startCountdowns();
+  logEvt('scheduled', `Scheduled: [${AGENT_META[agent]?.name||agent}] every ${freq}s`);
+}
+
+async function runScheduledJob(agent, task, id_ref) {
+  const entry = SCHEDULES.find(s=>s.id===(id_ref?.val||0));
+  if (entry) { entry.runCount++; entry.nextRun=Date.now()+entry.freq*1000; }
+  logEvt('scheduled', `⏱ Running scheduled: [${AGENT_META[agent]?.name||agent}] ${task.slice(0,40)}`);
+  document.getElementById('sc-agent-badge').textContent=`${AGENT_META[agent]?.icon||'🤖'} ${AGENT_META[agent]?.name||agent}`;
+  const out = document.getElementById('sc-output');
+  out.textContent='Running…';
+  try {
+    const result = await callClaude(agent, task);
+    out.textContent=result;
+    logEvt('complete', `✓ Scheduled complete: [${AGENT_META[agent]?.name||agent}]`);
+  } catch(e) {
+    out.textContent='Error: '+e.message;
+    logEvt('error', `✗ Scheduled error: ${e.message}`);
+  }
+  renderSchedules();
+}
+
+function renderSchedules() {
+  const el = document.getElementById('sched-list');
+  if (!SCHEDULES.length) { el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No scheduled jobs</div>'; return; }
+  el.innerHTML = SCHEDULES.map((s,i)=>{
+    const m=AGENT_META[s.agent]||{icon:'🤖',name:s.agent};
+    const secLeft = Math.max(0,Math.round((s.nextRun-Date.now())/1000));
+    return `<div class="sched-item">
+      <div class="sched-dot" style="background:${s.enabled?'var(--gr)':'var(--tx3)'}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500">${m.icon} ${m.name}: ${s.task.slice(0,45)}${s.task.length>45?'…':''}</div>
+        <div style="font-size:10px;color:var(--tx3)">Every ${s.freq}s · ran ${s.runCount}× </div>
+      </div>
+      <span class="sched-countdown" id="sc-cd-${s.id}">in ${secLeft}s</span>
+      <button class="btn btn-sm" onclick="runScheduledJob('${s.agent}','${s.task}',{val:${s.id}})">▶ Now</button>
+      <button class="btn btn-sm btn-rd" onclick="removeSchedule(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function startCountdowns() {
+  setInterval(()=>{
+    SCHEDULES.forEach(s=>{
+      const el=document.getElementById('sc-cd-'+s.id);
+      if (!el) return;
+      const secLeft=Math.max(0,Math.round((s.nextRun-Date.now())/1000));
+      el.textContent=secLeft>0?`in ${secLeft}s`:'running…';
+    });
+  },1000);
+}
+
+function removeSchedule(i) { clearInterval(SCHEDULES[i].id); SCHEDULES.splice(i,1); renderSchedules(); }
+function clearSchedules() { SCHEDULES.forEach(s=>clearInterval(s.id)); SCHEDULES.length=0; renderSchedules(); }
+
+/* ═══════════════════════════════════════
+   MESSAGING
+═══════════════════════════════════════ */
+const MSG_TYPES={handoff:{icon:'🤝',color:'var(--cy)'},question:{icon:'❓',color:'var(--bl)'},conflict:{icon:'⚠️',color:'var(--rd)'},request:{icon:'📋',color:'var(--pu)'},update:{icon:'📢',color:'var(--am)'}};
+
+async function sendMessage() {
+  const from=document.getElementById('msg-from').value;
+  const to=document.getElementById('msg-to').value;
+  const type=document.getElementById('msg-type').value;
+  const body=document.getElementById('msg-body').value.trim();
+  if (!body) { document.getElementById('msg-body').focus(); return; }
+  const msg={id:Date.now(),from,to,type,body,ts:new Date().toLocaleTimeString(),reply:null};
+  MESSAGES.push(msg);
+  stats.messages++; updateStats();
+  document.getElementById('msg-body').value='';
+  document.getElementById('msg-count-sub').textContent=MESSAGES.length+' messages';
+  logEvt('message', `📨 ${AGENT_META[from]?.name||from} → ${AGENT_META[to]?.name||to}: ${body.slice(0,40)}`);
+  renderMessages();
+  // auto-reply
+  try {
+    const sys=AGENT_SYSTEMS[to]||AGENT_SYSTEMS.pm;
+    const prompt=`You received a ${type} from the ${AGENT_META[from]?.name||from} agent:\n\n"${body}"\n\nRespond appropriately in 2-4 sentences as the ${AGENT_META[to]?.name||to} agent.`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:sys,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    if (!data.error) {
+      msg.reply=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+      logEvt('message', `↩ Reply: ${AGENT_META[to]?.name||to} → ${AGENT_META[from]?.name||from}`);
+    }
+  } catch(e){}
+  renderMessages();
+}
+
+function renderMessages() {
+  const el=document.getElementById('msg-bus');
+  if (!MESSAGES.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No messages yet</div>';return;}
+  el.innerHTML=[...MESSAGES].reverse().map(m=>{
+    const mt=MSG_TYPES[m.type]||{icon:'·',color:'var(--tx2)'};
+    return `<div class="msg-item">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:14px">${mt.icon}</span>
+        <span class="msg-from">${AGENT_META[m.from]?.icon||'🤖'} ${AGENT_META[m.from]?.name||m.from}</span>
+        <span style="color:var(--tx3)">→</span>
+        <span class="msg-to">${AGENT_META[m.to]?.icon||'🤖'} ${AGENT_META[m.to]?.name||m.to}</span>
+        <span class="badge b-gy" style="font-size:9px;margin-left:auto">${m.type}</span>
+        <span class="msg-ts">${m.ts}</span>
+      </div>
+      <div class="msg-content">${m.body}</div>
+      ${m.reply?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--bd)"><div style="font-size:10px;color:var(--tx3);margin-bottom:3px">↩ ${AGENT_META[m.to]?.name||m.to} replied:</div><div class="msg-content" style="color:var(--tx)">${m.reply}</div></div>`:'<div style="font-size:10px;color:var(--tx3);margin-top:4px">Waiting for reply…</div>'}
+    </div>`;
+  }).join('');
+}
+
+function clearMessages(){MESSAGES.length=0;renderMessages();document.getElementById('msg-count-sub').textContent='0 messages';}
+
+async function resolveConflict() {
+  const a=document.getElementById('cf-a').value.trim();
+  const b=document.getElementById('cf-b').value.trim();
+  if(!a||!b) return;
+  const btn=document.getElementById('resolve-btn');
+  btn.disabled=true;btn.textContent='⚖️ Resolving…';
+  const out=document.getElementById('cf-output');
+  out.style.display='block';out.textContent='Mediator agent thinking…';
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,system:'You are a neutral AI mediator. When two agents disagree, you analyse both positions, identify the core tension, and produce a clear, justified recommendation that resolves the conflict. Be decisive.',messages:[{role:'user',content:`Agent A says: "${a}"\n\nAgent B says: "${b}"\n\nAnalyse both positions and recommend the best course of action with clear justification.`}]})});
+    const data=await res.json();
+    out.textContent=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    logEvt('message','⚖️ Conflict resolved by mediator agent');
+  } catch(e){out.textContent='Error: '+e.message;}
+  btn.disabled=false;btn.textContent='⚖️ Resolve conflict';
+}
+
+function simulateConflict(){
+  document.getElementById('cf-a').value='CFO: We should use AWS RDS for simplicity and lower ops overhead — cheaper at our scale';
+  document.getElementById('cf-b').value='Architect: We need a managed CockroachDB cluster for global distribution and ACID guarantees at scale';
+}
+function simulateHandoff(){
+  document.getElementById('msg-from').value='pm';document.getElementById('msg-to').value='arch';
+  document.getElementById('msg-type').value='handoff';
+  document.getElementById('msg-body').value='PM here — requirements doc is complete. Key constraints: must support 10k concurrent users, offline-first mobile app, GDPR compliance required. Budget is £200k for Year 1 infra. Please design the architecture with these in mind.';
+}
+
+/* ═══════════════════════════════════════
+   EVENT LOG
+═══════════════════════════════════════ */
+const EVT_ICONS={fired:'🔥',triggered:'⚡',queued:'📥',running:'▶',complete:'✅',error:'❌',approval:'🔐',scheduled:'⏱️',message:'📨'};
+function logEvt(type, msg) {
+  EVENT_LOG.unshift({ts:new Date().toLocaleTimeString(),type,msg});
+  if(EVENT_LOG.length>500) EVENT_LOG.pop();
+  renderEventLog();
+}
+function renderEventLog() {
+  const filter=document.getElementById('evtlog-filter')?.value||'all';
+  const el=document.getElementById('event-log-full');
+  let entries=EVENT_LOG;
+  if(filter!=='all') entries=entries.filter(e=>e.type===filter);
+  if(!entries.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:20px">No events match</div>';return;}
+  el.innerHTML=entries.slice(0,200).map(e=>`
+    <div class="evt-entry ${e.type}">
+      <span class="evt-ts">${e.ts}</span>
+      <span class="evt-icon">${EVT_ICONS[e.type]||'·'}</span>
+      <span class="evt-msg">${e.msg}</span>
+    </div>`).join('');
+}
+function clearEventLog(){EVENT_LOG.length=0;renderEventLog();}
+function exportEventLog(){
+  const csv='timestamp,type,message\n'+EVENT_LOG.map(e=>`"${e.ts}","${e.type}","${e.msg.replace(/"/g,"'")}"`).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='event-log.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function updateStats(){
+  document.getElementById('st-events').textContent=stats.events;
+  document.getElementById('st-triggered').textContent=stats.triggered;
+  document.getElementById('st-queued').textContent=stats.queued;
+  document.getElementById('st-completed').textContent=stats.completed;
+  document.getElementById('st-approvals').textContent=stats.approvals;
+  document.getElementById('st-messages').textContent=stats.messages;
+}
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+const TAB_IDS=['pipeline','queue','triggers','scheduler','messaging','eventlog'];
+function sw(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TAB_IDS[i]===id));
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tp-'+id).classList.add('active');
+}
+
+/* ═══ INIT ═══ */
+buildPipelineUI();
+loadDefaultTriggers();
+logEvt('complete','Orchestration Engine initialised — all subsystems online');
+
+
+// ==AGENT-PANEL-INJECTED==
+(function(){
+const AP_KEY='company-os-agent-tasks';
+const AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+let apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+window.apGetAll=apGetAll;
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function openAgentPanel(name,emoji,role){
+  const a=emoji?{name,emoji,role}:AP_AGENTS.find(x=>x.name===name)||{name,emoji:'🤖',dept:'',role:''};
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(t=>{
+    document.getElementById('ap-tab-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('ap-tc-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const done=tasks.filter(t=>t.done).length,open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';return;}
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item" id="ap-ti-${i}">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-expand" onclick="apToggleOutput(${i})">▸ Show AI output</div><div class="ap-task-output" id="ap-to-${i}">${t.output.replace(/</g,'&lt;')}</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function apToggleOutput(idx){
+  const out=document.getElementById('ap-to-'+idx);
+  const exp=out?.previousElementSibling;
+  if(!out)return;
+  const open=out.classList.toggle('open');
+  if(exp)exp.textContent=open?'▾ Hide AI output':'▸ Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(t=>t.output&&t.output.length>0).reverse();
+  const list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet. Use "Run AI Task" to generate output.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ap-history-item">
+      <div class="ap-history-date">${new Date(t.completedAt||t.createdAt).toLocaleString()}</div>
+      <div class="ap-history-prompt">${t.title.replace(/</g,'&lt;')}</div>
+      <div class="ap-history-output">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent)return;
+  const inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title)return;
+  const all=apGetAll();
+  if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent)return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt)return;
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first (in Settings or the API key field in this module).');return;}
+  const btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent'}. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    const all=apGetAll();
+    if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history')apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message;out.style.display='block';
+  }
+  inner.textContent='▶ Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// Export
+function apExportTasks(){
+  const all=apGetAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+// Picker
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  const q=document.getElementById('ap-picker-search').value.toLowerCase();
+  const all=apGetAll();
+  const agents=q?AP_AGENTS.filter(a=>a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q)):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(a=>{
+    const tasks=(all[a.name]||[]),done=tasks.filter(t=>t.done).length;
+    const badge=tasks.length?`<span class="ap-picker-item-tasks">${done}/${tasks.length}✓</span>`:'';
+    return `<div class="ap-picker-item" onclick="apPickerSelect('${a.name.replace(/'/g,"\'")}')">
+      <span class="ap-picker-item-emoji">${a.emoji}</span>
+      <div style="flex:1;min-width:0"><div class="ap-picker-item-name">${a.name}</div><div class="ap-picker-item-dept">${a.dept}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  const a=AP_AGENTS.find(x=>x.name===name);
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+// Bulk Run
+let apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  const grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(a=>`
+    <div class="ap-bulk-agent-item ${apBulkSelected.has(a.name)?'selected':''}" onclick="apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <input type="checkbox" ${apBulkSelected.has(a.name)?'checked':''} onclick="event.stopPropagation();apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <span>${a.emoji}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+    </div>`).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(a=>a.name)):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  const prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-bulk-run-btn');
+  const prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  const agents=AP_AGENTS.filter(a=>apBulkSelected.has(a.name));
+  const all=apGetAll();
+  let done=0;
+  for(const a of agents){
+    prog.textContent=`Running ${a.emoji} ${a.name}… (${done}/${agents.length})`;
+    const sys=`You are ${a.name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||'Error';
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent=`✅ Done! Ran ${done} agents.`;
+  btn.disabled=false;
+  if(apCurrentAgent)apRenderTasks();apRenderStats();apRenderHistory();
+}
+window.apRunBulk=apRunBulk;
+})();
+
+</script>
+
+
+<!-- ==PANEL-ENHANCED== -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">⚡</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">📋 Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">📜 History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything — runs against this agent's system prompt and auto-saves…"></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">▶ Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">📤 Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>📋 Agent Tasks — Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">✕</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="🔍 Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>⚡ Bulk Run — Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer" onclick="apCloseBulk()">✕</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 priorities this quarter?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">⚡ Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

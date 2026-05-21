@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Module 3 — Memory Layer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#12151f;--bg3:#1a1e2e;--bg4:#222740;
+  --bd:#1e2236;--bd2:#2d3354;--bd3:#3d4470;
+  --tx:#dde1f5;--tx2:#8890bb;--tx3:#4a5180;
+  --gr:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#60a5fa;
+  --pu:#a78bfa;--cy:#22d3ee;--or:#fb923c;--pk:#f472b6;
+  --r:10px;--rl:14px;
+  --font:system-ui,-apple-system,sans-serif;
+  --mono:'Fira Code','JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--font);min-height:100vh}
+.app{max-width:1320px;margin:0 auto;padding:20px 24px}
+.topbar{margin-bottom:20px}
+.topbar h1{font-size:20px;font-weight:700}
+.topbar h1 span{background:linear-gradient(135deg,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar p{font-size:13px;color:var(--tx3);margin-top:4px}
+.module-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;background:#a78bfa18;color:var(--pu);border:1px solid #a78bfa44;margin-bottom:12px;font-weight:500}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:16px}
+.stat{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;text-align:center}
+.stat-n{font-size:22px;font-weight:500;color:var(--tx)}
+.stat-l{font-size:10px;color:var(--tx3);margin-top:2px}
+
+/* tabs */
+.tabs{display:flex;gap:3px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:7px 14px;font-size:12px;font-weight:500;border-radius:var(--r);border:1px solid transparent;color:var(--tx3);cursor:pointer;transition:all .15s;background:transparent}
+.tab:hover{color:var(--tx2);background:var(--bg3)}
+.tab.active{background:var(--bg3);border-color:var(--bd2);color:var(--tx)}
+.tp{display:none}.tp.active{display:block}
+
+/* layout */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px}
+.card-title{font-size:14px;font-weight:600;color:var(--tx)}
+.card-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+
+/* buttons */
+.btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:var(--r);cursor:pointer;border:1px solid var(--bd2);background:var(--bg3);color:var(--tx);font-family:var(--font);display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--bg4);border-color:var(--bd3)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-p{background:linear-gradient(135deg,#6b3fa0,#9b4fb5);border-color:var(--pu);color:#fff}
+.btn-p:hover:not(:disabled){filter:brightness(1.15)!important;background:linear-gradient(135deg,#6b3fa0,#9b4fb5)!important}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn-gr{border-color:#22c55e44;color:var(--gr)}
+.btn-gr:hover:not(:disabled){background:#22c55e18!important}
+.btn-rd{border-color:#ef444444;color:var(--rd)}
+.btn-cy{border-color:#22d3ee44;color:var(--cy)}
+
+/* form */
+label{font-size:11px;color:var(--tx2);margin-bottom:4px;display:block}
+input,select,textarea{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:8px 10px;font-size:13px;font-family:var(--font);color:var(--tx);width:100%;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pu)}
+input::placeholder,textarea::placeholder{color:var(--tx3)}
+select option{background:var(--bg3)}
+.row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.sp{margin-bottom:12px}
+
+/* badges */
+.badge{font-size:11px;padding:2px 8px;border-radius:12px;border:1px solid;font-weight:500;white-space:nowrap}
+.b-gr{background:#22c55e18;color:var(--gr);border-color:#22c55e44}
+.b-am{background:#f59e0b18;color:var(--am);border-color:#f59e0b44}
+.b-rd{background:#ef444418;color:var(--rd);border-color:#ef444444}
+.b-bl{background:#60a5fa18;color:var(--bl);border-color:#60a5fa44}
+.b-pu{background:#a78bfa18;color:var(--pu);border-color:#a78bfa44}
+.b-cy{background:#22d3ee18;color:var(--cy);border-color:#22d3ee44}
+.b-pk{background:#f472b618;color:var(--pk);border-color:#f472b644}
+.b-gy{background:var(--bg3);color:var(--tx2);border-color:var(--bd2)}
+
+/* memory items */
+.mem-item{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.mem-item:hover{border-color:var(--bd2)}
+.mem-item.highlighted{border-color:var(--pu)66;background:#a78bfa0a}
+.mem-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+.mem-agent-badge{font-size:10px;padding:1px 6px;border-radius:6px;flex-shrink:0;font-weight:500}
+.mem-type-badge{font-size:10px;padding:1px 6px;border-radius:6px;flex-shrink:0}
+.mem-content{font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:4px}
+.mem-content em{color:var(--pu);font-style:normal;background:#a78bfa18;padding:0 2px;border-radius:3px}
+.mem-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mem-tag{font-size:10px;padding:1px 6px;border-radius:6px;background:#a78bfa15;color:var(--pu);border:1px solid #a78bfa33}
+.mem-ts{font-size:10px;color:var(--tx3)}
+.mem-score{font-size:10px;padding:1px 6px;border-radius:6px;font-family:var(--mono)}
+.score-high{background:#22c55e18;color:var(--gr);border:1px solid #22c55e33}
+.score-mid{background:#f59e0b18;color:var(--am);border:1px solid #f59e0b33}
+.score-low{background:var(--bg4);color:var(--tx3);border:1px solid var(--bd)}
+
+/* customer timeline */
+.cx-event{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);position:relative}
+.cx-event:last-child{border-bottom:none}
+.cx-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.cx-line{position:absolute;left:4px;top:16px;bottom:-8px;width:2px;background:var(--bd)}
+.cx-event:last-child .cx-line{display:none}
+.cx-info{flex:1}
+.cx-type{font-size:12px;font-weight:500}
+.cx-note{font-size:11.5px;color:var(--tx2);margin-top:2px;line-height:1.5}
+.cx-ts{font-size:10px;color:var(--tx3);margin-top:2px}
+.cx-health{display:flex;align-items:center;gap:6px;margin-top:3px}
+.health-bar{height:4px;border-radius:2px;background:var(--bg4);flex:1;overflow:hidden}
+.health-fill{height:100%;border-radius:2px;transition:width .5s}
+
+/* KB items */
+.kb-item{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;margin-bottom:6px;transition:border-color .15s}
+.kb-item:hover{border-color:var(--bd2)}
+.kb-cat{font-size:10px;padding:1px 6px;border-radius:6px;font-weight:500;flex-shrink:0}
+
+/* vector viz */
+.vec-canvas{width:100%;height:280px;border-radius:var(--r);border:1px solid var(--bd);background:var(--bg);cursor:crosshair}
+.vec-node{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;transition:transform .15s}
+.vec-node:hover{transform:translate(-50%,-50%) scale(1.1)}
+.vec-label{font-size:9px;color:var(--tx2);margin-top:2px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
+
+/* context builder */
+.ctx-agent-out{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:12px;font-size:12px;line-height:1.7;color:var(--tx2);max-height:300px;overflow-y:auto;white-space:pre-wrap;scrollbar-width:thin}
+
+/* diff viewer */
+.diff-row{display:flex;gap:3px;font-size:11.5px;font-family:var(--mono);margin-bottom:2px;line-height:1.5}
+.diff-add{color:var(--gr);background:#22c55e0d;padding:0 4px;border-radius:3px;flex:1}
+.diff-rem{color:var(--rd);background:#ef44440d;padding:0 4px;border-radius:3px;flex:1}
+.diff-lbl{color:var(--tx3);width:14px;flex-shrink:0;text-align:center}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.mem-item{animation:fadeIn .2s ease}
+
+/* log */
+.log{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:10px;font-size:11.5px;line-height:1.7;color:var(--tx2);overflow-y:auto;white-space:pre-wrap;word-break:break-word;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+
+/* ==AGENT-PANEL-INJECTED== */
+
+/* ==PANEL-ENHANCED== */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;title:'Bulk Run'}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px}
+.ap-float-btn:hover{opacity:.85}
+
+</style>
+</head>
+<body>
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;font-family:system-ui,sans-serif">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+
+  <button class="ap-float-btn" onclick="apOpenPicker()">📋 Agent Tasks</button>
+</nav>
+
+<div class="app">
+
+<div class="topbar">
+  <div class="module-badge">🧠 Module 3 of 4</div>
+  <h1><span>Memory Layer</span></h1>
+  <p>Gives agents persistent memory — semantic search · knowledge base · customer context · institutional memory · memory-aware AI</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total memories</div></div>
+  <div class="stat"><div class="stat-n" id="st-kb">0</div><div class="stat-l">KB docs</div></div>
+  <div class="stat"><div class="stat-n" id="st-cx">0</div><div class="stat-l">Customers tracked</div></div>
+  <div class="stat"><div class="stat-n" id="st-queries">0</div><div class="stat-l">Queries</div></div>
+  <div class="stat"><div class="stat-n" id="st-recalls">0</div><div class="stat-l">Memories recalled</div></div>
+  <div class="stat"><div class="stat-n" id="st-agents">0</div><div class="stat-l">Active agents</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('store')">💾 Memory Store</button>
+  <button class="tab" onclick="sw('search')">🔍 Semantic Search</button>
+  <button class="tab" onclick="sw('agent')">🤖 Memory-Aware Agent</button>
+  <button class="tab" onclick="sw('kb')">📚 Knowledge Base</button>
+  <button class="tab" onclick="sw('customer')">🧑‍💼 Customer Context</button>
+  <button class="tab" onclick="sw('graph')">🕸️ Memory Graph</button>
+</div>
+
+<!-- ═══ MEMORY STORE ═══ -->
+<div class="tp active" id="tp-store">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">💾 Store a memory</div><div class="card-sub">Persist any agent output, decision, or fact</div></div></div>
+        <div class="sp"><label>Agent / source</label>
+          <div style="display:flex;gap:6px;align-items:center">
+          <select id="mem-agent" style="flex:1">
+            <option value="ceo">👑 CEO Agent</option><option value="pm">🧭 PM Agent</option>
+            <option value="arch">🏗️ Architect</option><option value="dev">💻 Developer</option>
+            <option value="sales">💼 Sales</option><option value="marketer">📢 Marketer</option>
+            <option value="cfo">💰 CFO</option><option value="qa">🧪 QA</option>
+            <option value="support">🎧 Support</option><option value="system">⚙️ System</option>
+          </select>
+          <button onclick="apOpenPicker()" style="padding:5px 8px;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:7px;cursor:pointer;font-size:.75rem;white-space:nowrap;flex-shrink:0" title="Open agent task panel">📋</button>
+          </div>
+        </div>
+        <div class="sp"><label>Memory type</label>
+          <select id="mem-type">
+            <option value="decision">📌 Decision — a choice made</option>
+            <option value="insight">💡 Insight — a discovery or learning</option>
+            <option value="output">📄 Agent output — result of a task</option>
+            <option value="fact">📊 Fact — a data point or metric</option>
+            <option value="lesson">⚠️ Lesson — something that went wrong</option>
+            <option value="plan">🗺️ Plan — a future intention</option>
+            <option value="relationship">🤝 Relationship — about a person or company</option>
+          </select>
+        </div>
+        <div class="sp"><label>Content</label>
+          <textarea id="mem-content" rows="4" placeholder="e.g. We decided to use PostgreSQL over MongoDB because our data is relational and we need strong ACID guarantees. Revisit when we hit 10M rows."></textarea>
+        </div>
+        <div class="sp"><label>Tags (comma separated)</label>
+          <input type="text" id="mem-tags" placeholder="e.g. database, architecture, decision">
+        </div>
+        <div class="sp row">
+          <div style="flex:1"><label>Importance</label>
+            <select id="mem-importance">
+              <option value="critical">🔴 Critical</option>
+              <option value="high">🟠 High</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="low">⚪ Low</option>
+            </select>
+          </div>
+          <div style="flex:1"><label>Expiry</label>
+            <select id="mem-expiry">
+              <option value="never">Never expires</option>
+              <option value="7">7 days</option>
+              <option value="30">30 days</option>
+              <option value="90">90 days</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn btn-p" onclick="storeMemory()">💾 Store memory</button>
+          <button class="btn btn-sm" onclick="seedMemories()">🌱 Seed examples</button>
+          <button class="btn btn-sm btn-rd" onclick="clearMemories()">Clear all</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-hdr">
+          <div><div class="card-title">📋 Memory store</div><div class="card-sub" id="store-sub">0 memories across 0 agents</div></div>
+          <div class="row">
+            <select id="store-filter" style="width:130px" onchange="renderStore()">
+              <option value="all">All agents</option>
+              <option value="ceo">CEO</option><option value="pm">PM</option>
+              <option value="dev">Developer</option><option value="sales">Sales</option>
+              <option value="cfo">CFO</option><option value="system">System</option>
+            </select>
+            <select id="type-filter" style="width:120px" onchange="renderStore()">
+              <option value="all">All types</option>
+              <option value="decision">Decisions</option><option value="insight">Insights</option>
+              <option value="fact">Facts</option><option value="lesson">Lessons</option>
+            </select>
+          </div>
+        </div>
+        <div id="mem-store-list" style="max-height:500px;overflow-y:auto">
+          <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No memories yet — store some or click Seed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SEMANTIC SEARCH ═══ -->
+<div class="tp" id="tp-search">
+  <div class="card">
+    <div class="card-hdr"><div><div class="card-title">🔍 Semantic Memory Search</div><div class="card-sub">Natural language search across all stored memories — relevance ranked</div></div></div>
+    <div class="row sp">
+      <input type="text" id="search-query" placeholder="e.g. database decisions  /  customer churn reasons  /  what did we learn about pricing" style="flex:1" onkeydown="if(event.key==='Enter')searchMemory()">
+      <button class="btn btn-p" onclick="searchMemory()" id="search-btn">🔍 Search</button>
+    </div>
+    <div class="row sp">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="s-decisions" checked> Decisions</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="s-insights" checked> Insights</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="s-facts" checked> Facts</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);cursor:pointer;margin:0"><input type="checkbox" id="s-lessons" checked> Lessons</label>
+      <div style="flex:1"></div>
+      <select id="s-agent" style="width:130px">
+        <option value="all">All agents</option>
+        <option value="ceo">CEO</option><option value="pm">PM</option>
+        <option value="dev">Developer</option><option value="sales">Sales</option>
+        <option value="cfo">CFO</option>
+      </select>
+    </div>
+    <div id="search-results">
+      <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">Search results appear here</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div><div class="card-title">💬 Ask memory a question</div><div class="card-sub">AI answers using only what's stored in memory — no hallucination</div></div></div>
+    <div class="row sp">
+      <input type="text" id="ask-q" placeholder="e.g. Why did we choose PostgreSQL? / What do we know about our churn?" style="flex:1" onkeydown="if(event.key==='Enter')askMemory()">
+      <button class="btn btn-p" onclick="askMemory()" id="ask-btn">Ask</button>
+    </div>
+    <div class="log" id="ask-output" style="max-height:200px;display:none"></div>
+  </div>
+</div>
+
+<!-- ═══ MEMORY-AWARE AGENT ═══ -->
+<div class="tp" id="tp-agent">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🤖 Memory-Aware Agent</div><div class="card-sub">Agent automatically retrieves relevant memories before responding</div></div></div>
+        <div class="sp"><label>Agent</label>
+          <select id="ma-agent">
+            <option value="pm">🧭 PM Agent</option><option value="dev">💻 Developer</option>
+            <option value="sales">💼 Sales</option><option value="cfo">💰 CFO</option>
+            <option value="support">🎧 Support</option><option value="marketer">📢 Marketer</option>
+          </select>
+        </div>
+        <div class="sp"><label>Task</label>
+          <textarea id="ma-task" rows="4" placeholder="e.g. Recommend a database technology for our new feature. Consider what we've decided before."></textarea>
+        </div>
+        <div class="sp">
+          <label>Memory retrieval settings</label>
+          <div class="row">
+            <div style="flex:1"><label>Max memories to inject</label><input type="number" id="ma-top-k" value="5" min="1" max="20"></div>
+            <div style="flex:1"><label>Min relevance score</label><input type="number" id="ma-threshold" value="0.3" min="0" max="1" step="0.05"></div>
+          </div>
+        </div>
+        <button class="btn btn-p" id="ma-run-btn" onclick="runMemoryAgent()">▶ Run with memory</button>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">🔗 Memories injected into context</span><span class="badge b-pu" id="ma-injected-count">0 memories</span></div>
+        <div id="ma-injected-list" style="max-height:200px;overflow-y:auto">
+          <div style="font-size:12px;color:var(--tx3);padding:8px">Run the agent to see which memories were retrieved…</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">📤 Agent response (memory-informed)</span><span class="badge b-gy" id="ma-status" style="display:none"></span></div>
+        <div class="ctx-agent-out" id="ma-output">Response appears here…</div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-hdr"><div><div class="card-title">🔄 Memory update</div><div class="card-sub">New memory learned from this session</div></div></div>
+        <div id="ma-new-memory" style="font-size:12px;color:var(--tx3);padding:4px">Run an agent to auto-generate a memory from its output…</div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn btn-sm btn-gr" id="ma-save-btn" onclick="saveAgentMemory()" disabled>💾 Save to memory</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ KNOWLEDGE BASE ═══ -->
+<div class="tp" id="tp-kb">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">📚 Knowledge Base</div><div class="card-sub">Company docs, SOPs, policies — all agents can query</div></div></div>
+        <div class="sp"><label>Title</label><input type="text" id="kb-title" placeholder="e.g. Pricing Policy"></div>
+        <div class="sp"><label>Category</label>
+          <select id="kb-cat">
+            <option value="policy">📋 Policy</option><option value="process">⚙️ Process / SOP</option>
+            <option value="product">🚀 Product</option><option value="sales">💼 Sales</option>
+            <option value="technical">💻 Technical</option><option value="legal">⚖️ Legal</option>
+            <option value="finance">💰 Finance</option><option value="culture">🌱 Culture</option>
+          </select>
+        </div>
+        <div class="sp"><label>Content</label>
+          <textarea id="kb-content" rows="5" placeholder="e.g. Our pricing tiers are: Starter ($49/mo, up to 3 users), Growth ($149/mo, up to 15 users), Enterprise (custom). Annual plans get 20% discount. No refunds after 30 days..."></textarea>
+        </div>
+        <div class="row">
+          <button class="btn btn-p" onclick="addKBDoc()">+ Add document</button>
+          <button class="btn btn-sm" onclick="seedKB()">🌱 Seed KB</button>
+          <button class="btn btn-sm btn-rd" onclick="clearKB()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🤖 Agent queries the KB</div><div class="card-sub">Agent automatically searches KB before responding</div></div></div>
+        <div class="sp row">
+          <input type="text" id="kb-query" placeholder="e.g. What is our refund policy?" style="flex:1" onkeydown="if(event.key==='Enter')queryKB()">
+          <button class="btn btn-p btn-sm" onclick="queryKB()">Ask KB</button>
+        </div>
+        <div class="log" id="kb-answer" style="max-height:160px;display:none"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">📖 Documents</div><div class="card-sub" id="kb-count-sub">0 documents</div></div>
+        <select id="kb-filter" style="width:130px" onchange="renderKB()">
+          <option value="all">All categories</option>
+          <option value="policy">Policy</option><option value="process">Process</option>
+          <option value="product">Product</option><option value="technical">Technical</option>
+          <option value="sales">Sales</option><option value="finance">Finance</option>
+        </select>
+      </div>
+      <div id="kb-list" style="max-height:600px;overflow-y:auto">
+        <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No documents yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CUSTOMER CONTEXT ═══ -->
+<div class="tp" id="tp-customer">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🧑‍💼 Customer Context Store</div><div class="card-sub">Per-customer memory — every interaction, event, and insight</div></div></div>
+        <div class="sp row">
+          <div style="flex:1"><label>Customer ID / name</label><input type="text" id="cx-id" placeholder="e.g. Acme Corp"></div>
+          <div style="flex:1"><label>Plan / tier</label>
+            <select id="cx-plan">
+              <option value="enterprise">Enterprise</option><option value="pro">Pro</option>
+              <option value="starter">Starter</option><option value="trial">Trial</option>
+            </select>
+          </div>
+        </div>
+        <div class="sp"><label>Event type</label>
+          <select id="cx-type">
+            <option value="signup">🟢 Signup</option><option value="onboarding">🚀 Onboarding step</option>
+            <option value="purchase">💳 Purchase / upgrade</option><option value="support">🎧 Support ticket</option>
+            <option value="complaint">⚠️ Complaint</option><option value="churn_risk">🔴 Churn risk flagged</option>
+            <option value="nps">⭐ NPS response</option><option value="upsell">📈 Upsell opportunity</option>
+            <option value="renewal">🔄 Renewal</option><option value="churned">❌ Churned</option>
+          </select>
+        </div>
+        <div class="sp"><label>Note / detail</label>
+          <textarea id="cx-note" rows="3" placeholder="e.g. Customer raised concern about API rate limits in support ticket #1234. Requested 10x increase. Currently on Pro plan."></textarea>
+        </div>
+        <div class="sp row">
+          <div style="flex:1"><label>Health score (0-100)</label><input type="number" id="cx-health" value="80" min="0" max="100"></div>
+          <div style="flex:1"><label>MRR ($)</label><input type="number" id="cx-mrr" value="0" min="0"></div>
+        </div>
+        <button class="btn btn-p" onclick="addCustomerEvent()">+ Log event</button>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">🔍 Lookup customer</div></div></div>
+        <div class="row sp">
+          <input type="text" id="cx-search" placeholder="Customer name…" style="flex:1" onkeydown="if(event.key==='Enter')lookupCustomer()">
+          <button class="btn btn-p btn-sm" onclick="lookupCustomer()">Lookup</button>
+          <button class="btn btn-sm" onclick="seedCustomers()">🌱 Seed</button>
+        </div>
+        <div id="cx-list-panel" style="font-size:12px;color:var(--tx3);text-align:center;padding:16px">Enter a customer name</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-hdr">
+          <div><div class="card-title">👥 All customers</div><div class="card-sub" id="cx-count-sub">0 customers tracked</div></div>
+          <select id="cx-filter" style="width:130px" onchange="renderCustomerList()">
+            <option value="all">All</option>
+            <option value="churn_risk">Churn risk</option>
+            <option value="enterprise">Enterprise</option>
+            <option value="churned">Churned</option>
+          </select>
+        </div>
+        <div id="cx-global-list" style="max-height:560px;overflow-y:auto">
+          <div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No customers yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MEMORY GRAPH ═══ -->
+<div class="tp" id="tp-graph">
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title">🕸️ Memory Graph</div><div class="card-sub">Visual map of memories by agent and type — click a node to inspect</div></div>
+      <div class="row">
+        <button class="btn btn-sm" onclick="renderGraph()">↺ Refresh</button>
+        <button class="btn btn-sm" onclick="exportMemories()">⬇ Export JSON</button>
+      </div>
+    </div>
+    <canvas id="graph-canvas" class="vec-canvas" style="height:340px"></canvas>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--pu);display:inline-block"></span> Decision</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--cy);display:inline-block"></span> Insight</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--bl);display:inline-block"></span> Fact</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--rd);display:inline-block"></span> Lesson</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--gr);display:inline-block"></span> Plan</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--am);display:inline-block"></span> Output</span>
+    </div>
+  </div>
+  <div class="card" id="graph-inspect" style="display:none">
+    <div class="card-hdr"><span class="card-title">🔎 Inspecting memory</span><button class="btn btn-sm" onclick="document.getElementById('graph-inspect').style.display='none'">✕</button></div>
+    <div id="graph-inspect-content"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div><div class="card-title">🔄 Memory evolution (diff view)</div><div class="card-sub">How knowledge about a topic changed over time</div></div></div>
+    <div class="row sp">
+      <input type="text" id="diff-topic" placeholder="e.g. pricing, database, churn" style="flex:1">
+      <button class="btn btn-p btn-sm" onclick="showMemoryDiff()">Show evolution</button>
+    </div>
+    <div id="diff-output" style="max-height:200px;overflow-y:auto"></div>
+  </div>
+</div>
+
+</div>
+<script>
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+const MEMORIES = [];
+const KB = [];
+const CUSTOMERS = {};
+let stats = {total:0,kb:0,cx:0,queries:0,recalls:0,agents:new Set()};
+let lastAgentOutput = '';
+let lastAgentId = '';
+
+const AGENT_META = {
+  ceo:{icon:'👑',name:'CEO',color:'#a78bfa'},
+  pm:{icon:'🧭',name:'PM',color:'#60a5fa'},
+  arch:{icon:'🏗️',name:'Architect',color:'#22d3ee'},
+  dev:{icon:'💻',name:'Developer',color:'#34d399'},
+  sales:{icon:'💼',name:'Sales',color:'#fb923c'},
+  marketer:{icon:'📢',name:'Marketer',color:'#f472b6'},
+  cfo:{icon:'💰',name:'CFO',color:'#22c55e'},
+  qa:{icon:'🧪',name:'QA',color:'#f87171'},
+  support:{icon:'🎧',name:'Support',color:'#38bdf8'},
+  system:{icon:'⚙️',name:'System',color:'#94a3b8'},
+};
+
+const TYPE_COLORS = {
+  decision:'#a78bfa',insight:'#22d3ee',output:'#f59e0b',
+  fact:'#60a5fa',lesson:'#ef4444',plan:'#22c55e',relationship:'#f472b6',
+};
+const TYPE_ICONS = {
+  decision:'📌',insight:'💡',output:'📄',fact:'📊',lesson:'⚠️',plan:'🗺️',relationship:'🤝',
+};
+
+const AGENT_SYSTEMS = {
+  pm:`You are an elite PM (MIT CS + MIT Sloan MBA, ex-Google Maps Senior PM 1B+ users, ex-Meta Reels PM 0→140M DAUs). Apply Jobs-to-be-Done and Amazon Working Backwards. You have access to memory context from past decisions — you MUST reference relevant prior decisions explicitly (cite the memory source). Build on institutional knowledge, do not repeat mistakes. Be specific, opinionated, and outcome-driven. Every feature has a testable hypothesis.`,
+
+  dev:`You are an exceptional SWE (IIT Bombay CS Gold Medal + MIT MEng, ex-Google L5 Search 8.5B queries/day, ex-Facebook SWE React/GraphQL). You have access to memory context including past architectural decisions — reference them directly and build on them consistently. Follow SOLID, TDD. Write production-ready code. Your implementation plans are concrete: named files, specific libraries, story points. No throwaway code.`,
+
+  sales:`You are an elite VP Sales (Harvard Business School MBA, ex-Google Cloud $80M quota, ex-Salesforce President's Club 4x). You have access to memory context including past customer learnings, deal outcomes, and competitive intelligence — reference them explicitly to sharpen this strategy. Use Challenger Sale + MEDDIC. Be specific about ICP, pain points, and recommended plays. Build on what has worked; avoid what has not.`,
+
+  cfo:`You are a world-class CFO (LSE Economics First Class + Wharton MBA, ex-Goldman Sachs VP IB, ex-Amazon Finance Director AWS). You have access to memory context including past financial decisions, budget actuals, and metrics — reference them explicitly and use them to anchor your analysis. Show calculations, flag assumptions, provide sensitivity ranges. Know SaaS metrics cold: ARR, NRR, CAC Payback, LTV:CAC, Rule of 40.`,
+
+  support:`You are a world-class Support specialist (IIT Delhi + Cambridge MBA, ex-Amazon Customer Obsession Lead, ex-Google Cloud Support Manager 50K enterprise customers). You have access to memory context including past tickets, policies, and resolution patterns — identify recurring root causes and reference them explicitly. Apply HEARD. Diagnose systematically. Every response ends with a prevention recommendation.`,
+
+  marketer:`You are an elite PMM (Harvard AB + Cambridge MPhil, ex-Google PMM Director Android 3B devices, ex-Apple Product Marketing MacBook M1). You have access to memory context including past campaign learnings, messaging tests, and customer insights — reference them explicitly and apply them. Use Crossing the Chasm, Blue Ocean, April Dunford's positioning. Be specific, differentiated, and conversion-focused. Never write generic content.`,
+};
+
+/* ═══════════════════════════════════════
+   MEMORY STORE
+═══════════════════════════════════════ */
+function storeMemory(agentId, type, content, tags, importance, source='manual') {
+  const agent = agentId || document.getElementById('mem-agent').value;
+  const t = type || document.getElementById('mem-type').value;
+  const c = content || document.getElementById('mem-content').value.trim();
+  const tgs = tags || document.getElementById('mem-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const imp = importance || document.getElementById('mem-importance').value;
+  if (!c) { if (source==='manual') document.getElementById('mem-content').focus(); return null; }
+
+  const mem = {
+    id: Date.now()+Math.random(),
+    agent, type:t, content:c, tags:tgs, importance:imp,
+    ts: new Date().toLocaleString(), source,
+    embedding: generatePseudoEmbedding(c), // keyword-based pseudo-embedding
+  };
+  MEMORIES.push(mem);
+  stats.total = MEMORIES.length;
+  stats.agents.add(agent);
+
+  if (source==='manual') {
+    document.getElementById('mem-content').value='';
+    document.getElementById('mem-tags').value='';
+  }
+  updateStats();
+  renderStore();
+  return mem;
+}
+
+// Pseudo-embedding: keyword frequency vector for demo
+function generatePseudoEmbedding(text) {
+  const words = text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>3);
+  const freq = {};
+  words.forEach(w=>freq[w]=(freq[w]||0)+1);
+  return freq;
+}
+
+function cosineSimilarity(a, b) {
+  const keys = new Set([...Object.keys(a),...Object.keys(b)]);
+  let dot=0,magA=0,magB=0;
+  keys.forEach(k=>{
+    const va=a[k]||0, vb=b[k]||0;
+    dot+=va*vb; magA+=va*va; magB+=vb*vb;
+  });
+  return magA&&magB ? dot/(Math.sqrt(magA)*Math.sqrt(magB)) : 0;
+}
+
+function searchMemories(query, topK=10, threshold=0.0, typeFilters=null, agentFilter='all') {
+  stats.queries++;
+  const qEmb = generatePseudoEmbedding(query);
+  const qWords = query.toLowerCase().split(/\s+/).filter(w=>w.length>2);
+
+  return MEMORIES
+    .filter(m => !typeFilters || typeFilters.includes(m.type))
+    .filter(m => agentFilter==='all' || m.agent===agentFilter)
+    .map(m => {
+      const embScore = cosineSimilarity(qEmb, m.embedding);
+      // boost for exact keyword matches in tags
+      const tagBoost = m.tags.some(t=>qWords.some(q=>t.includes(q))) ? 0.3 : 0;
+      const contentBoost = qWords.filter(q=>m.content.toLowerCase().includes(q)).length * 0.05;
+      const score = Math.min(1, embScore + tagBoost + contentBoost);
+      return {...m, score};
+    })
+    .filter(m => m.score >= threshold)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,topK);
+}
+
+function renderStore() {
+  const agentF = document.getElementById('store-filter').value;
+  const typeF = document.getElementById('type-filter').value;
+  let mems = MEMORIES;
+  if (agentF!=='all') mems=mems.filter(m=>m.agent===agentF);
+  if (typeF!=='all') mems=mems.filter(m=>m.type===typeF);
+  const agents = new Set(MEMORIES.map(m=>m.agent));
+  document.getElementById('store-sub').textContent=`${MEMORIES.length} memories across ${agents.size} agents`;
+  const el = document.getElementById('mem-store-list');
+  if (!mems.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No memories match</div>';return;}
+  el.innerHTML=[...mems].reverse().slice(0,50).map(m=>renderMemItem(m,false)).join('');
+}
+
+function renderMemItem(m, showScore) {
+  const am=AGENT_META[m.agent]||{icon:'🤖',name:m.agent,color:'#8890bb'};
+  const scoreHtml = showScore&&m.score!==undefined?`<span class="mem-score ${m.score>0.6?'score-high':m.score>0.3?'score-mid':'score-low'}">${(m.score*100).toFixed(0)}%</span>`:'';
+  return `<div class="mem-item ${showScore&&m.score>0.5?'highlighted':''}">
+    <div class="mem-header">
+      <span class="mem-agent-badge" style="background:${am.color}22;color:${am.color};border:1px solid ${am.color}44">${am.icon} ${am.name}</span>
+      <span class="mem-type-badge" style="background:${TYPE_COLORS[m.type]||'var(--tx3)'}22;color:${TYPE_COLORS[m.type]||'var(--tx2)'};border:1px solid ${TYPE_COLORS[m.type]||'var(--bd)'}44">${TYPE_ICONS[m.type]||'·'} ${m.type}</span>
+      <span class="mem-ts" style="margin-left:auto">${m.ts}</span>
+      ${scoreHtml}
+    </div>
+    <div class="mem-content">${m.content.slice(0,250)}${m.content.length>250?'…':''}</div>
+    <div class="mem-meta">
+      ${m.tags.map(t=>`<span class="mem-tag">${t}</span>`).join('')}
+      <span class="badge ${m.importance==='critical'?'b-rd':m.importance==='high'?'b-am':'b-gy'}" style="font-size:9px">${m.importance}</span>
+    </div>
+  </div>`;
+}
+
+function clearMemories(){MEMORIES.length=0;stats.total=0;stats.agents=new Set();updateStats();renderStore();}
+
+function seedMemories() {
+  const seeds=[
+    {agent:'ceo',type:'decision',content:'We are building a B2B SaaS product targeting legal tech. Bootstrap first, raise Series A at $1M ARR. Hiring freeze until product-market fit confirmed.',tags:['strategy','funding','hiring'],importance:'critical'},
+    {agent:'arch',type:'decision',content:'Chose PostgreSQL over MongoDB for our primary database. Reasons: relational data model fits our domain, strong ACID guarantees needed for financial data, team expertise, lower cost at our scale. Revisit at 50M rows.',tags:['database','architecture','postgresql'],importance:'critical'},
+    {agent:'pm',type:'insight',content:'User research (n=24) shows that lawyers spend avg 3.4hrs/day on document review. Top pain: inconsistent formatting across firms. They want one-click standardisation, not AI summaries.',tags:['user-research','pain-points','product'],importance:'high'},
+    {agent:'sales',type:'lesson',content:'Enterprise sales cycle is 4-6 months, not 6-8 weeks as we assumed. IT security review adds 8 weeks alone. Must start legal review conversation earlier. Adjusted deal velocity targets accordingly.',tags:['sales','enterprise','cycle-time'],importance:'high'},
+    {agent:'cfo',type:'fact',content:'Current unit economics: CAC $1,200, LTV $8,400, LTV:CAC 7x, payback period 9 months. Gross margin 78%. Monthly burn $45k. Runway 14 months at current rate.',tags:['metrics','unit-economics','finance'],importance:'critical'},
+    {agent:'dev',type:'lesson',content:'Shipping without feature flags caused 2hr outage in March. All new features must go behind flags from now. Rollout: 5% → 20% → 100% with 24h between stages. No exceptions.',tags:['engineering','feature-flags','incident'],importance:'high'},
+    {agent:'marketer',type:'insight',content:'LinkedIn organic outperforms all paid channels. Posts with data points (specific numbers) get 3x engagement vs opinion posts. Best time: Tuesday/Wednesday 8-9am EST. Lawyers respond to authority signals.',tags:['marketing','linkedin','content'],importance:'medium'},
+    {agent:'support',type:'fact',content:'Top 3 support issues: (1) API rate limits 34%, (2) SSO configuration 22%, (3) bulk upload timeout 18%. API rate limit complaints correlate 0.82 with churn risk. Must be fixed in Q2.',tags:['support','churn','api'],importance:'high'},
+    {agent:'pm',type:'plan',content:'Q2 roadmap: (1) API rate limit 10x — June 1, (2) SSO self-serve — June 15, (3) bulk upload redesign — June 30. These three will reduce churn by est. 1.8% points.',tags:['roadmap','q2','product'],importance:'high'},
+    {agent:'ceo',type:'decision',content:'Decided not to build mobile app in 2024. All users are desktop (legal work). Will revisit if mobile usage >5% (currently 1.2%). Saves 3 months of engineering.',tags:['mobile','product','decision'],importance:'medium'},
+  ];
+  seeds.forEach(s=>storeMemory(s.agent,s.type,s.content,s.tags,s.importance,'seed'));
+}
+
+/* ═══════════════════════════════════════
+   SEMANTIC SEARCH
+═══════════════════════════════════════ */
+function searchMemory() {
+  const q = document.getElementById('search-query').value.trim();
+  if (!q) return;
+  const typeFilters=[];
+  if(document.getElementById('s-decisions').checked) typeFilters.push('decision');
+  if(document.getElementById('s-insights').checked) typeFilters.push('insight');
+  if(document.getElementById('s-facts').checked) typeFilters.push('fact','output','plan','relationship');
+  if(document.getElementById('s-lessons').checked) typeFilters.push('lesson');
+  const agentFilter=document.getElementById('s-agent').value;
+  const results=searchMemories(q,10,0,typeFilters.length?typeFilters:null,agentFilter);
+  stats.recalls+=results.length; updateStats();
+  const el=document.getElementById('search-results');
+  if(!results.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No memories found matching "'+q+'"</div>';return;}
+  el.innerHTML=`<div style="font-size:12px;color:var(--tx2);margin-bottom:8px">${results.length} memories found for "<b>${q}</b>"</div>`+results.map(m=>renderMemItem(m,true)).join('');
+}
+
+async function askMemory() {
+  const q=document.getElementById('ask-q').value.trim();
+  if(!q) return;
+  const btn=document.getElementById('ask-btn');
+  btn.disabled=true;btn.textContent='Thinking…';
+  const relevant=searchMemories(q,8,0);
+  const out=document.getElementById('ask-output');
+  out.style.display='block';
+  out.textContent='Searching memory and reasoning…';
+  stats.queries++; updateStats();
+
+  const context=relevant.map(m=>`[${m.agent}/${m.type}] ${m.content}`).join('\n\n');
+  if(!context){out.textContent='No relevant memories found. Store some memories first.';btn.disabled=false;btn.textContent='Ask';return;}
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:'You are a memory retrieval system. Answer the question ONLY using the provided memory entries. If the memories do not contain the answer, say so clearly. Quote which agent/memory type your answer comes from.',messages:[{role:'user',content:`MEMORIES:\n${context}\n\nQUESTION: ${q}`}]})});
+    const data=await res.json();
+    out.textContent=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+  }catch(e){out.textContent='Error: '+e.message;}
+  btn.disabled=false;btn.textContent='Ask';
+}
+
+/* ═══════════════════════════════════════
+   MEMORY-AWARE AGENT
+═══════════════════════════════════════ */
+async function runMemoryAgent() {
+  const agent=document.getElementById('ma-agent').value;
+  const task=document.getElementById('ma-task').value.trim();
+  const topK=parseInt(document.getElementById('ma-top-k').value)||5;
+  const threshold=parseFloat(document.getElementById('ma-threshold').value)||0.3;
+  if(!task){document.getElementById('ma-task').focus();return;}
+
+  const btn=document.getElementById('ma-run-btn');
+  const status=document.getElementById('ma-status');
+  const out=document.getElementById('ma-output');
+  btn.disabled=true;
+  status.style.display='inline-block';status.textContent='🔍 Retrieving memories…';status.className='badge b-pu';
+  out.textContent='Retrieving relevant memories from store…';
+
+  // Retrieve
+  const relevant=searchMemories(task,topK,threshold);
+  stats.recalls+=relevant.length;updateStats();
+
+  // Show injected memories
+  const injEl=document.getElementById('ma-injected-list');
+  document.getElementById('ma-injected-count').textContent=relevant.length+' memories';
+  if(!relevant.length){injEl.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:8px">No relevant memories found — running without context</div>';}
+  else{injEl.innerHTML=relevant.map(m=>`<div style="padding:5px 0;border-bottom:1px solid var(--bd)"><div style="font-size:11px;display:flex;gap:6px;align-items:center"><span style="color:${AGENT_META[m.agent]?.color||'var(--tx2)'}">${AGENT_META[m.agent]?.icon||'🤖'} ${AGENT_META[m.agent]?.name||m.agent}</span><span style="color:var(--tx3)">${TYPE_ICONS[m.type]} ${m.type}</span><span class="mem-score ${m.score>0.5?'score-high':'score-mid'}">${(m.score*100).toFixed(0)}%</span></div><div style="font-size:11px;color:var(--tx2);margin-top:2px">${m.content.slice(0,100)}…</div></div>`).join('');}
+
+  status.textContent='🤖 Running agent…';
+  out.textContent='Running agent with memory context…';
+
+  const memCtx=relevant.map(m=>`[${m.agent} / ${m.type}]: ${m.content}`).join('\n\n');
+  const sys=AGENT_SYSTEMS[agent]||AGENT_SYSTEMS.pm;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:sys,messages:[{role:'user',content:memCtx?`MEMORY CONTEXT (past decisions and knowledge):\n${memCtx}\n\nTASK:\n${task}\n\nUse the memory context to inform your response. Reference specific past decisions when relevant.`:task}]})});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    out.textContent=text;
+    lastAgentOutput=text;lastAgentId=agent;
+    status.textContent='✓ Complete';status.className='badge b-gr';
+
+    // Auto-generate new memory snippet
+    const newMemEl=document.getElementById('ma-new-memory');
+    newMemEl.textContent=text.slice(0,200)+'…';
+    document.getElementById('ma-save-btn').disabled=false;
+
+    // Auto-store
+    storeMemory(agent,'output',text.slice(0,500),[agent,'auto','task'],′medium′,'auto');
+  }catch(e){out.textContent='Error: '+e.message;status.textContent='✗ Failed';status.className='badge b-rd';}
+  btn.disabled=false;
+}
+
+function saveAgentMemory(){
+  if(!lastAgentOutput) return;
+  storeMemory(lastAgentId,'output',lastAgentOutput.slice(0,500),[lastAgentId,'saved'],'medium','saved');
+  document.getElementById('ma-save-btn').disabled=true;
+  document.getElementById('ma-save-btn').textContent='✓ Saved';
+}
+
+/* ═══════════════════════════════════════
+   KNOWLEDGE BASE
+═══════════════════════════════════════ */
+function addKBDoc(){
+  const title=document.getElementById('kb-title').value.trim();
+  const cat=document.getElementById('kb-cat').value;
+  const content=document.getElementById('kb-content').value.trim();
+  if(!title||!content)return;
+  KB.push({id:Date.now(),title,cat,content,ts:new Date().toLocaleString(),embedding:generatePseudoEmbedding(title+' '+content)});
+  stats.kb=KB.length;updateStats();
+  document.getElementById('kb-title').value='';document.getElementById('kb-content').value='';
+  renderKB();
+  // also store in memories
+  storeMemory('system','fact',`[KB/${cat}] ${title}: ${content.slice(0,200)}`,[cat,'kb','document'],'medium','kb');
+}
+
+function renderKB(){
+  const filter=document.getElementById('kb-filter').value;
+  let docs=KB; if(filter!=='all') docs=docs.filter(d=>d.cat===filter);
+  document.getElementById('kb-count-sub').textContent=KB.length+' documents';
+  const el=document.getElementById('kb-list');
+  const CAT_COLORS={policy:'#60a5fa',process:'#94a3b8',product:'#a78bfa',sales:'#fb923c',technical:'#34d399',legal:'#f87171',finance:'#22c55e',culture:'#f472b6'};
+  const CAT_ICONS={policy:'📋',process:'⚙️',product:'🚀',sales:'💼',technical:'💻',legal:'⚖️',finance:'💰',culture:'🌱'};
+  if(!docs.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No documents</div>';return;}
+  el.innerHTML=docs.map((d,i)=>`
+    <div class="kb-item">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span class="kb-cat" style="background:${CAT_COLORS[d.cat]||'var(--tx3)'}22;color:${CAT_COLORS[d.cat]||'var(--tx2)'};border:1px solid ${CAT_COLORS[d.cat]||'var(--bd)'}44">${CAT_ICONS[d.cat]||'·'} ${d.cat}</span>
+        <span style="font-size:13px;font-weight:500;flex:1">${d.title}</span>
+        <button class="btn btn-sm btn-rd" onclick="KB.splice(${i},1);stats.kb=KB.length;updateStats();renderKB()">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--tx2);line-height:1.6">${d.content.slice(0,180)}${d.content.length>180?'…':''}</div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px">${d.ts}</div>
+    </div>`).join('');
+}
+
+async function queryKB(){
+  const q=document.getElementById('kb-query').value.trim();
+  if(!q)return;
+  const qEmb=generatePseudoEmbedding(q);
+  const relevant=KB.map(d=>({...d,score:cosineSimilarity(qEmb,d.embedding)})).sort((a,b)=>b.score-a.score).slice(0,3);
+  const out=document.getElementById('kb-answer');
+  out.style.display='block';out.textContent='Searching knowledge base…';
+  const ctx=relevant.map(d=>`[${d.cat}] ${d.title}: ${d.content}`).join('\n\n');
+  if(!ctx){out.textContent='No relevant documents found in KB.';return;}
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,system:'You are a knowledge base assistant. Answer questions using ONLY the provided documents. Be concise and cite which document your answer comes from.',messages:[{role:'user',content:`DOCUMENTS:\n${ctx}\n\nQUESTION: ${q}`}]})});
+    const data=await res.json();
+    out.textContent=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+  }catch(e){out.textContent='Error: '+e.message;}
+}
+
+function seedKB(){
+  const docs=[
+    {title:'Pricing Policy',cat:'policy',content:'Starter $49/mo (3 users, 100 docs/mo), Pro $149/mo (15 users, 1000 docs/mo), Enterprise custom. Annual discount 20%. No refunds after 30 days. Free trial 14 days, no credit card required.'},
+    {title:'Support SLA',cat:'policy',content:'P1 Critical (data loss/outage): 1hr response, 4hr resolution. P2 High (feature broken): 4hr response, 24hr resolution. P3 Medium: 24hr response, 72hr resolution. P4 Low: 72hr response. Support hours: Mon-Fri 9am-6pm EST.'},
+    {title:'Incident Response Process',cat:'process',content:'1. Alert fires in PagerDuty. 2. On-call engineer triages within 15min. 3. Severity assessed (P1-P4). 4. War room opened in Slack #incidents for P1/P2. 5. Status page updated within 30min. 6. Post-mortem required within 5 days for P1.'},
+    {title:'Sales Qualification Framework',cat:'sales',content:'MEDDIC: Metrics (quantified pain), Economic Buyer (must be in room), Decision Criteria (our scorecard), Decision Process (mapped), Identify Pain (3 pains confirmed), Champion (internal advocate). Do not progress deal without all 6.'},
+    {title:'Engineering Standards',cat:'technical',content:'All PRs require 2 approvals. Test coverage minimum 80% (unit) + 60% (integration). No commits to main without PR. Deploy only on Tue-Thu 10am-3pm EST. All new features behind feature flags. Hotfixes exempted with post-mortem.'},
+    {title:'Data Retention Policy',cat:'legal',content:'Customer data retained for 7 years post-contract. Logs retained 90 days. Backups: daily for 30 days, weekly for 12 months. GDPR deletion requests fulfilled within 30 days. SOC2 Type II certified annually.'},
+  ];
+  docs.forEach(d=>{ document.getElementById('kb-title').value=d.title; document.getElementById('kb-cat').value=d.cat; document.getElementById('kb-content').value=d.content; addKBDoc(); });
+}
+
+function clearKB(){KB.length=0;stats.kb=0;updateStats();renderKB();}
+
+/* ═══════════════════════════════════════
+   CUSTOMER CONTEXT
+═══════════════════════════════════════ */
+const CX_COLORS={signup:'#22c55e',onboarding:'#60a5fa',purchase:'#22c55e',support:'#f59e0b',complaint:'#ef4444',churn_risk:'#ef4444',nps:'#a78bfa',upsell:'#22d3ee',renewal:'#22c55e',churned:'#6b7280'};
+const CX_ICONS={signup:'🟢',onboarding:'🚀',purchase:'💳',support:'🎧',complaint:'⚠️',churn_risk:'🔴',nps:'⭐',upsell:'📈',renewal:'🔄',churned:'❌'};
+
+function addCustomerEvent(){
+  const id=document.getElementById('cx-id').value.trim();
+  if(!id)return;
+  const plan=document.getElementById('cx-plan').value;
+  const type=document.getElementById('cx-type').value;
+  const note=document.getElementById('cx-note').value.trim();
+  const health=parseInt(document.getElementById('cx-health').value)||80;
+  const mrr=parseInt(document.getElementById('cx-mrr').value)||0;
+  if(!CUSTOMERS[id])CUSTOMERS[id]={events:[],plan,health,mrr,firstSeen:new Date().toLocaleDateString()};
+  CUSTOMERS[id].events.push({type,note,health,mrr,ts:new Date().toLocaleString()});
+  CUSTOMERS[id].health=health;CUSTOMERS[id].mrr=mrr||CUSTOMERS[id].mrr;CUSTOMERS[id].plan=plan;
+  stats.cx=Object.keys(CUSTOMERS).length;updateStats();
+  document.getElementById('cx-note').value='';
+  renderCustomerList();
+  document.getElementById('cx-search').value=id;lookupCustomer();
+}
+
+function lookupCustomer(){
+  const q=document.getElementById('cx-search').value.trim();
+  const el=document.getElementById('cx-list-panel');
+  const match=Object.entries(CUSTOMERS).find(([k])=>k.toLowerCase().includes(q.toLowerCase()));
+  if(!match){el.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:8px">No customer found: "'+q+'"</div>';return;}
+  const [id,cx]=match;
+  el.innerHTML=`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:15px;font-weight:600">${id}</span>
+        <span class="badge b-gy">${cx.plan}</span>
+        <span class="badge ${cx.health>=70?'b-gr':cx.health>=40?'b-am':'b-rd'}">${cx.health} health</span>
+        ${cx.mrr?`<span class="badge b-cy">$${cx.mrr}/mo</span>`:''}
+      </div>
+      <div class="cx-health"><span style="font-size:10px;color:var(--tx3);width:60px">Health</span><div class="health-bar"><div class="health-fill" style="width:${cx.health}%;background:${cx.health>=70?'var(--gr)':cx.health>=40?'var(--am)':'var(--rd)'}"></div></div><span style="font-size:11px;color:var(--tx2)">${cx.health}%</span></div>
+    </div>
+    <div style="position:relative">
+      ${cx.events.slice().reverse().map((e,i)=>`
+        <div class="cx-event">
+          <div class="cx-dot" style="background:${CX_COLORS[e.type]||'#8890bb'}"></div>
+          ${i<cx.events.length-1?'<div class="cx-line"></div>':''}
+          <div class="cx-info">
+            <div class="cx-type">${CX_ICONS[e.type]||'·'} ${e.type.replace('_',' ')}</div>
+            ${e.note?`<div class="cx-note">${e.note}</div>`:''}
+            <div class="cx-ts">${e.ts}</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderCustomerList(){
+  const filter=document.getElementById('cx-filter').value;
+  const el=document.getElementById('cx-global-list');
+  let entries=Object.entries(CUSTOMERS);
+  if(filter==='churn_risk') entries=entries.filter(([,cx])=>cx.health<40||cx.events.some(e=>e.type==='churn_risk'));
+  if(filter==='enterprise') entries=entries.filter(([,cx])=>cx.plan==='enterprise');
+  if(filter==='churned') entries=entries.filter(([,cx])=>cx.events.some(e=>e.type==='churned'));
+  document.getElementById('cx-count-sub').textContent=Object.keys(CUSTOMERS).length+' customers tracked';
+  if(!entries.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:24px">No customers match</div>';return;}
+  el.innerHTML=entries.map(([id,cx])=>`
+    <div class="mem-item" onclick="document.getElementById('cx-search').value='${id}';lookupCustomer();sw('customer')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-weight:600;font-size:13px;flex:1">${id}</span>
+        <span class="badge b-gy" style="font-size:10px">${cx.plan}</span>
+        ${cx.mrr?`<span class="badge b-cy" style="font-size:10px">$${cx.mrr}</span>`:''}
+      </div>
+      <div class="cx-health"><div class="health-bar"><div class="health-fill" style="width:${cx.health}%;background:${cx.health>=70?'var(--gr)':cx.health>=40?'var(--am)':'var(--rd)'}"></div></div><span style="font-size:10px;color:var(--tx2);margin-left:6px">${cx.health}% health</span></div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px">${cx.events.length} events · last: ${cx.events[cx.events.length-1]?.ts||'—'}</div>
+    </div>`).join('');
+}
+
+function seedCustomers(){
+  const seeds=[
+    {id:'Acme Legal',plan:'enterprise',events:[{type:'signup',note:'Referral from conference',health:90,mrr:2400},{type:'onboarding',note:'Completed setup, team of 8 lawyers',health:88,mrr:2400},{type:'support',note:'API rate limit hit during bulk import',health:72,mrr:2400},{type:'churn_risk',note:'Usage dropped 40% after rate limit issue',health:42,mrr:2400}]},
+    {id:'Bright & Co',plan:'pro',events:[{type:'signup',note:'Inbound via blog post',health:85,mrr:149},{type:'onboarding',note:'Smooth onboarding, very engaged',health:90,mrr:149},{type:'nps',note:'NPS 9 — loves the document parsing',health:92,mrr:149},{type:'upsell',note:'Asked about enterprise features',health:92,mrr:149}]},
+    {id:'Lexon Group',plan:'starter',events:[{type:'signup',note:'Trial signup',health:70,mrr:0},{type:'support',note:'Trouble with SSO setup',health:55,mrr:0},{type:'churned',note:'Went with competitor, cited mobile app',health:10,mrr:0}]},
+    {id:'Parker Firm',plan:'enterprise',events:[{type:'signup',note:'Direct sales deal',health:95,mrr:5000},{type:'purchase',note:'Annual Enterprise contract signed',health:95,mrr:5000},{type:'renewal',note:'Renewed for 2nd year, +30% seats',health:96,mrr:6500}]},
+  ];
+  seeds.forEach(s=>{
+    CUSTOMERS[s.id]={events:[],plan:s.plan,health:s.events[s.events.length-1].health,mrr:s.events[s.events.length-1].mrr,firstSeen:new Date().toLocaleDateString()};
+    s.events.forEach(e=>{CUSTOMERS[s.id].events.push({...e,ts:new Date().toLocaleString()});CUSTOMERS[s.id].health=e.health;});
+  });
+  stats.cx=Object.keys(CUSTOMERS).length;updateStats();renderCustomerList();
+}
+
+/* ═══════════════════════════════════════
+   MEMORY GRAPH
+═══════════════════════════════════════ */
+function renderGraph(){
+  const canvas=document.getElementById('graph-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||900;
+  const H=340;
+  canvas.width=W;canvas.height=H;
+  ctx.clearRect(0,0,W,H);
+
+  if(!MEMORIES.length){
+    ctx.fillStyle='#4a5180';ctx.font='13px system-ui';ctx.textAlign='center';
+    ctx.fillText('No memories yet — store some first',W/2,H/2);return;
+  }
+
+  // Group by agent
+  const agents={}; MEMORIES.forEach(m=>{if(!agents[m.agent])agents[m.agent]=[];agents[m.agent].push(m);});
+  const agentList=Object.keys(agents);
+  const centerX=W/2,centerY=H/2,radius=Math.min(W,H)*0.32;
+  const agentPositions={};
+
+  agentList.forEach((ag,i)=>{
+    const angle=(i/agentList.length)*Math.PI*2-Math.PI/2;
+    agentPositions[ag]={x:centerX+Math.cos(angle)*radius,y:centerY+Math.sin(angle)*radius};
+  });
+
+  // Draw edges between agents that share tags
+  agentList.forEach((a,i)=>agentList.slice(i+1).forEach(b=>{
+    const tagsA=new Set(agents[a].flatMap(m=>m.tags));
+    const tagsB=new Set(agents[b].flatMap(m=>m.tags));
+    const shared=[...tagsA].filter(t=>tagsB.has(t));
+    if(shared.length>0){
+      ctx.beginPath();
+      ctx.moveTo(agentPositions[a].x,agentPositions[a].y);
+      ctx.lineTo(agentPositions[b].x,agentPositions[b].y);
+      ctx.strokeStyle='#2d3354';ctx.lineWidth=Math.min(shared.length,3);ctx.stroke();
+    }
+  }));
+
+  // Draw agent nodes
+  agentList.forEach(ag=>{
+    const pos=agentPositions[ag];
+    const mems=agents[ag];
+    const am=AGENT_META[ag]||{icon:'🤖',name:ag,color:'#8890bb'};
+    const r=12+Math.min(mems.length*2,20);
+    ctx.beginPath();ctx.arc(pos.x,pos.y,r,0,Math.PI*2);
+    ctx.fillStyle=am.color+'33';ctx.fill();
+    ctx.strokeStyle=am.color+'88';ctx.lineWidth=2;ctx.stroke();
+    ctx.font=`${Math.min(16,10+mems.length)}px serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(am.icon,pos.x,pos.y);
+    ctx.font='10px system-ui';ctx.fillStyle='#8890bb';
+    ctx.fillText(am.name,pos.x,pos.y+r+10);
+    ctx.fillStyle='#22c55e';ctx.font='bold 10px system-ui';
+    ctx.fillText(mems.length,pos.x+r,pos.y-r);
+
+    // Mini memory dots
+    mems.slice(0,8).forEach((m,mi)=>{
+      const angle=(mi/Math.max(mems.length,1))*Math.PI*2;
+      const mr=r+18;
+      const mx=pos.x+Math.cos(angle)*mr,my=pos.y+Math.sin(angle)*mr;
+      ctx.beginPath();ctx.arc(mx,my,4,0,Math.PI*2);
+      ctx.fillStyle=TYPE_COLORS[m.type]||'#8890bb';ctx.fill();
+    });
+  });
+
+  canvas.onclick=(e)=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)*(W/rect.width);
+    const my=(e.clientY-rect.top)*(H/rect.height);
+    agentList.forEach(ag=>{
+      const pos=agentPositions[ag];
+      if(Math.hypot(mx-pos.x,my-pos.y)<30){
+        const card=document.getElementById('graph-inspect');
+        const content=document.getElementById('graph-inspect-content');
+        card.style.display='block';
+        const am=AGENT_META[ag]||{icon:'🤖',name:ag};
+        content.innerHTML=`<div style="margin-bottom:8px"><b>${am.icon} ${am.name}</b> — ${agents[ag].length} memories</div>`+
+          agents[ag].map(m=>renderMemItem(m,false)).join('');
+      }
+    });
+  };
+}
+
+function showMemoryDiff(){
+  const topic=document.getElementById('diff-topic').value.trim().toLowerCase();
+  if(!topic)return;
+  const relevant=MEMORIES.filter(m=>m.content.toLowerCase().includes(topic)||m.tags.includes(topic)).sort((a,b)=>a.id-b.id);
+  const el=document.getElementById('diff-output');
+  if(!relevant.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:8px">No memories found about "'+topic+'"</div>';return;}
+  el.innerHTML=relevant.map((m,i)=>`
+    <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--bd)">
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">${i===0?'First recorded →':'Update '+(i+1)+' →'} ${m.ts} [${m.agent}]</div>
+      <div class="diff-row"><span class="diff-lbl">${i===0?'+':`↳`}</span><span class="${i===0?'diff-add':i%2===0?'diff-add':'diff-rem'}">${m.content.slice(0,180)}</span></div>
+    </div>`).join('');
+}
+
+function exportMemories(){
+  const blob=new Blob([JSON.stringify({memories:MEMORIES,kb:KB,customers:CUSTOMERS},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='memory-export.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+function updateStats(){
+  document.getElementById('st-total').textContent=stats.total;
+  document.getElementById('st-kb').textContent=stats.kb;
+  document.getElementById('st-cx').textContent=stats.cx;
+  document.getElementById('st-queries').textContent=stats.queries;
+  document.getElementById('st-recalls').textContent=stats.recalls;
+  document.getElementById('st-agents').textContent=stats.agents.size;
+}
+
+const TABS=['store','search','agent','kb','customer','graph'];
+function sw(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TABS[i]===id));
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tp-'+id).classList.add('active');
+  if(id==='graph')setTimeout(renderGraph,50);
+}
+
+// Fix typo in storeMemory call
+const origStore=storeMemory;
+
+
+// ==AGENT-PANEL-INJECTED==
+(function(){
+const AP_KEY='company-os-agent-tasks';
+const AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+let apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+window.apGetAll=apGetAll;
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function openAgentPanel(name,emoji,role){
+  const a=emoji?{name,emoji,role}:AP_AGENTS.find(x=>x.name===name)||{name,emoji:'🤖',dept:'',role:''};
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(t=>{
+    document.getElementById('ap-tab-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('ap-tc-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const done=tasks.filter(t=>t.done).length,open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';return;}
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item" id="ap-ti-${i}">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-expand" onclick="apToggleOutput(${i})">▸ Show AI output</div><div class="ap-task-output" id="ap-to-${i}">${t.output.replace(/</g,'&lt;')}</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function apToggleOutput(idx){
+  const out=document.getElementById('ap-to-'+idx);
+  const exp=out?.previousElementSibling;
+  if(!out)return;
+  const open=out.classList.toggle('open');
+  if(exp)exp.textContent=open?'▾ Hide AI output':'▸ Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(t=>t.output&&t.output.length>0).reverse();
+  const list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet. Use "Run AI Task" to generate output.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ap-history-item">
+      <div class="ap-history-date">${new Date(t.completedAt||t.createdAt).toLocaleString()}</div>
+      <div class="ap-history-prompt">${t.title.replace(/</g,'&lt;')}</div>
+      <div class="ap-history-output">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent)return;
+  const inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title)return;
+  const all=apGetAll();
+  if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent)return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt)return;
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first (in Settings or the API key field in this module).');return;}
+  const btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent'}. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    const all=apGetAll();
+    if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history')apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message;out.style.display='block';
+  }
+  inner.textContent='▶ Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// Export
+function apExportTasks(){
+  const all=apGetAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+// Picker
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  const q=document.getElementById('ap-picker-search').value.toLowerCase();
+  const all=apGetAll();
+  const agents=q?AP_AGENTS.filter(a=>a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q)):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(a=>{
+    const tasks=(all[a.name]||[]),done=tasks.filter(t=>t.done).length;
+    const badge=tasks.length?`<span class="ap-picker-item-tasks">${done}/${tasks.length}✓</span>`:'';
+    return `<div class="ap-picker-item" onclick="apPickerSelect('${a.name.replace(/'/g,"\'")}')">
+      <span class="ap-picker-item-emoji">${a.emoji}</span>
+      <div style="flex:1;min-width:0"><div class="ap-picker-item-name">${a.name}</div><div class="ap-picker-item-dept">${a.dept}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  const a=AP_AGENTS.find(x=>x.name===name);
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+// Bulk Run
+let apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  const grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(a=>`
+    <div class="ap-bulk-agent-item ${apBulkSelected.has(a.name)?'selected':''}" onclick="apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <input type="checkbox" ${apBulkSelected.has(a.name)?'checked':''} onclick="event.stopPropagation();apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <span>${a.emoji}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+    </div>`).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(a=>a.name)):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  const prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-bulk-run-btn');
+  const prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  const agents=AP_AGENTS.filter(a=>apBulkSelected.has(a.name));
+  const all=apGetAll();
+  let done=0;
+  for(const a of agents){
+    prog.textContent=`Running ${a.emoji} ${a.name}… (${done}/${agents.length})`;
+    const sys=`You are ${a.name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||'Error';
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent=`✅ Done! Ran ${done} agents.`;
+  btn.disabled=false;
+  if(apCurrentAgent)apRenderTasks();apRenderStats();apRenderHistory();
+}
+window.apRunBulk=apRunBulk;
+})();
+
+</script>
+
+
+<!-- ==PANEL-ENHANCED== -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">⚡</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">📋 Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">📜 History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything — runs against this agent's system prompt and auto-saves…"></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">▶ Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">📤 Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>📋 Agent Tasks — Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">✕</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="🔍 Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>⚡ Bulk Run — Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer" onclick="apCloseBulk()">✕</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 priorities this quarter?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">⚡ Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

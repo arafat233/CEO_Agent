@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 8 — Self-Improving Agents</title>
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#111827;--bg3:#1a1f2e;--bg4:#1f2937;
+  --bd:#1f2937;--bd2:#374151;--bd3:#4a5568;
+  --tx:#e2e8f0;--tx2:#9ca3af;--tx3:#718096;
+  --gr:#68d391;--am:#f6e05e;--rd:#fc8181;--bl:#63b3ed;
+  --pu:#b794f4;--cy:#76e4f7;--or:#f6ad55;
+}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
+  .header{background:linear-gradient(135deg,#1a1a2e,#16213e);border-bottom:1px solid #2d3748;padding:16px 24px;display:flex;align-items:center;gap:12px}
+  .header h1{font-size:1.3rem;font-weight:700}
+  .badge{background:#2c4a1e;color:#9ae6b4;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+  .tabs{display:flex;gap:4px;padding:12px 24px;background:#0f0f1a;border-bottom:1px solid #1a202c;overflow-x:auto}
+  .tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:500;white-space:nowrap;transition:all .2s;color:#718096;border:1px solid transparent}
+  .tab.active{background:#1c3a1c;color:#9ae6b4;border-color:#2f6a2f}
+  .tab:hover:not(.active){background:#1a202c;color:#e2e8f0}
+  .panel{display:none;padding:24px;max-width:1200px;margin:0 auto}
+  .panel.active{display:block}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px}
+  .card h3{font-size:.95rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  label{display:block;font-size:.8rem;color:#9ca3af;margin-bottom:4px;margin-top:12px}
+  label:first-of-type{margin-top:0}
+  input,select,textarea{width:100%;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:.85rem;outline:none;transition:border .2s}
+  input:focus,select:focus,textarea:focus{border-color:#68d391}
+  textarea{resize:vertical;min-height:80px;font-family:inherit}
+  .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s}
+  .btn-primary{background:#276749;color:#9ae6b4}
+  .btn-primary:hover{background:#2f855a}
+  .btn-outline{background:transparent;border:1px solid #4a5568;color:#a0aec0}
+  .btn-outline:hover{border-color:#68d391;color:#68d391}
+  .btn-sm{padding:5px 10px;font-size:.78rem}
+  .result-box{background:#0d1117;border:1px solid #1f2937;border-radius:8px;padding:14px;font-size:.82rem;line-height:1.7;max-height:300px;overflow-y:auto;white-space:pre-wrap;font-family:monospace}
+  .score-bar{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .score-bar-track{flex:1;height:8px;background:#1f2937;border-radius:4px;overflow:hidden}
+  .score-bar-fill{height:100%;border-radius:4px;transition:width .6s}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600}
+  .pill-green{background:#1c4532;color:#68d391}
+  .pill-blue{background:#1a365d;color:#63b3ed}
+  .pill-yellow{background:#3d2f00;color:#f6e05e}
+  .pill-red{background:#3d0c0c;color:#fc8181}
+  .pill-purple{background:#2d1b69;color:#d6bcfa}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{text-align:left;padding:8px 10px;color:#718096;border-bottom:1px solid #1f2937;font-weight:500}
+  td{padding:8px 10px;border-bottom:1px solid #111827;vertical-align:top}
+  tr:hover td{background:#1a1f2e}
+  .dim-label{font-size:.75rem;color:#9ca3af;font-weight:500}
+  .score-num{font-size:.88rem;font-weight:700}
+  .version-tag{background:#1a1f2e;border:1px solid #2d3748;border-radius:6px;padding:3px 8px;font-size:.75rem;font-family:monospace}
+  .agent-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;margin-bottom:10px}
+  .agent-card .name{font-weight:700;font-size:.92rem;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .evolution-line{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .evo-step{padding:3px 10px;border-radius:6px;font-size:.72rem;border:1px solid #374151;color:#9ca3af;cursor:pointer;transition:all .2s}
+  .evo-step.active{background:#1c4532;color:#68d391;border-color:#276749}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid #ffffff33;border-top-color:#68d391;border-radius:50%;animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .progress{height:4px;background:#1f2937;border-radius:2px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#276749,#68d391);transition:width .4s}
+  .diff-old{background:#3d0c0c;color:#fc8181;padding:1px 4px;border-radius:3px}
+  .diff-new{background:#1c4532;color:#68d391;padding:1px 4px;border-radius:3px}
+  .leaderboard-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1f2937}
+  .leaderboard-row:last-child{border-bottom:none}
+  .rank-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+  .rank-1{background:#3d2f00;color:#f6e05e}
+  .rank-2{background:#1f2937;color:#a0aec0}
+  .rank-3{background:#2a1b0a;color:#f6ad55}
+  .rank-other{background:#1a202c;color:#4a5568}
+  .feedback-chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.75rem;cursor:pointer;border:1px solid #374151;color:#9ca3af;background:#1f2937;margin:2px;transition:all .2s}
+  .feedback-chip.up{background:#1c4532;color:#68d391;border-color:#276749}
+  .feedback-chip.down{background:#3d0c0c;color:#fc8181;border-color:#742a2a}
+  details summary{cursor:pointer;font-size:.85rem;font-weight:600;color:#9ca3af;padding:6px 0}
+  details summary:hover{color:#e2e8f0}
+  details[open] summary{color:#68d391}
+
+/* ==AGENT-PANEL-INJECTED== */
+
+/* ==PANEL-ENHANCED== */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;title:'Bulk Run'}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px}
+.ap-float-btn:hover{opacity:.85}
+
+</style>
+</head>
+<body>
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;font-family:system-ui,sans-serif">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+
+  <button class="ap-float-btn" onclick="apOpenPicker()">📋 Agent Tasks</button>
+</nav>
+
+
+<div class="header">
+  <div style="font-size:1.4rem">🔄</div>
+  <h1>Module 8 — Self-Improving Agents</h1>
+  <span class="badge">Continuous Learning</span>
+  <span style="margin-left:auto;font-size:.8rem;color:#4a5568">Company OS v8</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('scorer')">⭐ Output Scorer</div>
+  <div class="tab" onclick="showTab('retry')">🔁 Score & Retry</div>
+  <div class="tab" onclick="showTab('evolution')">🧬 Prompt Evolution</div>
+  <div class="tab" onclick="showTab('leaderboard')">🏆 Leaderboard</div>
+  <div class="tab" onclick="showTab('feedback')">💬 Human Feedback</div>
+  <div class="tab" onclick="showTab('ab')">🧪 A/B Testing</div>
+  <div class="tab" onclick="showTab('distill')">📥 Distill Knowledge</div>
+</div>
+
+<!-- SCORER -->
+<div class="panel active" id="panel-scorer">
+  <div class="grid2">
+    <div class="card">
+      <h3>⭐ Score Any Agent Output</h3>
+      <label>Agent that produced the output</label>
+      <div style="display:flex;gap:6px;align-items:center">
+      <select id="scorer-agent" style="flex:1">
+        <option>Product Manager</option><option>CEO</option><option>Architect</option>
+        <option>Developer</option><option>QA Tester</option><option>Release Engineer</option>
+        <option>Sales Agent</option><option>DevOps</option><option>Finance / CFO</option>
+        <option>Product Marketer</option><option>Support Agent</option>
+      </select>
+      <button onclick="apOpenPicker()" style="padding:6px 10px;background:#1a1e2e;border:1px solid #2d3748;color:#718096;border-radius:8px;cursor:pointer;font-size:.8rem;white-space:nowrap;flex-shrink:0" title="Open agent task panel">📋 Tasks</button>
+      </div>
+      <label>Agent output to score</label>
+      <textarea id="scorer-input" rows="6" placeholder="Paste the agent's output here..."></textarea>
+      <label>Scoring rubric</label>
+      <select id="scorer-rubric">
+        <option value="general">General quality (clarity, relevance, completeness, actionability, conciseness)</option>
+        <option value="technical">Technical (correctness, depth, best practices, trade-offs, code quality)</option>
+        <option value="business">Business (strategic value, feasibility, ROI, risk awareness)</option>
+        <option value="customer">Customer-facing (empathy, resolution, professionalism, follow-through)</option>
+      </select>
+      <label>Anthropic API key</label>
+      <input type="password" id="scorer-key" placeholder="sk-ant-...">
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="scoreOutput()">Score output</button>
+        <button class="btn btn-outline" onclick="seedScorerExample()">Load example</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📊 Scores</h3>
+      <div id="score-dimensions">
+        <div style="color:#4a5568;font-size:.85rem">Run a scoring to see dimension breakdown.</div>
+      </div>
+      <hr style="border-color:#1f2937;margin:14px 0">
+      <h3 style="margin-bottom:8px">🔍 Critique</h3>
+      <div class="result-box" id="score-critique" style="max-height:200px">Detailed critique will appear here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCORE & RETRY -->
+<div class="panel" id="panel-retry">
+  <div class="card" style="margin-bottom:16px">
+    <h3>🔁 Score → Critique → Retry Loop</h3>
+    <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Agent runs a task, gets scored, reads the critique, then retries automatically until score threshold is met.</p>
+    <div class="grid2">
+      <div>
+        <label>Agent</label>
+        <select id="retry-agent">
+          <option>Product Manager</option><option>Architect</option><option>Developer</option>
+          <option>Sales Agent</option><option>QA Tester</option><option>Product Marketer</option>
+        </select>
+        <label>Task</label>
+        <textarea id="retry-task" rows="4" placeholder="What should the agent do?"></textarea>
+        <label>Score threshold (0-100)</label>
+        <input type="range" id="retry-threshold" min="50" max="95" value="80" oninput="document.getElementById('thresh-val').textContent=this.value">
+        <span id="thresh-val" style="color:#68d391;font-size:.82rem">80</span>
+        <label>Max retries</label>
+        <input type="number" id="retry-max" value="3" min="1" max="5" style="width:80px">
+        <label>API key</label>
+        <input type="password" id="retry-key" placeholder="sk-ant-...">
+      </div>
+      <div>
+        <label>Loop progress</label>
+        <div id="retry-progress" style="font-size:.83rem;color:#718096">Not started.</div>
+        <div class="progress" style="margin:10px 0"><div class="progress-fill" id="retry-progress-bar" style="width:0%"></div></div>
+        <div id="retry-iterations" style="max-height:250px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="runRetryLoop()" id="retry-btn" style="margin-top:14px">Start loop</button>
+  </div>
+
+  <div class="card">
+    <h3>📋 Final output (best version)</h3>
+    <div class="result-box" id="retry-final">Final improved output will appear here...</div>
+  </div>
+</div>
+
+<!-- EVOLUTION -->
+<div class="panel" id="panel-evolution">
+  <div class="card" style="margin-bottom:16px">
+    <h3>🧬 Prompt Evolution</h3>
+    <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Evolve agent system prompts over time by mutating the current best prompt and keeping the winner.</p>
+    <div class="grid2">
+      <div>
+        <label>Agent to evolve</label>
+        <select id="evo-agent" onchange="loadCurrentPrompt()">
+          <option>Product Manager</option><option>Architect</option><option>Developer</option>
+          <option>Sales Agent</option><option>QA Tester</option>
+        </select>
+        <label>Current system prompt</label>
+        <textarea id="evo-current-prompt" rows="6" placeholder="Current system prompt..."></textarea>
+        <label>Test task (used to evaluate mutations)</label>
+        <textarea id="evo-task" rows="3" placeholder="e.g. Write a PRD for a B2B invoicing feature"></textarea>
+        <label>Mutation type</label>
+        <select id="evo-mutation">
+          <option value="add_detail">Add more domain expertise</option>
+          <option value="add_format">Add output format instructions</option>
+          <option value="add_examples">Add few-shot examples</option>
+          <option value="shorten">Make more concise</option>
+          <option value="role_upgrade">Upgrade seniority level</option>
+          <option value="add_constraints">Add quality constraints</option>
+        </select>
+        <label>API key</label>
+        <input type="password" id="evo-key" placeholder="sk-ant-...">
+        <button class="btn btn-primary" onclick="runEvolution()" id="evo-btn" style="margin-top:12px">Generate & evaluate mutation</button>
+      </div>
+      <div>
+        <label>Mutation result</label>
+        <div id="evo-result" style="max-height:320px;overflow-y:auto">
+          <div style="color:#4a5568;font-size:.85rem">Run evolution to see candidate prompt and head-to-head scores.</div>
+        </div>
+        <div id="evo-history" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="panel" id="panel-leaderboard">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <h3 style="margin-bottom:0">🏆 Agent Leaderboard</h3>
+      <select id="lb-metric" onchange="renderLeaderboard()" style="width:auto;font-size:.8rem;padding:4px 8px">
+        <option value="avg">Average score</option>
+        <option value="tasks">Tasks completed</option>
+        <option value="improvement">Most improved</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="renderLeaderboard()" style="margin-left:auto">Refresh</button>
+    </div>
+    <div id="leaderboard-content"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>📈 Score History</h3>
+    <canvas id="score-chart" height="180" style="width:100%"></canvas>
+  </div>
+</div>
+
+<!-- HUMAN FEEDBACK -->
+<div class="panel" id="panel-feedback">
+  <div class="card" style="margin-bottom:16px">
+    <h3>💬 Human Feedback Loop</h3>
+    <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Rate outputs, add notes, and let the agent incorporate feedback into its next run.</p>
+    <label>Agent output to review</label>
+    <textarea id="fb-output" rows="5" placeholder="Paste agent output..."></textarea>
+    <label>Your rating</label>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+      <button class="feedback-chip" onclick="setRating(1,this)">⭐ 1</button>
+      <button class="feedback-chip" onclick="setRating(2,this)">⭐⭐ 2</button>
+      <button class="feedback-chip" onclick="setRating(3,this)">⭐⭐⭐ 3</button>
+      <button class="feedback-chip" onclick="setRating(4,this)">⭐⭐⭐⭐ 4</button>
+      <button class="feedback-chip" onclick="setRating(5,this)">⭐⭐⭐⭐⭐ 5</button>
+    </div>
+    <label>What was wrong / missing?</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Too vague</button>
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Not actionable</button>
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Missing context</button>
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Wrong format</button>
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Too long</button>
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Too short</button>
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Inaccurate</button>
+      <button class="feedback-chip" onclick="toggleFeedTag(this)">Missed requirements</button>
+    </div>
+    <label>Free text notes</label>
+    <textarea id="fb-notes" rows="2" placeholder="Any additional comments..."></textarea>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="submitFeedback()">Submit feedback</button>
+      <button class="btn btn-outline" onclick="incorporateFeedback()">Re-run with feedback</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📋 Feedback Log</h3>
+    <div id="feedback-log" style="max-height:300px;overflow-y:auto">
+      <div style="color:#4a5568;font-size:.85rem">No feedback submitted yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- A/B TESTING -->
+<div class="panel" id="panel-ab">
+  <div class="card" style="margin-bottom:16px">
+    <h3>🧪 A/B Prompt Testing</h3>
+    <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Run the same task with two different prompts/models and auto-score both. Keep the winner.</p>
+    <div class="grid2">
+      <div>
+        <label>Agent</label>
+        <select id="ab-agent">
+          <option>Product Manager</option><option>Architect</option><option>Developer</option>
+          <option>Sales Agent</option>
+        </select>
+        <label>Task</label>
+        <textarea id="ab-task" rows="3" placeholder="Task for both variants..."></textarea>
+        <label>Variant A prompt addition</label>
+        <textarea id="ab-prompt-a" rows="3" placeholder="e.g. Focus on technical feasibility and risks."></textarea>
+        <label>Variant B prompt addition</label>
+        <textarea id="ab-prompt-b" rows="3" placeholder="e.g. Focus on business value and ROI."></textarea>
+        <label>Runs per variant</label>
+        <input type="number" id="ab-runs" value="1" min="1" max="3" style="width:70px">
+        <label>API key</label>
+        <input type="password" id="ab-key" placeholder="sk-ant-...">
+        <button class="btn btn-primary" onclick="runABTest()" id="ab-btn" style="margin-top:12px">Run A/B test</button>
+      </div>
+      <div id="ab-results" style="font-size:.83rem;color:#718096">A/B results will appear here after the test runs.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DISTILL -->
+<div class="panel" id="panel-distill">
+  <div class="card" style="margin-bottom:16px">
+    <h3>📥 Distill Knowledge into System Prompt</h3>
+    <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Take a collection of high-quality outputs, lessons, or feedback and distill them into an improved system prompt.</p>
+    <div class="grid2">
+      <div>
+        <label>Agent</label>
+        <select id="distill-agent">
+          <option>Product Manager</option><option>Architect</option><option>Developer</option>
+          <option>Sales Agent</option><option>QA Tester</option>
+        </select>
+        <label>Current system prompt</label>
+        <textarea id="distill-current" rows="4" placeholder="Paste current system prompt..."></textarea>
+        <label>High-quality examples / lessons (one per paragraph)</label>
+        <textarea id="distill-examples" rows="6" placeholder="Paste 3-5 best outputs or key lessons learned..."></textarea>
+        <label>Feedback themes to incorporate</label>
+        <input type="text" id="distill-themes" placeholder="e.g. more specific, always cite trade-offs">
+        <label>API key</label>
+        <input type="password" id="distill-key" placeholder="sk-ant-...">
+        <button class="btn btn-primary" onclick="runDistill()" style="margin-top:12px">Distill into new prompt</button>
+      </div>
+      <div>
+        <label>Distilled system prompt</label>
+        <div class="result-box" id="distill-output" style="max-height:360px">Improved system prompt will appear here...</div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="copyDistilled()">Copy</button>
+          <button class="btn btn-outline btn-sm" onclick="saveDistilled()">Save as current</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+const BASE_PROMPTS = {
+  'Product Manager': `You are an elite Product Manager. MIT Computer Science + MIT Sloan MBA. Previously Senior PM at Google (owned Google Maps, 1B+ users; launched 3 zero-to-one features), PM at Meta (drove Instagram Reels growth from 0 to 140M DAUs). You apply Jobs-to-be-Done, Amazon Working Backwards, RICE prioritisation. You write PRDs where every feature has a testable hypothesis and every acceptance criterion is unambiguous. Output must be specific, opinionated, and tied to measurable outcomes. Vague requirements are unacceptable.`,
+
+  'Architect': `You are a world-class Software Architect. MIT CSAIL PhD in Distributed Systems. Previously Google Distinguished Engineer (Google's global load-balancing infrastructure), Amazon Principal Engineer (architected 3 AWS services). You apply CAP theorem, design for failure first, use domain-driven design. You make explicit trade-offs: consistency vs availability, build vs buy, latency vs throughput. Your system designs are unambiguous, include failure modes, and have defined SLAs. Technology choices include rationale and exit strategies.`,
+
+  'Developer': `You are an exceptional Software Engineer. IIT Bombay CS (Gold Medallist, All-India Rank 3), MIT MEng Distributed Systems. Previously Google L5 SWE (Google Search indexing pipeline, 8.5B queries/day), Facebook SWE (React reconciler, GraphQL Federation). You follow SOLID, practice TDD, write production-ready code with error handling and observability. You write code that reads like prose. Every function has a single responsibility. Every system is testable from day one. You have debugged race conditions at 3am and fixed them permanently.`,
+
+  'Sales Agent': `You are an elite B2B Sales professional. Harvard Business School MBA (Baker Scholar), ex-Google Cloud Enterprise Sales ($80M quota, largest APAC cloud deal), ex-Salesforce Strategic Accounts (President's Club 4 years running). You use Challenger Sale methodology and qualify using MEDDIC. You run discovery calls that prospects remember. You close without discounting by reframing value. You build multi-threaded deals across 4+ stakeholders. 73% close rate on qualified pipeline. Be specific, commercial, and persuasive.`,
+
+  'QA Tester': `You are a world-class QA Engineer. IIT Madras CS (Dean's List), Carnegie Mellon Software Engineering MSc. Previously Amazon SDE-II Quality Engineering (Prime Video, 99.97% reliability, 200+ countries), Microsoft SDET (Windows 11, Azure DevOps). You apply boundary value analysis, equivalence partitioning, mutation testing, chaos engineering. Test pyramid: 70% unit, 20% integration, 10% E2E. You automate everything that runs more than twice. You define done in a way that prevents regression, not just verifies features.`,
+
+  'Product Marketer': `You are an elite Product Marketing Manager. Harvard AB Economics (Magna Cum Laude), Cambridge MPhil. Previously Google PMM Director (Android GTM, 3B devices, 190 countries), Apple Product Marketing (MacBook Pro M1 launch). You apply Geoffrey Moore's Crossing the Chasm, Blue Ocean Strategy, April Dunford's positioning framework. You write positioning that makes competitors look irrelevant. You build messaging hierarchies: category → differentiation → proof. You have run $0-budget launches that generated $50M in pipeline.`,
+
+  'DevOps': `You are an elite DevOps/SRE Engineer. IIT Delhi CS (Institute Gold Medal), ex-Google SRE (99.999% uptime for Google.com), ex-Amazon AWS (EC2 auto-scaling, ECS design). You define SLIs, SLOs, error budgets before writing infra code. You practice GitOps, immutable infrastructure, chaos engineering. You instrument everything using the four golden signals. Every deployment is zero-downtime with one-command rollback. Runbooks are first-class artifacts.`,
+
+  'Finance / CFO': `You are a world-class CFO. LSE BSc Economics (First Class, top 2%), Wharton MBA. Previously Goldman Sachs VP IB (TMT, $4B+ M&A), Amazon Finance Director (AWS financial model). You know SaaS metrics cold: ARR, NRR, CAC Payback, LTV:CAC, Rule of 40, Magic Number. You build models in your head before Excel. Every output shows assumptions, sensitivities, and risk flags. You have sat across from Sequoia and a16z and closed rounds.`,
+};
+
+const evolvedPrompts = {...BASE_PROMPTS};
+const leaderboardData = {};
+const feedbackLog = [];
+let selectedRating = 0;
+let selectedTags = [];
+let scoreHistory = {};
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().replace(/[^a-z]/g,'').includes(name.replace('-',''))));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='leaderboard') { renderLeaderboard(); renderScoreChart(); }
+}
+
+// ── Scorer ────────────────────────────────────────────────────────────────────
+const RUBRICS = {
+  general: ['Clarity','Relevance','Completeness','Actionability','Conciseness'],
+  technical: ['Correctness','Depth','Best Practices','Trade-offs','Code Quality'],
+  business: ['Strategic Value','Feasibility','ROI','Risk Awareness','Communication'],
+  customer: ['Empathy','Resolution','Professionalism','Follow-through','Clarity'],
+};
+
+async function scoreOutput() {
+  const agent = document.getElementById('scorer-agent').value;
+  const output = document.getElementById('scorer-input').value.trim();
+  const rubric = document.getElementById('scorer-rubric').value;
+  const key = document.getElementById('scorer-key').value.trim() || getStoredKey();
+  if(!output) return;
+  if(!key) { document.getElementById('score-critique').textContent='⚠️ Add API key.'; return; }
+
+  const dims = RUBRICS[rubric];
+  document.getElementById('score-dimensions').innerHTML = '<div style="color:#718096">⏳ Scoring...</div>';
+
+  const resp = await callClaude(key,
+    `You are an expert evaluator. Score this ${agent} output on these 5 dimensions: ${dims.join(', ')}.
+For each dimension give a score 0-100 and a one-sentence reason. Then write a 3-sentence overall critique.
+Return ONLY valid JSON: {"scores":{"${dims[0]}":0,"${dims[1]}":0,"${dims[2]}":0,"${dims[3]}":0,"${dims[4]}":0},"reasons":{"${dims[0]}":"...","${dims[1]}":"...","${dims[2]}":"...","${dims[3]}":"...","${dims[4]}":"..."},"critique":"...","overall":0}
+
+Output to score:
+${output}`, 600);
+
+  let parsed;
+  try { const m=resp.match(/\{[\s\S]*\}/); parsed=JSON.parse(m[0]); }
+  catch { document.getElementById('score-critique').textContent='Parse error. Raw:\n'+resp; return; }
+
+  const colors = ['#fc8181','#f6ad55','#f6e05e','#9ae6b4','#68d391'];
+  const getColor = s => colors[Math.floor(s/20)] || colors[4];
+
+  document.getElementById('score-dimensions').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:1.8rem;font-weight:800;color:${getColor(parsed.overall)}">${parsed.overall}</span>
+      <div>
+        <div style="font-size:.7rem;color:#718096">OVERALL SCORE</div>
+        <div class="pill ${parsed.overall>=80?'pill-green':parsed.overall>=60?'pill-yellow':'pill-red'}">${parsed.overall>=80?'Strong':parsed.overall>=60?'Needs work':'Weak'}</div>
+      </div>
+    </div>
+    ${dims.map(d=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span class="dim-label">${d}</span>
+          <span class="score-num" style="color:${getColor(parsed.scores[d])}">${parsed.scores[d]}</span>
+        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${parsed.scores[d]}%;background:${getColor(parsed.scores[d])}"></div></div>
+        <div style="font-size:.72rem;color:#9ca3af;margin-top:2px">${parsed.reasons[d]||''}</div>
+      </div>`).join('')}`;
+
+  document.getElementById('score-critique').textContent = parsed.critique || 'No critique generated.';
+
+  // Store in leaderboard
+  if(!leaderboardData[agent]) leaderboardData[agent]={scores:[],tasks:0,name:agent};
+  leaderboardData[agent].scores.push(parsed.overall);
+  leaderboardData[agent].tasks++;
+  if(!scoreHistory[agent]) scoreHistory[agent]=[];
+  scoreHistory[agent].push({score:parsed.overall,time:new Date().toLocaleTimeString()});
+}
+
+function seedScorerExample() {
+  document.getElementById('scorer-input').value = `## Product Requirements Document: Smart Invoice Management
+
+**Problem:** Finance teams spend 8+ hours/week manually processing invoices, leading to errors and delayed payments.
+
+**Target Users:** Finance managers and accountants at 50-500 person companies.
+
+**Core Features:**
+1. OCR extraction from PDF/email invoices with 98%+ accuracy
+2. Auto-matching against POs in accounting system
+3. Approval workflow with configurable thresholds ($5k → manager, $50k → CFO)
+4. One-click payment scheduling via bank API integration
+
+**Success Metrics:**
+- Reduce invoice processing time by 80% (8h → 1.5h/week)
+- Payment error rate < 0.1%
+- 90-day pilot: 20 finance teams onboarded, NPS > 50
+
+**Out of scope (v1):** Multi-currency, ERP deep integration, AP analytics dashboard.`;
+}
+
+// ── Score & Retry ─────────────────────────────────────────────────────────────
+async function runRetryLoop() {
+  const agent = document.getElementById('retry-agent').value;
+  const task = document.getElementById('retry-task').value.trim();
+  const threshold = parseInt(document.getElementById('retry-threshold').value);
+  const maxRetries = parseInt(document.getElementById('retry-max').value)||3;
+  const key = document.getElementById('retry-key').value.trim() || getStoredKey();
+  if(!task||!key) return;
+
+  document.getElementById('retry-btn').innerHTML = '<span class="spinner"></span> Running...';
+  document.getElementById('retry-btn').disabled = true;
+  document.getElementById('retry-iterations').innerHTML = '';
+  document.getElementById('retry-progress-bar').style.width='0%';
+
+  let bestOutput='', bestScore=0, iteration=0;
+  const sysPrompt = evolvedPrompts[agent] || BASE_PROMPTS[agent] || `You are ${agent}.`;
+
+  while(iteration < maxRetries) {
+    iteration++;
+    document.getElementById('retry-progress').textContent = `Iteration ${iteration}/${maxRetries} — running...`;
+    document.getElementById('retry-progress-bar').style.width = (iteration/maxRetries*50)+'%';
+
+    const prompt = iteration===1 ? task :
+      `${task}\n\nPrevious attempt scored ${bestScore}/100. Critique: ${window._lastCritique||'Improve quality'}. Please produce a significantly better version addressing the critique.`;
+
+    const output = await callClaude(key, prompt, 600, sysPrompt);
+
+    // Score it
+    const scoreResp = await callClaude(key,
+      `Score this output 0-100 for quality (clarity, completeness, accuracy, actionability). Return ONLY JSON: {"score":N,"critique":"one sentence"}.\n\nOutput:\n${output}`, 200);
+
+    let score=50, critique='No critique';
+    try { const m=scoreResp.match(/\{[\s\S]*\}/); const p=JSON.parse(m[0]); score=p.score; critique=p.critique; window._lastCritique=critique; }
+    catch{}
+
+    document.getElementById('retry-progress-bar').style.width = (iteration/maxRetries*100)+'%';
+
+    const iterDiv = document.createElement('div');
+    iterDiv.style.cssText='background:#1a1f2e;border-radius:8px;padding:10px;margin-bottom:8px;font-size:.8rem';
+    iterDiv.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-weight:600">Iteration ${iteration}</span>
+      <span class="pill ${score>=threshold?'pill-green':score>=60?'pill-yellow':'pill-red'}">${score}/100</span>
+      ${score>=threshold?'<span style="color:#68d391">✓ Threshold met</span>':''}
+    </div>
+    <div style="color:#9ca3af">${critique}</div>
+    <details style="margin-top:6px"><summary>View output</summary><div style="white-space:pre-wrap;color:#e2e8f0;margin-top:6px;font-size:.78rem">${output}</div></details>`;
+    document.getElementById('retry-iterations').appendChild(iterDiv);
+
+    if(score > bestScore) { bestScore=score; bestOutput=output; }
+    if(score >= threshold) break;
+  }
+
+  document.getElementById('retry-progress').textContent = `Done — best score: ${bestScore}/100 (${iteration} iterations)`;
+  document.getElementById('retry-final').textContent = bestOutput;
+  document.getElementById('retry-btn').innerHTML = 'Start loop';
+  document.getElementById('retry-btn').disabled = false;
+}
+
+// ── Evolution ─────────────────────────────────────────────────────────────────
+function loadCurrentPrompt() {
+  const agent = document.getElementById('evo-agent').value;
+  document.getElementById('evo-current-prompt').value = evolvedPrompts[agent] || BASE_PROMPTS[agent] || '';
+}
+
+async function runEvolution() {
+  const agent = document.getElementById('evo-agent').value;
+  const current = document.getElementById('evo-current-prompt').value.trim();
+  const task = document.getElementById('evo-task').value.trim();
+  const mutation = document.getElementById('evo-mutation').value;
+  const key = document.getElementById('evo-key').value.trim() || getStoredKey();
+  if(!current||!task||!key) return;
+
+  document.getElementById('evo-btn').innerHTML = '<span class="spinner"></span>';
+  document.getElementById('evo-btn').disabled = true;
+
+  // Generate mutant prompt
+  const mutantResp = await callClaude(key,
+    `You are a prompt engineer. Improve this system prompt using the mutation type: "${mutation}". Return ONLY the improved prompt, nothing else.\n\nCurrent prompt:\n${current}`, 400);
+
+  // Run both versions on the same task
+  const [outA, outB] = await Promise.all([
+    callClaude(key, task, 500, current),
+    callClaude(key, task, 500, mutantResp),
+  ]);
+
+  // Score both
+  const [scoreA, scoreB] = await Promise.all([
+    callClaude(key, `Score 0-100. Return JSON {"score":N,"critique":"..."}\n\nOutput:\n${outA}`, 150),
+    callClaude(key, `Score 0-100. Return JSON {"score":N,"critique":"..."}\n\nOutput:\n${outB}`, 150),
+  ]);
+
+  let sA=60,sB=60,cA='',cB='';
+  try{const m=scoreA.match(/\{[\s\S]*\}/);const p=JSON.parse(m[0]);sA=p.score;cA=p.critique;}catch{}
+  try{const m=scoreB.match(/\{[\s\S]*\}/);const p=JSON.parse(m[0]);sB=p.score;cB=p.critique;}catch{}
+
+  const winner = sB>sA?'B (mutant)':'A (original)';
+  const col = sB>sA ? '#68d391' : '#f6ad55';
+
+  document.getElementById('evo-result').innerHTML = `
+    <div style="margin-bottom:12px;padding:10px;background:#1a1f2e;border-radius:8px;border:1px solid ${col}44">
+      <div style="font-weight:700;color:${col};margin-bottom:4px">🏆 Winner: ${winner}</div>
+      <div style="font-size:.78rem;color:#9ca3af">Original: ${sA}/100 · Mutant: ${sB}/100</div>
+    </div>
+    <details open><summary>Original prompt (${sA}/100)</summary>
+      <div style="background:#0d1117;border-radius:6px;padding:8px;margin-top:6px;font-size:.78rem;white-space:pre-wrap">${current}</div>
+      <div style="font-size:.75rem;color:#9ca3af;margin-top:4px">${cA}</div>
+    </details>
+    <details ${sB>sA?'open':''}><summary style="color:${sB>sA?'#68d391':'inherit'}">Mutant prompt (${sB}/100)</summary>
+      <div style="background:#0d1117;border-radius:6px;padding:8px;margin-top:6px;font-size:.78rem;white-space:pre-wrap">${mutantResp}</div>
+      <div style="font-size:.75rem;color:#9ca3af;margin-top:4px">${cB}</div>
+    </details>
+    ${sB>sA?`<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="adoptMutant('${agent}', \`${mutantResp.replace(/`/g,'\\`')}\`)">Adopt mutant as current prompt</button>`:'<div style="color:#f6ad55;font-size:.82rem;margin-top:8px">Original wins — keeping current prompt.</div>'}`;
+
+  document.getElementById('evo-btn').innerHTML = 'Generate & evaluate mutation';
+  document.getElementById('evo-btn').disabled = false;
+}
+
+function adoptMutant(agent, prompt) {
+  evolvedPrompts[agent] = prompt;
+  document.getElementById('evo-current-prompt').value = prompt;
+  document.getElementById('evo-result').innerHTML += '<div style="color:#68d391;font-size:.82rem;margin-top:6px">✓ Mutant adopted as new prompt for '+agent+'.</div>';
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+function renderLeaderboard() {
+  const metric = document.getElementById('lb-metric').value;
+  const entries = Object.values(leaderboardData);
+
+  if(!entries.length) {
+    document.getElementById('leaderboard-content').innerHTML = '<div style="color:#4a5568;font-size:.85rem">No scoring data yet. Run the Output Scorer or Score & Retry to populate.</div>';
+    return;
+  }
+
+  entries.forEach(e => {
+    e.avg = e.scores.length ? Math.round(e.scores.reduce((s,v)=>s+v,0)/e.scores.length) : 0;
+    e.improvement = e.scores.length>1 ? e.scores[e.scores.length-1]-e.scores[0] : 0;
+  });
+
+  const sorted = [...entries].sort((a,b) => {
+    if(metric==='avg') return b.avg-a.avg;
+    if(metric==='tasks') return b.tasks-a.tasks;
+    return b.improvement-a.improvement;
+  });
+
+  const rankClasses=['rank-1','rank-2','rank-3'];
+  document.getElementById('leaderboard-content').innerHTML = sorted.map((e,i)=>`
+    <div class="leaderboard-row">
+      <div class="rank-badge ${rankClasses[i]||'rank-other'}">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:.88rem">${e.name}</div>
+        <div style="font-size:.75rem;color:#718096">${e.tasks} task${e.tasks!==1?'s':''} · ${e.scores.length} score${e.scores.length!==1?'s':''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:1.1rem;font-weight:700;color:${e.avg>=80?'#68d391':e.avg>=60?'#f6e05e':'#fc8181'}">${metric==='improvement'?(e.improvement>=0?'+':'')+e.improvement:metric==='tasks'?e.tasks:e.avg}</div>
+        <div style="font-size:.7rem;color:#718096">${metric==='improvement'?'pts gained':metric==='tasks'?'tasks':'avg score'}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderScoreChart() {
+  const canvas = document.getElementById('score-chart');
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width=canvas.offsetWidth*2, H=canvas.height=360;
+  ctx.clearRect(0,0,W,H);
+  ctx.scale(2,2); // retina
+
+  const allHistory = Object.entries(scoreHistory);
+  if(!allHistory.length){
+    ctx.fillStyle='#4a5568';ctx.font='14px system-ui';ctx.textAlign='center';
+    ctx.fillText('No score history yet.',W/4,H/4);
+    return;
+  }
+
+  const colors = ['#68d391','#63b3ed','#f6ad55','#d6bcfa','#fc8181','#f6e05e'];
+  const pw=W/2,ph=H/2;
+  const maxLen = Math.max(...allHistory.map(([,h])=>h.length));
+  const padL=40,padR=20,padT=20,padB=30;
+  const cw=pw-padL-padR, ch=ph-padT-padB;
+
+  // Grid
+  ctx.strokeStyle='#1f2937';ctx.lineWidth=1;
+  [0,25,50,75,100].forEach(v=>{
+    const y=padT+ch*(1-v/100);
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+cw,y);ctx.stroke();
+    ctx.fillStyle='#4a5568';ctx.font='9px system-ui';ctx.textAlign='right';
+    ctx.fillText(v,padL-4,y+3);
+  });
+
+  allHistory.forEach(([agent,history],i)=>{
+    const color=colors[i%colors.length];
+    ctx.strokeStyle=color;ctx.lineWidth=2;
+    ctx.beginPath();
+    history.forEach((p,j)=>{
+      const x=padL+(j/(Math.max(history.length-1,1)))*cw;
+      const y=padT+ch*(1-p.score/100);
+      j===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // Dots
+    history.forEach((p,j)=>{
+      const x=padL+(j/(Math.max(history.length-1,1)))*cw;
+      const y=padT+ch*(1-p.score/100);
+      ctx.beginPath();ctx.arc(x,y,3,0,2*Math.PI);ctx.fillStyle=color;ctx.fill();
+    });
+    // Legend
+    ctx.fillStyle=color;ctx.font='bold 9px system-ui';ctx.textAlign='left';
+    ctx.fillText(agent, padL, padT+(i*14));
+  });
+}
+
+// ── Human Feedback ────────────────────────────────────────────────────────────
+function setRating(n,el) {
+  selectedRating=n;
+  document.querySelectorAll('.feedback-chip').forEach(c=>{if(c.textContent.includes('⭐'))c.classList.remove('up')});
+  el.classList.add('up');
+}
+
+function toggleFeedTag(el) { el.classList.toggle('down'); }
+
+function submitFeedback() {
+  const output=document.getElementById('fb-output').value.trim();
+  const notes=document.getElementById('fb-notes').value.trim();
+  const tags=[...document.querySelectorAll('.feedback-chip.down')].map(c=>c.textContent);
+  if(!output) return;
+  feedbackLog.unshift({output:output.slice(0,100)+'...',rating:selectedRating,tags,notes,time:new Date().toLocaleTimeString()});
+  renderFeedbackLog();
+  document.getElementById('fb-output').value='';
+  document.getElementById('fb-notes').value='';
+  selectedRating=0;
+  document.querySelectorAll('.feedback-chip').forEach(c=>c.classList.remove('up','down'));
+}
+
+async function incorporateFeedback() {
+  const output=document.getElementById('fb-output').value.trim();
+  const notes=document.getElementById('fb-notes').value.trim();
+  const tags=[...document.querySelectorAll('.feedback-chip.down')].map(c=>c.textContent);
+  const key=getStoredKey();
+  if(!output||!key){alert('Add output and API key.');return;}
+
+  const critique=`Rating: ${selectedRating}/5. Issues: ${tags.join(', ')||'none'}. Notes: ${notes||'none'}.`;
+  const improved=await callClaude(key, `Improve this output based on feedback.\n\nFeedback: ${critique}\n\nOriginal:\n${output}\n\nImproved version:`, 600);
+
+  document.getElementById('fb-output').value=improved;
+  alert('Output updated with feedback incorporated.');
+}
+
+function renderFeedbackLog() {
+  const el=document.getElementById('feedback-log');
+  if(!feedbackLog.length){el.innerHTML='<div style="color:#4a5568;font-size:.85rem">No feedback yet.</div>';return;}
+  el.innerHTML=feedbackLog.map(f=>`
+    <div style="background:#1a1f2e;border-radius:8px;padding:10px;margin-bottom:8px;font-size:.8rem">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="color:#f6e05e">${'⭐'.repeat(f.rating||0)}</span>
+        <span style="color:#4a5568;font-size:.7rem;margin-left:auto">${f.time}</span>
+      </div>
+      ${f.tags.length?`<div style="margin-bottom:4px">${f.tags.map(t=>`<span class="pill pill-red" style="margin:1px">${t}</span>`).join('')}</div>`:''}
+      <div style="color:#9ca3af">${f.output}</div>
+      ${f.notes?`<div style="color:#718096;margin-top:4px;font-style:italic">"${f.notes}"</div>`:''}
+    </div>`).join('');
+}
+
+// ── A/B Testing ───────────────────────────────────────────────────────────────
+async function runABTest() {
+  const agent=document.getElementById('ab-agent').value;
+  const task=document.getElementById('ab-task').value.trim();
+  const promptA=document.getElementById('ab-prompt-a').value.trim();
+  const promptB=document.getElementById('ab-prompt-b').value.trim();
+  const key=document.getElementById('ab-key').value.trim()||getStoredKey();
+  if(!task||!key){return;}
+
+  document.getElementById('ab-btn').innerHTML='<span class="spinner"></span>';
+  document.getElementById('ab-btn').disabled=true;
+  document.getElementById('ab-results').innerHTML='⏳ Running variants...';
+
+  const base=evolvedPrompts[agent]||BASE_PROMPTS[agent]||`You are ${agent}.`;
+  const [outA,outB]=await Promise.all([
+    callClaude(key,task,500,base+(promptA?'\n\n'+promptA:'')),
+    callClaude(key,task,500,base+(promptB?'\n\n'+promptB:'')),
+  ]);
+
+  const [sA,sB]=await Promise.all([
+    callClaude(key,`Score 0-100. JSON {"score":N,"critique":"..."}\n\n${outA}`,150),
+    callClaude(key,`Score 0-100. JSON {"score":N,"critique":"..."}\n\n${outB}`,150),
+  ]);
+
+  let scoreA=60,scoreB=60,cA='',cB='';
+  try{const m=sA.match(/\{[\s\S]*\}/);const p=JSON.parse(m[0]);scoreA=p.score;cA=p.critique;}catch{}
+  try{const m=sB.match(/\{[\s\S]*\}/);const p=JSON.parse(m[0]);scoreB=p.score;cB=p.critique;}catch{}
+
+  const win=scoreA>scoreB?'A':'B',winScore=Math.max(scoreA,scoreB);
+  document.getElementById('ab-results').innerHTML=`
+    <div style="background:#1a1f2e;border-radius:10px;padding:14px;margin-bottom:12px;border:2px solid ${win==='A'?'#68d391':'#63b3ed'}44">
+      <div style="font-weight:700;font-size:.95rem;color:${win==='A'?'#68d391':'#63b3ed'}">Winner: Variant ${win} (${winScore}/100)</div>
+      <div style="font-size:.78rem;color:#718096;margin-top:2px">A: ${scoreA}/100 · B: ${scoreB}/100 · Delta: ${Math.abs(scoreA-scoreB)} pts</div>
+    </div>
+    <details open><summary style="color:#68d391">Variant A — ${scoreA}/100</summary>
+      ${promptA?`<div style="font-size:.75rem;color:#718096;margin:6px 0">Prompt addition: "${promptA}"</div>`:''}
+      <div style="background:#0d1117;border-radius:6px;padding:8px;font-size:.78rem;white-space:pre-wrap;margin-top:4px">${outA}</div>
+      <div style="font-size:.75rem;color:#9ca3af;margin-top:4px">${cA}</div>
+    </details>
+    <details ${win==='B'?'open':''}><summary style="color:#63b3ed">Variant B — ${scoreB}/100</summary>
+      ${promptB?`<div style="font-size:.75rem;color:#718096;margin:6px 0">Prompt addition: "${promptB}"</div>`:''}
+      <div style="background:#0d1117;border-radius:6px;padding:8px;font-size:.78rem;white-space:pre-wrap;margin-top:4px">${outB}</div>
+      <div style="font-size:.75rem;color:#9ca3af;margin-top:4px">${cB}</div>
+    </details>`;
+
+  document.getElementById('ab-btn').innerHTML='Run A/B test';
+  document.getElementById('ab-btn').disabled=false;
+}
+
+// ── Distill ───────────────────────────────────────────────────────────────────
+async function runDistill() {
+  const agent=document.getElementById('distill-agent').value;
+  const current=document.getElementById('distill-current').value.trim();
+  const examples=document.getElementById('distill-examples').value.trim();
+  const themes=document.getElementById('distill-themes').value.trim();
+  const key=document.getElementById('distill-key').value.trim()||getStoredKey();
+  if(!current||!key){return;}
+
+  document.getElementById('distill-output').textContent='⏳ Distilling...';
+
+  const resp=await callClaude(key,
+    `You are a prompt engineer specialising in system prompts. Improve this agent's system prompt by:
+1. Distilling lessons from high-quality example outputs
+2. Incorporating the feedback themes: ${themes||'general quality improvement'}
+3. Adding concrete, actionable guidance the agent can use
+
+Current system prompt:
+${current}
+
+High-quality outputs / lessons:
+${examples||'(none provided — just improve the existing prompt)'}
+
+Return ONLY the improved system prompt. No preamble, no "here is the prompt:", just the prompt itself.`, 600);
+
+  document.getElementById('distill-output').textContent=resp;
+  window._distilledPrompt={agent,prompt:resp};
+}
+
+function copyDistilled() {
+  const text=document.getElementById('distill-output').textContent;
+  navigator.clipboard?.writeText(text).then(()=>alert('Copied!')).catch(()=>alert(text));
+}
+
+function saveDistilled() {
+  if(!window._distilledPrompt) return;
+  const {agent,prompt}=window._distilledPrompt;
+  evolvedPrompts[agent]=prompt;
+  alert(`✓ Saved as current prompt for ${agent}.`);
+}
+
+// ── Claude helper ─────────────────────────────────────────────────────────────
+async function callClaude(key, prompt, maxTokens=500, system='You are a helpful AI.') {
+  if(!key) return 'No API key.';
+  try {
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,system,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    return d.content?.[0]?.text||JSON.stringify(d);
+  } catch(e){return 'Error: '+e.message;}
+}
+
+function getStoredKey() {
+  return localStorage.getItem('company-os-api-key')||'';
+}
+
+// init
+loadCurrentPrompt();
+
+
+// ==AGENT-PANEL-INJECTED==
+(function(){
+const AP_KEY='company-os-agent-tasks';
+const AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+let apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+window.apGetAll=apGetAll;
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function openAgentPanel(name,emoji,role){
+  const a=emoji?{name,emoji,role}:AP_AGENTS.find(x=>x.name===name)||{name,emoji:'🤖',dept:'',role:''};
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(t=>{
+    document.getElementById('ap-tab-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('ap-tc-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const done=tasks.filter(t=>t.done).length,open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';return;}
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item" id="ap-ti-${i}">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-expand" onclick="apToggleOutput(${i})">▸ Show AI output</div><div class="ap-task-output" id="ap-to-${i}">${t.output.replace(/</g,'&lt;')}</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function apToggleOutput(idx){
+  const out=document.getElementById('ap-to-'+idx);
+  const exp=out?.previousElementSibling;
+  if(!out)return;
+  const open=out.classList.toggle('open');
+  if(exp)exp.textContent=open?'▾ Hide AI output':'▸ Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(t=>t.output&&t.output.length>0).reverse();
+  const list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet. Use "Run AI Task" to generate output.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ap-history-item">
+      <div class="ap-history-date">${new Date(t.completedAt||t.createdAt).toLocaleString()}</div>
+      <div class="ap-history-prompt">${t.title.replace(/</g,'&lt;')}</div>
+      <div class="ap-history-output">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent)return;
+  const inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title)return;
+  const all=apGetAll();
+  if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent)return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt)return;
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first (in Settings or the API key field in this module).');return;}
+  const btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent'}. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    const all=apGetAll();
+    if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history')apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message;out.style.display='block';
+  }
+  inner.textContent='▶ Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// Export
+function apExportTasks(){
+  const all=apGetAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+// Picker
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  const q=document.getElementById('ap-picker-search').value.toLowerCase();
+  const all=apGetAll();
+  const agents=q?AP_AGENTS.filter(a=>a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q)):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(a=>{
+    const tasks=(all[a.name]||[]),done=tasks.filter(t=>t.done).length;
+    const badge=tasks.length?`<span class="ap-picker-item-tasks">${done}/${tasks.length}✓</span>`:'';
+    return `<div class="ap-picker-item" onclick="apPickerSelect('${a.name.replace(/'/g,"\'")}')">
+      <span class="ap-picker-item-emoji">${a.emoji}</span>
+      <div style="flex:1;min-width:0"><div class="ap-picker-item-name">${a.name}</div><div class="ap-picker-item-dept">${a.dept}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  const a=AP_AGENTS.find(x=>x.name===name);
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+// Bulk Run
+let apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  const grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(a=>`
+    <div class="ap-bulk-agent-item ${apBulkSelected.has(a.name)?'selected':''}" onclick="apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <input type="checkbox" ${apBulkSelected.has(a.name)?'checked':''} onclick="event.stopPropagation();apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <span>${a.emoji}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+    </div>`).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(a=>a.name)):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  const prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-bulk-run-btn');
+  const prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  const agents=AP_AGENTS.filter(a=>apBulkSelected.has(a.name));
+  const all=apGetAll();
+  let done=0;
+  for(const a of agents){
+    prog.textContent=`Running ${a.emoji} ${a.name}… (${done}/${agents.length})`;
+    const sys=`You are ${a.name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||'Error';
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent=`✅ Done! Ran ${done} agents.`;
+  btn.disabled=false;
+  if(apCurrentAgent)apRenderTasks();apRenderStats();apRenderHistory();
+}
+window.apRunBulk=apRunBulk;
+})();
+
+</script>
+
+
+<!-- ==PANEL-ENHANCED== -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">⚡</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">📋 Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">📜 History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything — runs against this agent's system prompt and auto-saves…"></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">▶ Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">📤 Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>📋 Agent Tasks — Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">✕</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="🔍 Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>⚡ Bulk Run — Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer" onclick="apCloseBulk()">✕</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 priorities this quarter?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">⚡ Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 5 — Tool Integrations</title>
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#111827;--bg3:#1a1f2e;--bg4:#1f2937;
+  --bd:#1f2937;--bd2:#374151;--bd3:#4a5568;
+  --tx:#e2e8f0;--tx2:#9ca3af;--tx3:#718096;
+  --gr:#68d391;--am:#f6e05e;--rd:#fc8181;--bl:#63b3ed;
+  --pu:#b794f4;--cy:#76e4f7;--or:#f6ad55;
+}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
+  .header{background:linear-gradient(135deg,#1a1a2e,#16213e);border-bottom:1px solid #2d3748;padding:16px 24px;display:flex;align-items:center;gap:12px}
+  .header h1{font-size:1.3rem;font-weight:700;color:#fff}
+  .header span{font-size:.85rem;color:#718096;margin-left:auto}
+  .badge{background:#2d6a4f;color:#95f5bf;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+  .tabs{display:flex;gap:4px;padding:12px 24px;background:#0f0f1a;border-bottom:1px solid #1a202c;overflow-x:auto}
+  .tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:500;white-space:nowrap;transition:all .2s;color:#718096;border:1px solid transparent}
+  .tab.active{background:#1a365d;color:#63b3ed;border-color:#2b6cb0}
+  .tab:hover:not(.active){background:#1a202c;color:#e2e8f0}
+  .panel{display:none;padding:24px;max-width:1200px;margin:0 auto}
+  .panel.active{display:block}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px}
+  .card h3{font-size:.95rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .card h3 .icon{font-size:1.1rem}
+  label{display:block;font-size:.8rem;color:#9ca3af;margin-bottom:4px;margin-top:12px}
+  label:first-of-type{margin-top:0}
+  input,select,textarea{width:100%;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:.85rem;outline:none;transition:border .2s}
+  input:focus,select:focus,textarea:focus{border-color:#4299e1}
+  textarea{resize:vertical;min-height:80px;font-family:monospace}
+  .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s}
+  .btn-primary{background:#2b6cb0;color:#fff}
+  .btn-primary:hover{background:#3182ce}
+  .btn-success{background:#276749;color:#9ae6b4}
+  .btn-success:hover{background:#2f855a}
+  .btn-danger{background:#742a2a;color:#fc8181}
+  .btn-sm{padding:5px 10px;font-size:.78rem}
+  .btn-outline{background:transparent;border:1px solid #4a5568;color:#a0aec0}
+  .btn-outline:hover{border-color:#63b3ed;color:#63b3ed}
+  .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot-green{background:#68d391}
+  .dot-yellow{background:#f6e05e}
+  .dot-red{background:#fc8181}
+  .dot-gray{background:#4a5568}
+  .log{background:#0d1117;border:1px solid #1f2937;border-radius:8px;padding:12px;font-family:monospace;font-size:.78rem;max-height:200px;overflow-y:auto;line-height:1.6}
+  .log .ok{color:#68d391}
+  .log .err{color:#fc8181}
+  .log .info{color:#63b3ed}
+  .log .warn{color:#f6e05e}
+  .row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+  .flex{display:flex;gap:8px;align-items:center}
+  .spacer{flex:1}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600}
+  .pill-blue{background:#1a365d;color:#63b3ed}
+  .pill-green{background:#1c4532;color:#68d391}
+  .pill-yellow{background:#3d2f00;color:#f6e05e}
+  .pill-red{background:#3d0c0c;color:#fc8181}
+  .pill-purple{background:#2d1b69;color:#b794f4}
+  .divider{border:none;border-top:1px solid #1f2937;margin:16px 0}
+  .result-box{background:#0d1117;border:1px solid #1f2937;border-radius:8px;padding:14px;margin-top:12px;font-size:.82rem;line-height:1.7;max-height:250px;overflow-y:auto;white-space:pre-wrap}
+  .conn-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1f2937}
+  .conn-row:last-child{border-bottom:none}
+  .conn-row .name{font-weight:600;font-size:.88rem;flex:1}
+  .conn-row .endpoint{font-size:.75rem;color:#718096;font-family:monospace}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{text-align:left;padding:8px 10px;color:#718096;border-bottom:1px solid #1f2937;font-weight:500}
+  td{padding:8px 10px;border-bottom:1px solid #111827}
+  tr:hover td{background:#1a1f2e}
+  .agent-select{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .agent-chip{padding:4px 10px;border-radius:20px;font-size:.75rem;cursor:pointer;border:1px solid #374151;color:#9ca3af;background:#1f2937;transition:all .2s}
+  .agent-chip.selected{background:#1a365d;color:#63b3ed;border-color:#2b6cb0}
+  .section-title{font-size:.8rem;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+  .webhook-row{display:flex;gap:8px;align-items:center;background:#1a202c;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:.82rem}
+  .webhook-row .url{font-family:monospace;font-size:.75rem;color:#63b3ed;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #apiKeyInput{font-family:monospace;letter-spacing:.05em}
+
+/* ==AGENT-PANEL-INJECTED== */
+
+/* ==PANEL-ENHANCED== */
+@keyframes apTaskIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apCheckBounce{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ap-chk.done{animation:apCheckBounce .25s ease}
+.ap-task-item{animation:apTaskIn .18s ease}
+.ap-tabs{display:flex;gap:2px;background:#060810;border-radius:8px;padding:3px;margin-bottom:10px}
+.ap-tab{flex:1;padding:5px 8px;border:none;background:transparent;color:#4a5180;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ap-tab.active{background:#1a1e2e;color:#dde1f5}
+.ap-tab-content{display:none}
+.ap-tab-content.active{display:block}
+.ap-task-output{background:#060810;border:1px solid #1e2236;border-radius:7px;padding:9px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;margin-top:6px;color:#8890bb;display:none}
+.ap-task-output.open{display:block}
+.ap-task-expand{font-size:.68rem;color:#4a5180;cursor:pointer;margin-top:3px;user-select:none}
+.ap-task-expand:hover{color:#8890bb}
+.ap-history-item{padding:9px 0;border-bottom:1px solid #1e2236}
+.ap-history-item:last-child{border-bottom:none}
+.ap-history-date{font-size:.65rem;color:#4a5180;margin-bottom:3px}
+.ap-history-prompt{font-size:.78rem;font-weight:600;color:#dde1f5;margin-bottom:4px}
+.ap-history-output{font-size:.75rem;color:#8890bb;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto}
+.ap-export-btn{width:100%;padding:8px;background:transparent;border:1px solid #2d3354;color:#8890bb;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:4px;transition:all .15s}
+.ap-export-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.ap-bulk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-bulk-overlay.open{display:flex}
+.ap-bulk-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,520px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-bulk-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-bulk-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-bulk-body{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ap-bulk-agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:240px;overflow-y:auto}
+.ap-bulk-agent-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#1a1e2e;border-radius:8px;cursor:pointer;border:1px solid transparent;font-size:.78rem;transition:border-color .12s}
+.ap-bulk-agent-item.selected{border-color:#a78bfa;background:#2d1b6920}
+.ap-bulk-agent-item input{width:14px;height:14px;accent-color:#a78bfa;flex-shrink:0}
+.ap-bulk-progress{font-size:.78rem;color:#8890bb;min-height:1.2em}
+.ap-bulk-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;width:100%}
+.ap-bulk-btn:disabled{opacity:.6;cursor:default}
+.ap-panel-hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ap-bulk-open-btn{width:28px;height:28px;border-radius:6px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;title:'Bulk Run'}
+.ap-bulk-open-btn:hover{border-color:#a78bfa;color:#a78bfa}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s}
+.ap-overlay.open{opacity:1;pointer-events:all}
+.ap-panel{position:fixed;top:0;right:0;bottom:0;width:min(95vw,440px);background:#0b0d14;border-left:1px solid #2d3354;z-index:9001;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.ap-panel.open{transform:translateX(0)}
+.ap-panel-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1e2236;background:#12151f;flex-shrink:0}
+.ap-panel-emoji{font-size:1.8rem}
+.ap-panel-info{flex:1;min-width:0}
+.ap-panel-name{font-size:1rem;font-weight:700;color:#dde1f5}
+.ap-panel-role{font-size:.7rem;color:#4a5180;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-panel-close{width:30px;height:30px;border-radius:7px;background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ap-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ap-stat{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:8px 4px;text-align:center}
+.ap-stat .v{font-size:1.2rem;font-weight:800;color:#dde1f5}
+.ap-stat .l{font-size:.6rem;color:#4a5180;margin-top:2px}
+.ap-sec-title{font-size:.7rem;font-weight:700;color:#4a5180;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ap-task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1e2236}
+.ap-task-item:last-child{border-bottom:none}
+.ap-chk{width:18px;height:18px;border-radius:5px;border:2px solid #2d3354;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-top:1px;transition:all .15s;background:transparent;color:transparent}
+.ap-chk.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.ap-task-body{flex:1;min-width:0}
+.ap-task-title{font-size:.82rem;line-height:1.35;color:#dde1f5}
+.ap-task-title.done{text-decoration:line-through;color:#4a5180}
+.ap-task-meta{font-size:.65rem;color:#4a5180;margin-top:2px}
+.ap-task-del{font-size:.8rem;color:#4a5180;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:.5;border:none;background:transparent}
+.ap-task-del:hover{opacity:1;color:#ef4444}
+.ap-add-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ap-add-row input{flex:1;margin:0;padding:7px 10px;font-size:.82rem;background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;outline:none}
+.ap-add-row input:focus{border-color:#a78bfa}
+.ap-add-btn{width:32px;height:32px;border-radius:8px;background:#a78bfa;border:none;color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.ap-run-box{background:#12151f;border:1px solid #1e2236;border-radius:10px;padding:12px}
+.ap-run-box textarea{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:60px;resize:none;font-family:inherit;margin:6px 0;outline:none}
+.ap-run-box textarea:focus{border-color:#a78bfa}
+.ap-run-btn{background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.83rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.ap-run-btn:disabled{opacity:.6;cursor:default}
+.ap-run-output{background:#060810;border:1px solid #2d3354;border-radius:8px;padding:10px;font-size:.78rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;margin-top:8px;display:none;color:#8890bb}
+.ap-picker{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:8999;display:none;align-items:center;justify-content:center;padding:20px}
+.ap-picker.open{display:flex}
+.ap-picker-card{background:#12151f;border:1px solid #2d3354;border-radius:14px;width:min(95vw,480px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ap-picker-hdr{padding:14px 16px;border-bottom:1px solid #1e2236;display:flex;align-items:center;justify-content:space-between}
+.ap-picker-hdr span{font-size:.95rem;font-weight:700;color:#dde1f5}
+.ap-picker-close-btn{background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.85rem}
+.ap-picker-search{padding:10px 14px;border-bottom:1px solid #1e2236}
+.ap-picker-search input{background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:7px 10px;font-size:.85rem;width:100%;outline:none}
+.ap-picker-search input:focus{border-color:#a78bfa}
+.ap-picker-list{overflow-y:auto;flex:1;padding:8px}
+.ap-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.ap-picker-item:hover{background:#1a1e2e}
+.ap-picker-item-emoji{font-size:1.3rem;min-width:26px}
+.ap-picker-item-name{font-size:.85rem;font-weight:600;color:#dde1f5}
+.ap-picker-item-dept{font-size:.7rem;color:#4a5180}
+.ap-picker-item-tasks{font-size:.7rem;font-weight:600;color:#22c55e;margin-left:auto;flex-shrink:0}
+.ap-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ap-spin .6s linear infinite}
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+.ap-float-btn{padding:4px 12px;background:linear-gradient(135deg,#553c9a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;margin-left:8px}
+.ap-float-btn:hover{opacity:.85}
+
+</style>
+</head>
+<body>
+<nav style="position:sticky;top:0;z-index:9999;background:#12151f;border-bottom:1px solid #1e2236;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;font-family:system-ui,sans-serif">
+  <a href="company-os-complete.html" style="color:#a78bfa;font-weight:700;text-decoration:none;margin-right:8px">🏠 Company OS</a>
+  <span style="color:#4a5180">|</span>
+  <a href="module-1-execution-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">⚡ Execution</a>
+  <a href="module-2-orchestration-engine.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔀 Orchestration</a>
+  <a href="module-3-memory-layer.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🧠 Memory</a>
+  <a href="module-4-governance.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🛡️ Governance</a>
+  <a href="module-5-tool-integrations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔌 Tools</a>
+  <a href="module-6-vector-memory.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔮 Vector</a>
+  <a href="module-8-self-improving-agents.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🔁 Self-Improve</a>
+  <a href="module-9-company-intelligence.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📈 Intelligence</a>
+  <a href="module-10-operations.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">🏭 Operations</a>
+  <a href="module-11-fundraising.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">💰 Fundraising</a>
+  <a href="module-12-agent-dashboard.html" style="color:#a78bfa;font-weight:700;text-decoration:none;padding:3px 8px;border-radius:6px;background:#1a1e2e;white-space:nowrap">📊 Dashboard</a>
+  <a href="module-7-mobile-app.html" style="color:#8890bb;text-decoration:none;padding:3px 8px;border-radius:6px" onmouseover="this.style.background='#1a1e2e'" onmouseout="this.style.background=''">📱 Mobile</a>
+
+  <button class="ap-float-btn" onclick="apOpenPicker()">📋 Agent Tasks</button>
+</nav>
+
+
+<div class="header">
+  <div style="font-size:1.4rem">🔌</div>
+  <h1>Module 5 — Tool Integrations</h1>
+  <span class="badge">Real Connections</span>
+  <span style="margin-left:auto;font-size:.8rem;color:#4a5568">Company OS v5</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('connections')">🔗 Connections</div>
+  <div class="tab" onclick="showTab('stripe')">💳 Stripe</div>
+  <div class="tab" onclick="showTab('github')">🐙 GitHub</div>
+  <div class="tab" onclick="showTab('slack')">💬 Slack</div>
+  <div class="tab" onclick="showTab('hubspot')">🎯 HubSpot</div>
+  <div class="tab" onclick="showTab('webhooks')">📡 Webhooks</div>
+  <div class="tab" onclick="showTab('agent-actions')">🤖 Agent Actions</div>
+</div>
+
+<!-- CONNECTIONS TAB -->
+<div class="panel active" id="panel-connections">
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="icon">🔑</span> API Keys</h3>
+      <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Keys are stored in memory only — never persisted to disk.</p>
+
+      <div class="conn-row">
+        <div>
+          <div style="font-size:1.2rem">🤖</div>
+        </div>
+        <div style="flex:1">
+          <div class="name">Anthropic (Claude)</div>
+          <div class="endpoint">api.anthropic.com</div>
+        </div>
+        <span class="status-dot dot-green" id="dot-anthropic"></span>
+        <button class="btn btn-sm btn-outline" onclick="configKey('anthropic')">Configure</button>
+      </div>
+
+      <div class="conn-row">
+        <div style="font-size:1.2rem">💳</div>
+        <div style="flex:1">
+          <div class="name">Stripe</div>
+          <div class="endpoint">api.stripe.com/v1</div>
+        </div>
+        <span class="status-dot dot-gray" id="dot-stripe"></span>
+        <button class="btn btn-sm btn-outline" onclick="configKey('stripe')">Configure</button>
+      </div>
+
+      <div class="conn-row">
+        <div style="font-size:1.2rem">🐙</div>
+        <div style="flex:1">
+          <div class="name">GitHub</div>
+          <div class="endpoint">api.github.com</div>
+        </div>
+        <span class="status-dot dot-gray" id="dot-github"></span>
+        <button class="btn btn-sm btn-outline" onclick="configKey('github')">Configure</button>
+      </div>
+
+      <div class="conn-row">
+        <div style="font-size:1.2rem">💬</div>
+        <div style="flex:1">
+          <div class="name">Slack</div>
+          <div class="endpoint">slack.com/api</div>
+        </div>
+        <span class="status-dot dot-gray" id="dot-slack"></span>
+        <button class="btn btn-sm btn-outline" onclick="configKey('slack')">Configure</button>
+      </div>
+
+      <div class="conn-row">
+        <div style="font-size:1.2rem">🎯</div>
+        <div style="flex:1">
+          <div class="name">HubSpot</div>
+          <div class="endpoint">api.hubapi.com</div>
+        </div>
+        <span class="status-dot dot-gray" id="dot-hubspot"></span>
+        <button class="btn btn-sm btn-outline" onclick="configKey('hubspot')">Configure</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🛰️</span> Connection Status</h3>
+      <div class="log" id="conn-log">
+        <div class="info">System ready. Configure API keys to connect integrations.</div>
+        <div class="info">Anthropic key required for all agent actions.</div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="testAllConnections()">Test all connections</button>
+        <button class="btn btn-outline" onclick="clearLog('conn-log')">Clear log</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key config modal area -->
+  <div class="card" id="key-config-card" style="margin-top:16px;display:none">
+    <h3 id="key-config-title"><span class="icon">🔑</span> Configure Key</h3>
+    <label>API Key / Token</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-... or ghp_... or xoxb-...">
+    <label id="key-extra-label" style="display:none">Workspace / Org (optional)</label>
+    <input type="text" id="key-extra-input" placeholder="" style="display:none">
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-success" onclick="saveKey()">Save & Test</button>
+      <button class="btn btn-outline" onclick="document.getElementById('key-config-card').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- STRIPE TAB -->
+<div class="panel" id="panel-stripe">
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="icon">💳</span> Stripe Actions</h3>
+      <label>Action</label>
+      <select id="stripe-action" onchange="updateStripeForm()">
+        <option value="list_customers">List customers</option>
+        <option value="get_customer">Get customer by ID</option>
+        <option value="list_charges">List recent charges</option>
+        <option value="get_balance">Get account balance</option>
+        <option value="list_subscriptions">List subscriptions</option>
+        <option value="list_invoices">List invoices</option>
+        <option value="create_customer">Create customer</option>
+        <option value="create_product">Create product + price</option>
+      </select>
+
+      <div id="stripe-params"></div>
+
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" onclick="runStripeAction()">Run action</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">📊</span> Revenue Snapshot</h3>
+      <div id="stripe-snapshot" style="color:#718096;font-size:.85rem">Connect Stripe to see live MRR, charges, and customer count.</div>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="loadStripeSnapshot()">Refresh snapshot</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3><span class="icon">📋</span> Result</h3>
+    <div class="result-box" id="stripe-result">Results will appear here...</div>
+  </div>
+</div>
+
+<!-- GITHUB TAB -->
+<div class="panel" id="panel-github">
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="icon">🐙</span> GitHub Actions</h3>
+      <label>Action</label>
+      <select id="github-action" onchange="updateGithubForm()">
+        <option value="list_repos">List my repos</option>
+        <option value="list_issues">List issues</option>
+        <option value="create_issue">Create issue</option>
+        <option value="list_prs">List pull requests</option>
+        <option value="get_repo">Get repo info</option>
+        <option value="list_commits">List recent commits</option>
+        <option value="create_file">Create/update file</option>
+        <option value="search_code">Search code</option>
+      </select>
+      <div id="github-params"></div>
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" onclick="runGithubAction()">Run action</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🤖</span> Dev Agent → GitHub</h3>
+      <p style="font-size:.8rem;color:#718096;margin-bottom:12px">Let the Developer agent create a GitHub issue from a description.</p>
+      <label>Feature / Bug description</label>
+      <textarea id="dev-github-input" rows="4" placeholder="Describe the feature or bug..."></textarea>
+      <label>Target repo (owner/repo)</label>
+      <input type="text" id="dev-github-repo" placeholder="myorg/myrepo">
+      <div style="margin-top:12px">
+        <button class="btn btn-success" onclick="devAgentCreateIssue()">Agent → create issue</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3><span class="icon">📋</span> Result</h3>
+    <div class="result-box" id="github-result">Results will appear here...</div>
+  </div>
+</div>
+
+<!-- SLACK TAB -->
+<div class="panel" id="panel-slack">
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="icon">💬</span> Slack Actions</h3>
+      <label>Action</label>
+      <select id="slack-action" onchange="updateSlackForm()">
+        <option value="send_message">Send message</option>
+        <option value="list_channels">List channels</option>
+        <option value="post_announcement">Post announcement</option>
+        <option value="get_channel_history">Get channel history</option>
+      </select>
+      <div id="slack-params">
+        <label>Channel</label>
+        <input type="text" id="slack-channel" placeholder="#general or channel ID">
+        <label>Message</label>
+        <textarea id="slack-message" rows="3" placeholder="Your message..."></textarea>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" onclick="runSlackAction()">Send</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">📢</span> Agent → Slack</h3>
+      <p style="font-size:.8rem;color:#718096;margin-bottom:12px">Let any agent draft and send a Slack message.</p>
+      <label>Choose agent</label>
+      <select id="slack-agent">
+        <option>Product Manager</option>
+        <option>CEO</option>
+        <option>Release Engineer</option>
+        <option>Product Marketer</option>
+        <option>Sales Agent</option>
+        <option>DevOps</option>
+      </select>
+      <label>Topic / instruction</label>
+      <textarea id="slack-agent-topic" rows="3" placeholder="e.g. Send sprint summary to engineering channel"></textarea>
+      <label>Target channel</label>
+      <input type="text" id="slack-agent-channel" placeholder="#engineering">
+      <div style="margin-top:12px">
+        <button class="btn btn-success" onclick="agentSendSlack()">Agent → Slack</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3><span class="icon">📋</span> Result</h3>
+    <div class="result-box" id="slack-result">Results will appear here...</div>
+  </div>
+</div>
+
+<!-- HUBSPOT TAB -->
+<div class="panel" id="panel-hubspot">
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="icon">🎯</span> HubSpot Actions</h3>
+      <label>Action</label>
+      <select id="hubspot-action" onchange="updateHubspotForm()">
+        <option value="list_contacts">List contacts</option>
+        <option value="create_contact">Create contact</option>
+        <option value="list_deals">List deals</option>
+        <option value="create_deal">Create deal</option>
+        <option value="list_companies">List companies</option>
+        <option value="create_note">Create note on contact</option>
+      </select>
+      <div id="hubspot-params"></div>
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" onclick="runHubspotAction()">Run action</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🤝</span> Sales Agent → HubSpot</h3>
+      <p style="font-size:.8rem;color:#718096;margin-bottom:12px">Sales agent qualifies a lead and creates a HubSpot contact + deal.</p>
+      <label>Lead information</label>
+      <textarea id="sales-lead-input" rows="5" placeholder="Name, company, role, what they need, budget signal..."></textarea>
+      <div style="margin-top:12px">
+        <button class="btn btn-success" onclick="salesAgentCreateLead()">Agent → qualify + create in HubSpot</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3><span class="icon">📋</span> Result</h3>
+    <div class="result-box" id="hubspot-result">Results will appear here...</div>
+  </div>
+</div>
+
+<!-- WEBHOOKS TAB -->
+<div class="panel" id="panel-webhooks">
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="icon">📡</span> Incoming Webhooks</h3>
+      <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Register webhook endpoints that trigger agent workflows when called.</p>
+      <label>Webhook name</label>
+      <input type="text" id="wh-name" placeholder="e.g. stripe-payment-succeeded">
+      <label>Trigger agent</label>
+      <select id="wh-agent">
+        <option>Finance / CFO</option>
+        <option>Sales Agent</option>
+        <option>Support Agent</option>
+        <option>DevOps</option>
+        <option>Release Engineer</option>
+        <option>Product Manager</option>
+      </select>
+      <label>Agent instruction on trigger</label>
+      <textarea id="wh-instruction" rows="3" placeholder="When this webhook fires, the agent should..."></textarea>
+      <div style="margin-top:12px">
+        <button class="btn btn-success" onclick="registerWebhook()">Register webhook</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">📋</span> Registered Webhooks</h3>
+      <div id="webhook-list" style="font-size:.83rem;color:#718096">No webhooks registered yet.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3><span class="icon">🧪</span> Simulate Webhook Trigger</h3>
+    <div class="row">
+      <select id="wh-sim-select" style="flex:1"><option>-- select a webhook --</option></select>
+      <textarea id="wh-sim-payload" rows="2" style="flex:2;min-height:40px" placeholder='{"event":"payment_succeeded","amount":500}'></textarea>
+      <button class="btn btn-primary" onclick="simulateWebhook()">Fire</button>
+    </div>
+    <div class="result-box" id="webhook-result" style="margin-top:12px">Webhook simulation results will appear here...</div>
+  </div>
+</div>
+
+<!-- AGENT ACTIONS TAB -->
+<div class="panel" id="panel-agent-actions">
+  <div class="card" style="margin-bottom:16px">
+    <h3><span class="icon">🤖</span> Cross-Integration Agent Action</h3>
+    <p style="font-size:.8rem;color:#718096;margin-bottom:14px">Pick an agent, give it a goal — it will plan and execute real API calls across connected tools.</p>
+    <div class="grid2">
+      <div>
+        <label>Agent</label>
+        <select id="aa-agent">
+          <option>CEO</option>
+          <option>Product Manager</option>
+          <option>Developer</option>
+          <option>Sales Agent</option>
+          <option>Release Engineer</option>
+          <option>Product Marketer</option>
+          <option>DevOps</option>
+          <option>Finance / CFO</option>
+          <option>Support Agent</option>
+        </select>
+        <label>Available tools for this run</label>
+        <div class="agent-select" id="aa-tools">
+          <div class="agent-chip selected" data-tool="github">🐙 GitHub</div>
+          <div class="agent-chip selected" data-tool="slack">💬 Slack</div>
+          <div class="agent-chip" data-tool="stripe">💳 Stripe</div>
+          <div class="agent-chip" data-tool="hubspot">🎯 HubSpot</div>
+        </div>
+      </div>
+      <div>
+        <label>Goal / instruction</label>
+        <textarea id="aa-goal" rows="6" placeholder="e.g. Check all open GitHub issues labeled 'urgent', summarize them, and post the summary to #engineering on Slack."></textarea>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="runAgentAction()">Run agent action</button>
+      <button class="btn btn-outline" onclick="clearResult('aa-result')">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="icon">📋</span> Agent Execution Log</h3>
+    <div class="result-box" id="aa-result" style="max-height:400px">Agent actions will be logged here with step-by-step tool call planning...</div>
+  </div>
+</div>
+
+<!-- Modal overlay for key entry -->
+<div id="key-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center">
+  <div style="background:#111827;border:1px solid #374151;border-radius:16px;padding:28px;width:420px;max-width:95vw">
+    <h3 id="modal-title" style="margin-bottom:16px">Configure Key</h3>
+    <label>API Key / Token</label>
+    <input type="password" id="modal-key-input" placeholder="Paste your key here" style="margin-bottom:8px">
+    <p style="font-size:.75rem;color:#718096">Stored in memory only. Never written to disk or sent anywhere except the official API endpoint.</p>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-success" onclick="saveModalKey()">Save & Test</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const keys = {};
+const webhooks = [];
+let currentKeyService = null;
+
+// ── Tab navigation ────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', t.textContent.toLowerCase().includes(name) || (name==='connections' && i===0));
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if(name==='stripe') updateStripeForm();
+  if(name==='github') updateGithubForm();
+  if(name==='hubspot') updateHubspotForm();
+}
+
+// ── Key management ────────────────────────────────────────────────────────────
+function configKey(service) {
+  currentKeyService = service;
+  const names = {anthropic:'Anthropic (Claude)',stripe:'Stripe',github:'GitHub',slack:'Slack',hubspot:'HubSpot'};
+  document.getElementById('modal-title').textContent = '🔑 Configure ' + names[service];
+  document.getElementById('modal-key-input').value = keys[service] || '';
+  document.getElementById('key-modal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('key-modal').style.display = 'none';
+}
+
+async function saveModalKey() {
+  const val = document.getElementById('modal-key-input').value.trim();
+  if(!val) return;
+  keys[currentKeyService] = val;
+  closeModal();
+  await testConnection(currentKeyService);
+}
+
+function saveKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if(!val) return;
+  keys[currentKeyService] = val;
+  document.getElementById('key-config-card').style.display = 'none';
+  testConnection(currentKeyService);
+}
+
+async function testConnection(service) {
+  const dot = document.getElementById('dot-' + service);
+  if(dot) dot.className = 'status-dot dot-yellow';
+  addLog('conn-log', 'info', `Testing ${service} connection...`);
+
+  try {
+    if(service === 'anthropic') {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST', headers:{'x-api-key':keys.anthropic,'anthropic-version':'2023-06-01','content-type':'application/json'},
+        body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'hi'}]})
+      });
+      if(r.ok || r.status===200){ dot.className='status-dot dot-green'; addLog('conn-log','ok','Anthropic ✓ connected'); }
+      else { dot.className='status-dot dot-red'; addLog('conn-log','err',`Anthropic ✗ HTTP ${r.status}`); }
+    } else if(service === 'github') {
+      const r = await fetch('https://api.github.com/user', {headers:{Authorization:`token ${keys.github}`}});
+      if(r.ok){ const d=await r.json(); dot.className='status-dot dot-green'; addLog('conn-log','ok',`GitHub ✓ logged in as ${d.login}`); }
+      else { dot.className='status-dot dot-red'; addLog('conn-log','err',`GitHub ✗ HTTP ${r.status}`); }
+    } else if(service === 'stripe') {
+      const r = await fetch('https://api.stripe.com/v1/balance', {headers:{Authorization:`Bearer ${keys.stripe}`}});
+      if(r.ok){ dot.className='status-dot dot-green'; addLog('conn-log','ok','Stripe ✓ connected'); }
+      else { dot.className='status-dot dot-red'; addLog('conn-log','err',`Stripe ✗ HTTP ${r.status}`); }
+    } else if(service === 'slack') {
+      const r = await fetch('https://slack.com/api/auth.test', {headers:{Authorization:`Bearer ${keys.slack}`}});
+      const d = await r.json();
+      if(d.ok){ dot.className='status-dot dot-green'; addLog('conn-log','ok',`Slack ✓ workspace: ${d.team}`); }
+      else { dot.className='status-dot dot-red'; addLog('conn-log','err',`Slack ✗ ${d.error}`); }
+    } else if(service === 'hubspot') {
+      const r = await fetch('https://api.hubapi.com/crm/v3/objects/contacts?limit=1', {headers:{Authorization:`Bearer ${keys.hubspot}`}});
+      if(r.ok){ dot.className='status-dot dot-green'; addLog('conn-log','ok','HubSpot ✓ connected'); }
+      else { dot.className='status-dot dot-red'; addLog('conn-log','err',`HubSpot ✗ HTTP ${r.status}`); }
+    }
+  } catch(e) {
+    if(dot) dot.className='status-dot dot-red';
+    addLog('conn-log','err',`${service} ✗ ${e.message} (check CORS — use a proxy for Stripe/HubSpot in production)`);
+  }
+}
+
+async function testAllConnections() {
+  for(const s of ['anthropic','stripe','github','slack','hubspot']) {
+    if(keys[s]) await testConnection(s);
+    else addLog('conn-log','warn',`${s} — no key configured, skipping`);
+  }
+}
+
+// ── Stripe ────────────────────────────────────────────────────────────────────
+function updateStripeForm() {
+  const action = document.getElementById('stripe-action').value;
+  let html = '';
+  if(action==='get_customer') html = `<label>Customer ID</label><input id="sp1" placeholder="cus_...">`;
+  if(action==='create_customer') html = `<label>Email</label><input id="sp1" placeholder="user@example.com"><label>Name</label><input id="sp2" placeholder="Jane Doe">`;
+  if(action==='create_product') html = `<label>Product name</label><input id="sp1" placeholder="Pro Plan"><label>Price (cents)</label><input id="sp2" type="number" placeholder="2999">`;
+  if(action==='list_invoices'||action==='list_subscriptions') html = `<label>Limit</label><input id="sp1" type="number" value="5">`;
+  document.getElementById('stripe-params').innerHTML = html;
+}
+
+async function runStripeAction() {
+  if(!keys.stripe) { showResult('stripe-result','⚠️ Configure Stripe API key first.'); return; }
+  const action = document.getElementById('stripe-action').value;
+  showResult('stripe-result','⏳ Calling Stripe...');
+  let url='', opts={method:'GET',headers:{Authorization:`Bearer ${keys.stripe}`}};
+  const s1 = ()=>document.getElementById('sp1')?.value;
+  const s2 = ()=>document.getElementById('sp2')?.value;
+
+  try {
+    if(action==='list_customers') url='https://api.stripe.com/v1/customers?limit=10';
+    else if(action==='get_customer') url=`https://api.stripe.com/v1/customers/${s1()}`;
+    else if(action==='list_charges') url='https://api.stripe.com/v1/charges?limit=10';
+    else if(action==='get_balance') url='https://api.stripe.com/v1/balance';
+    else if(action==='list_subscriptions') url=`https://api.stripe.com/v1/subscriptions?limit=${s1()||5}`;
+    else if(action==='list_invoices') url=`https://api.stripe.com/v1/invoices?limit=${s1()||5}`;
+    else if(action==='create_customer') {
+      url='https://api.stripe.com/v1/customers'; opts.method='POST';
+      opts.body=`email=${encodeURIComponent(s1())}&name=${encodeURIComponent(s2()||'')}`;
+      opts.headers['Content-Type']='application/x-www-form-urlencoded';
+    } else if(action==='create_product') {
+      url='https://api.stripe.com/v1/products'; opts.method='POST';
+      opts.body=`name=${encodeURIComponent(s1()||'Product')}`;
+      opts.headers['Content-Type']='application/x-www-form-urlencoded';
+    }
+    const r = await fetch(url, opts);
+    const d = await r.json();
+    showResult('stripe-result', JSON.stringify(d, null, 2));
+  } catch(e) { showResult('stripe-result','Error: '+e.message); }
+}
+
+async function loadStripeSnapshot() {
+  if(!keys.stripe) { document.getElementById('stripe-snapshot').textContent='Configure Stripe key first.'; return; }
+  document.getElementById('stripe-snapshot').textContent='Loading...';
+  try {
+    const [bal, cust, charges] = await Promise.all([
+      fetch('https://api.stripe.com/v1/balance',{headers:{Authorization:`Bearer ${keys.stripe}`}}).then(r=>r.json()),
+      fetch('https://api.stripe.com/v1/customers?limit=100',{headers:{Authorization:`Bearer ${keys.stripe}`}}).then(r=>r.json()),
+      fetch('https://api.stripe.com/v1/charges?limit=10',{headers:{Authorization:`Bearer ${keys.stripe}`}}).then(r=>r.json()),
+    ]);
+    const avail = bal.available?.[0];
+    const totalRecent = charges.data?.reduce((s,c)=>s+(c.amount_captured||0),0)||0;
+    document.getElementById('stripe-snapshot').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.85rem">
+        <div style="background:#1a2035;padding:12px;border-radius:8px">
+          <div style="color:#718096;font-size:.75rem">BALANCE</div>
+          <div style="font-size:1.2rem;font-weight:700;color:#68d391">${avail ? (avail.amount/100).toFixed(2)+' '+avail.currency.toUpperCase() : 'N/A'}</div>
+        </div>
+        <div style="background:#1a2035;padding:12px;border-radius:8px">
+          <div style="color:#718096;font-size:.75rem">CUSTOMERS</div>
+          <div style="font-size:1.2rem;font-weight:700;color:#63b3ed">${cust.data?.length||0}</div>
+        </div>
+        <div style="background:#1a2035;padding:12px;border-radius:8px;grid-column:1/-1">
+          <div style="color:#718096;font-size:.75rem">LAST 10 CHARGES TOTAL</div>
+          <div style="font-size:1.2rem;font-weight:700;color:#b794f4">$${(totalRecent/100).toFixed(2)}</div>
+        </div>
+      </div>`;
+  } catch(e) { document.getElementById('stripe-snapshot').textContent='Error: '+e.message; }
+}
+
+// ── GitHub ────────────────────────────────────────────────────────────────────
+function updateGithubForm() {
+  const action = document.getElementById('github-action').value;
+  let html = '';
+  const repoField = `<label>Repository (owner/repo)</label><input id="gp1" placeholder="myorg/myrepo">`;
+  if(['list_issues','list_prs','get_repo','list_commits'].includes(action)) html = repoField;
+  if(action==='create_issue') html = repoField+`<label>Title</label><input id="gp2" placeholder="Bug: ..."><label>Body</label><textarea id="gp3" rows="3" placeholder="Details..."></textarea>`;
+  if(action==='create_file') html = repoField+`<label>File path</label><input id="gp2" placeholder="src/hello.txt"><label>Content</label><textarea id="gp3" rows="3"></textarea><label>Commit message</label><input id="gp4" placeholder="Add file via Company OS">`;
+  if(action==='search_code') html = `<label>Search query</label><input id="gp1" placeholder="function login language:javascript">`;
+  document.getElementById('github-params').innerHTML = html;
+}
+
+async function runGithubAction() {
+  if(!keys.github) { showResult('github-result','⚠️ Configure GitHub token first.'); return; }
+  const action = document.getElementById('github-action').value;
+  const h = {Authorization:`token ${keys.github}`,Accept:'application/vnd.github+json'};
+  const gp = n => document.getElementById(`gp${n}`)?.value;
+  showResult('github-result','⏳ Calling GitHub...');
+
+  try {
+    let r, d;
+    if(action==='list_repos') { r=await fetch('https://api.github.com/user/repos?per_page=20&sort=updated',{headers:h}); d=await r.json(); }
+    else if(action==='list_issues') { r=await fetch(`https://api.github.com/repos/${gp(1)}/issues?state=open&per_page=20`,{headers:h}); d=await r.json(); }
+    else if(action==='list_prs') { r=await fetch(`https://api.github.com/repos/${gp(1)}/pulls?state=open&per_page=20`,{headers:h}); d=await r.json(); }
+    else if(action==='get_repo') { r=await fetch(`https://api.github.com/repos/${gp(1)}`,{headers:h}); d=await r.json(); }
+    else if(action==='list_commits') { r=await fetch(`https://api.github.com/repos/${gp(1)}/commits?per_page=10`,{headers:h}); d=await r.json(); }
+    else if(action==='search_code') { r=await fetch(`https://api.github.com/search/code?q=${encodeURIComponent(gp(1))}`,{headers:h}); d=await r.json(); }
+    else if(action==='create_issue') {
+      r=await fetch(`https://api.github.com/repos/${gp(1)}/issues`,{method:'POST',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({title:gp(2),body:gp(3)})});
+      d=await r.json();
+    } else if(action==='create_file') {
+      const sha = null; // would need to GET file first for updates
+      r=await fetch(`https://api.github.com/repos/${gp(1)}/contents/${gp(2)}`,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({message:gp(4)||'Company OS update',content:btoa(gp(3)||'')})});
+      d=await r.json();
+    }
+    showResult('github-result', JSON.stringify(d, null, 2));
+  } catch(e) { showResult('github-result','Error: '+e.message); }
+}
+
+async function devAgentCreateIssue() {
+  if(!keys.anthropic) { showResult('github-result','⚠️ Configure Anthropic key first.'); return; }
+  const desc = document.getElementById('dev-github-input').value.trim();
+  const repo = document.getElementById('dev-github-repo').value.trim();
+  if(!desc) return;
+  showResult('github-result','🤖 Developer agent thinking...');
+
+  const aiResp = await callClaude('developer',
+    `You are a senior developer. Convert the following into a well-structured GitHub issue with: a clear title (max 70 chars), detailed body with ## Context, ## Steps to reproduce / ## Feature details, ## Acceptance criteria. Return JSON: {"title":"...","body":"..."}.\n\nInput: ${desc}`,
+    100);
+
+  let parsed;
+  try { const m = aiResp.match(/\{[\s\S]*\}/); parsed = JSON.parse(m[0]); }
+  catch { showResult('github-result','Agent response (no GitHub key to create):\n\n'+aiResp); return; }
+
+  if(!keys.github) { showResult('github-result','Agent drafted issue:\n\n**'+parsed.title+'**\n\n'+parsed.body+'\n\n⚠️ Add GitHub key to auto-create.'); return; }
+
+  const r = await fetch(`https://api.github.com/repos/${repo}/issues`,{method:'POST',headers:{Authorization:`token ${keys.github}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(parsed)});
+  const d = await r.json();
+  showResult('github-result', `✅ Issue created: ${d.html_url}\n\n${JSON.stringify(d,null,2)}`);
+}
+
+// ── Slack ─────────────────────────────────────────────────────────────────────
+function updateSlackForm() {
+  const action = document.getElementById('slack-action').value;
+  let html = '';
+  if(action==='send_message'||action==='post_announcement') html = `<label>Channel</label><input id="slack-channel" placeholder="#general"><label>Message</label><textarea id="slack-message" rows="3" placeholder="Your message..."></textarea>`;
+  if(action==='list_channels') html = `<p style="color:#718096;font-size:.82rem;margin-top:8px">Will list all channels in workspace.</p>`;
+  if(action==='get_channel_history') html = `<label>Channel ID</label><input id="slack-channel" placeholder="C01234567">`;
+  document.getElementById('slack-params').innerHTML = html;
+}
+
+async function runSlackAction() {
+  if(!keys.slack) { showResult('slack-result','⚠️ Configure Slack token first.'); return; }
+  const action = document.getElementById('slack-action').value;
+  showResult('slack-result','⏳ Calling Slack...');
+
+  try {
+    let r, d;
+    if(action==='list_channels') {
+      r=await fetch('https://slack.com/api/conversations.list',{headers:{Authorization:`Bearer ${keys.slack}`}});
+      d=await r.json();
+    } else if(action==='send_message'||action==='post_announcement') {
+      const ch = document.getElementById('slack-channel')?.value;
+      const txt = document.getElementById('slack-message')?.value;
+      r=await fetch('https://slack.com/api/chat.postMessage',{method:'POST',headers:{Authorization:`Bearer ${keys.slack}`,'Content-Type':'application/json'},body:JSON.stringify({channel:ch,text:txt})});
+      d=await r.json();
+    } else if(action==='get_channel_history') {
+      const ch = document.getElementById('slack-channel')?.value;
+      r=await fetch(`https://slack.com/api/conversations.history?channel=${ch}&limit=20`,{headers:{Authorization:`Bearer ${keys.slack}`}});
+      d=await r.json();
+    }
+    showResult('slack-result', JSON.stringify(d, null, 2));
+  } catch(e) { showResult('slack-result','Error: '+e.message); }
+}
+
+async function agentSendSlack() {
+  if(!keys.anthropic) { showResult('slack-result','⚠️ Configure Anthropic key first.'); return; }
+  const agent = document.getElementById('slack-agent').value;
+  const topic = document.getElementById('slack-agent-topic').value.trim();
+  const channel = document.getElementById('slack-agent-channel').value.trim();
+  if(!topic) return;
+  showResult('slack-result',`🤖 ${agent} drafting message...`);
+
+  const msg = await callClaude(agent, `Draft a concise, professional Slack message for the channel "${channel}" about: ${topic}. Return only the message text, no extra commentary.`, 300);
+
+  if(!keys.slack) { showResult('slack-result',`Agent drafted message (no Slack key to send):\n\n${msg}`); return; }
+  if(!channel) { showResult('slack-result',`Agent drafted message (no channel specified):\n\n${msg}`); return; }
+
+  try {
+    const r=await fetch('https://slack.com/api/chat.postMessage',{method:'POST',headers:{Authorization:`Bearer ${keys.slack}`,'Content-Type':'application/json'},body:JSON.stringify({channel,text:msg,username:agent,icon_emoji:':robot_face:'})});
+    const d=await r.json();
+    showResult('slack-result', d.ok ? `✅ Sent to ${channel}:\n\n${msg}` : `✗ Slack error: ${d.error}\n\nDrafted message:\n${msg}`);
+  } catch(e) { showResult('slack-result','Error: '+e.message+'\n\nDrafted:\n'+msg); }
+}
+
+// ── HubSpot ───────────────────────────────────────────────────────────────────
+function updateHubspotForm() {
+  const action = document.getElementById('hubspot-action').value;
+  let html = '';
+  if(action==='create_contact') html=`<label>Email</label><input id="hp1" placeholder="lead@company.com"><label>First name</label><input id="hp2" placeholder="Jane"><label>Last name</label><input id="hp3" placeholder="Doe">`;
+  if(action==='create_deal') html=`<label>Deal name</label><input id="hp1" placeholder="Enterprise deal — ACME"><label>Amount</label><input id="hp2" type="number" placeholder="50000"><label>Stage</label><select id="hp3"><option>appointmentscheduled</option><option>qualifiedtobuy</option><option>presentationscheduled</option><option>decisionmakerboughtin</option><option>contractsent</option><option>closedwon</option><option>closedlost</option></select>`;
+  if(action==='create_note') html=`<label>Contact ID</label><input id="hp1" placeholder="12345"><label>Note body</label><textarea id="hp2" rows="3"></textarea>`;
+  document.getElementById('hubspot-params').innerHTML = html;
+}
+
+async function runHubspotAction() {
+  if(!keys.hubspot) { showResult('hubspot-result','⚠️ Configure HubSpot token first.'); return; }
+  const action = document.getElementById('hubspot-action').value;
+  const h = {Authorization:`Bearer ${keys.hubspot}`,'Content-Type':'application/json'};
+  const hp = n => document.getElementById(`hp${n}`)?.value;
+  showResult('hubspot-result','⏳ Calling HubSpot...');
+
+  try {
+    let r, d;
+    if(action==='list_contacts') { r=await fetch('https://api.hubapi.com/crm/v3/objects/contacts?limit=20&properties=email,firstname,lastname',{headers:h}); d=await r.json(); }
+    else if(action==='list_deals') { r=await fetch('https://api.hubapi.com/crm/v3/objects/deals?limit=20&properties=dealname,amount,dealstage',{headers:h}); d=await r.json(); }
+    else if(action==='list_companies') { r=await fetch('https://api.hubapi.com/crm/v3/objects/companies?limit=20&properties=name,domain',{headers:h}); d=await r.json(); }
+    else if(action==='create_contact') {
+      r=await fetch('https://api.hubapi.com/crm/v3/objects/contacts',{method:'POST',headers:h,body:JSON.stringify({properties:{email:hp(1),firstname:hp(2),lastname:hp(3)}})});
+      d=await r.json();
+    } else if(action==='create_deal') {
+      r=await fetch('https://api.hubapi.com/crm/v3/objects/deals',{method:'POST',headers:h,body:JSON.stringify({properties:{dealname:hp(1),amount:hp(2),dealstage:hp(3),pipeline:'default'}})});
+      d=await r.json();
+    } else if(action==='create_note') {
+      r=await fetch('https://api.hubapi.com/crm/v3/objects/notes',{method:'POST',headers:h,body:JSON.stringify({properties:{hs_note_body:hp(2),hs_timestamp:Date.now()}})});
+      d=await r.json();
+    }
+    showResult('hubspot-result', JSON.stringify(d, null, 2));
+  } catch(e) { showResult('hubspot-result','Error: '+e.message); }
+}
+
+async function salesAgentCreateLead() {
+  if(!keys.anthropic) { showResult('hubspot-result','⚠️ Configure Anthropic key first.'); return; }
+  const input = document.getElementById('sales-lead-input').value.trim();
+  if(!input) return;
+  showResult('hubspot-result','🤖 Sales agent qualifying lead...');
+
+  const resp = await callClaude('sales',
+    `You are a B2B sales agent. Qualify this lead and extract structured data for CRM. Return JSON: {"qualified":true/false,"reason":"...","contact":{"email":"...","firstname":"...","lastname":"...","company":"..."},"deal":{"dealname":"...","amount":0,"stage":"appointmentscheduled"},"notes":"..."}.\n\nLead info: ${input}`,
+    200);
+
+  let parsed;
+  try { const m=resp.match(/\{[\s\S]*\}/); parsed=JSON.parse(m[0]); }
+  catch { showResult('hubspot-result','Agent analysis:\n\n'+resp); return; }
+
+  if(!parsed.qualified) { showResult('hubspot-result',`❌ Lead not qualified.\nReason: ${parsed.reason}\n\nFull analysis:\n${JSON.stringify(parsed,null,2)}`); return; }
+
+  if(!keys.hubspot) { showResult('hubspot-result',`✅ Qualified lead (no HubSpot key to create):\n${JSON.stringify(parsed,null,2)}`); return; }
+
+  const h = {Authorization:`Bearer ${keys.hubspot}`,'Content-Type':'application/json'};
+  try {
+    const contactResp = await fetch('https://api.hubapi.com/crm/v3/objects/contacts',{method:'POST',headers:h,body:JSON.stringify({properties:parsed.contact})});
+    const contact = await contactResp.json();
+    const dealResp = await fetch('https://api.hubapi.com/crm/v3/objects/deals',{method:'POST',headers:h,body:JSON.stringify({properties:{...parsed.deal,pipeline:'default'}})});
+    const deal = await dealResp.json();
+    showResult('hubspot-result',`✅ Contact created: ${contact.id}\n✅ Deal created: ${deal.id}\n\nAgent notes: ${parsed.notes}\n\n${JSON.stringify({contact,deal},null,2)}`);
+  } catch(e) { showResult('hubspot-result','HubSpot error: '+e.message+'\n\nAgent data:\n'+JSON.stringify(parsed,null,2)); }
+}
+
+// ── Webhooks ──────────────────────────────────────────────────────────────────
+function registerWebhook() {
+  const name = document.getElementById('wh-name').value.trim();
+  const agent = document.getElementById('wh-agent').value;
+  const instruction = document.getElementById('wh-instruction').value.trim();
+  if(!name) return;
+  const id = 'wh_' + Math.random().toString(36).slice(2,8);
+  webhooks.push({id, name, agent, instruction, url:`https://your-domain.com/hooks/${id}`, created: new Date().toLocaleTimeString()});
+  renderWebhooks();
+  document.getElementById('wh-name').value='';
+  document.getElementById('wh-instruction').value='';
+}
+
+function renderWebhooks() {
+  const el = document.getElementById('webhook-list');
+  const sel = document.getElementById('wh-sim-select');
+  if(!webhooks.length){ el.innerHTML='<span style="color:#4a5568">No webhooks registered yet.</span>'; sel.innerHTML='<option>-- select a webhook --</option>'; return; }
+  el.innerHTML = webhooks.map(w=>`
+    <div class="webhook-row">
+      <div style="font-weight:600;min-width:120px">${w.name}</div>
+      <div class="url">${w.url}</div>
+      <div style="color:#9ca3af;min-width:100px;font-size:.75rem">${w.agent}</div>
+      <button class="btn btn-sm btn-danger" onclick="removeWebhook('${w.id}')">✕</button>
+    </div>`).join('');
+  sel.innerHTML = '<option>-- select a webhook --</option>' + webhooks.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');
+}
+
+function removeWebhook(id) {
+  const i = webhooks.findIndex(w=>w.id===id);
+  if(i>=0) webhooks.splice(i,1);
+  renderWebhooks();
+}
+
+async function simulateWebhook() {
+  const id = document.getElementById('wh-sim-select').value;
+  const payload = document.getElementById('wh-sim-payload').value;
+  const wh = webhooks.find(w=>w.id===id);
+  if(!wh) { showResult('webhook-result','Select a registered webhook first.'); return; }
+  showResult('webhook-result',`🔔 Webhook fired: ${wh.name}\n⚡ Triggering agent: ${wh.agent}\n📦 Payload: ${payload}\n\n🤖 Agent processing...`);
+
+  if(!keys.anthropic) { showResult('webhook-result',`Webhook ${wh.name} would trigger ${wh.agent}.\nInstruction: ${wh.instruction}\nPayload: ${payload}\n\n⚠️ Add Anthropic key for live agent response.`); return; }
+
+  const resp = await callClaude(wh.agent, `A webhook event was received.\nWebhook: ${wh.name}\nPayload: ${payload}\nYour instruction: ${wh.instruction}\n\nRespond with what you would do, any actions taken, and any follow-up tasks.`, 400);
+  showResult('webhook-result',`🔔 Webhook: ${wh.name}\n⚡ Agent: ${wh.agent}\n📦 Payload: ${payload}\n\n🤖 Agent response:\n${resp}`);
+}
+
+// ── Agent Actions ─────────────────────────────────────────────────────────────
+async function runAgentAction() {
+  if(!keys.anthropic) { showResult('aa-result','⚠️ Configure Anthropic key first.'); return; }
+  const agent = document.getElementById('aa-agent').value;
+  const goal = document.getElementById('aa-goal').value.trim();
+  const tools = [...document.querySelectorAll('#aa-tools .agent-chip.selected')].map(c=>c.dataset.tool);
+  if(!goal) return;
+
+  const connected = tools.filter(t=>keys[t]);
+  const notConnected = tools.filter(t=>!keys[t]);
+
+  showResult('aa-result',`🤖 ${agent} planning action...\nConnected tools: ${connected.join(', ')||'none'}\nNot connected: ${notConnected.join(', ')||'none'}\n\n`);
+
+  const systemParts = {
+    CEO:'You are the CEO of a company.',Developer:'You are a senior software developer.',
+    'Product Manager':'You are a product manager.','Sales Agent':'You are a B2B sales agent.',
+    'Release Engineer':'You are a release engineer.','Product Marketer':'You are a product marketer.',
+    DevOps:'You are a DevOps engineer.','Finance / CFO':'You are the CFO.',
+    'Support Agent':'You are a customer support specialist.',
+  };
+
+  const toolDescriptions = {
+    github:'GitHub API (list/create repos, issues, PRs, commits, files)',
+    slack:'Slack API (send messages, list channels)',
+    stripe:'Stripe API (balance, customers, charges, subscriptions)',
+    hubspot:'HubSpot CRM (contacts, deals, companies)',
+  };
+
+  const availableTools = connected.map(t=>toolDescriptions[t]).join('\n');
+
+  const planResp = await callClaude(agent,
+    `${systemParts[agent]||'You are a business agent.'}\n\nAvailable tools:\n${availableTools||'None connected'}\n\nGoal: ${goal}\n\nCreate a step-by-step execution plan. For each step, specify: which tool to call, what parameters, what you expect to happen, and what you'll do with the result. Be concrete and specific.`,
+    600);
+
+  showResult('aa-result',`🤖 ${agent} execution plan:\n\n${planResp}\n\n` + (connected.length ? `\n📍 To execute: API calls require connected tools. Plan above shows exactly what would fire.` : `\n⚠️ No tools connected — add API keys in the Connections tab to execute.`));
+}
+
+document.querySelectorAll('#aa-tools .agent-chip').forEach(chip=>{
+  chip.addEventListener('click',()=>chip.classList.toggle('selected'));
+});
+
+// ── Claude helper ─────────────────────────────────────────────────────────────
+async function callClaude(agent, prompt, maxTokens=500) {
+  if(!keys.anthropic) return '⚠️ No Anthropic key configured.';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':keys.anthropic,'anthropic-version':'2023-06-01','content-type':'application/json'},
+      body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+    });
+    const d = await r.json();
+    return d.content?.[0]?.text || JSON.stringify(d);
+  } catch(e) { return 'Error: '+e.message; }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function addLog(logId, cls, msg) {
+  const el = document.getElementById(logId);
+  if(!el) return;
+  el.innerHTML += `<div class="${cls}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function showResult(id, text) {
+  const el = document.getElementById(id);
+  if(el) { el.textContent = text; el.scrollTop = 0; }
+}
+
+function clearResult(id) { const el=document.getElementById(id); if(el) el.textContent=''; }
+function clearLog(id) { const el=document.getElementById(id); if(el) el.innerHTML=''; }
+
+// init
+updateStripeForm(); updateGithubForm(); updateSlackForm(); updateHubspotForm();
+
+
+// ==AGENT-PANEL-INJECTED==
+(function(){
+const AP_KEY='company-os-agent-tasks';
+const AP_AGENTS=[
+  {name:'CEO',emoji:'👑',dept:'Strategy & Leadership'},
+  {name:'CTO',emoji:'🧠',dept:'Strategy & Leadership'},
+  {name:'Chief of Staff',emoji:'🗂️',dept:'Strategy & Leadership'},
+  {name:'Strategy Planner',emoji:'♟️',dept:'Strategy & Leadership'},
+  {name:'Legal Advisor',emoji:'⚖️',dept:'Strategy & Leadership'},
+  {name:'Risk Manager',emoji:'🛡️',dept:'Strategy & Leadership'},
+  {name:'Product Manager',emoji:'🧭',dept:'Product & Engineering'},
+  {name:'AI Product Manager',emoji:'🤖',dept:'Product & Engineering'},
+  {name:'Architect',emoji:'🏗️',dept:'Product & Engineering'},
+  {name:'Developer',emoji:'💻',dept:'Product & Engineering'},
+  {name:'UX Designer',emoji:'🎨',dept:'Product & Engineering'},
+  {name:'UX Researcher',emoji:'🔭',dept:'Product & Engineering'},
+  {name:'QA Tester',emoji:'🧪',dept:'Product & Engineering'},
+  {name:'DevOps',emoji:'⚙️',dept:'Product & Engineering'},
+  {name:'Security Engineer',emoji:'🔒',dept:'Product & Engineering'},
+  {name:'Release Engineer',emoji:'🚀',dept:'Product & Engineering'},
+  {name:'Tech Writer',emoji:'📝',dept:'Product & Engineering'},
+  {name:'ML Engineer',emoji:'🔬',dept:'Product & Engineering'},
+  {name:'CFO',emoji:'💰',dept:'Finance & Operations'},
+  {name:'Accountant',emoji:'📊',dept:'Finance & Operations'},
+  {name:'CA (Chartered Accountant)',emoji:'🧾',dept:'Finance & Operations'},
+  {name:'Company Secretary',emoji:'🏛️',dept:'Finance & Operations'},
+  {name:'Internal Auditor',emoji:'🔍',dept:'Finance & Operations'},
+  {name:'Tax Advisor',emoji:'⚖️',dept:'Finance & Operations'},
+  {name:'Treasury Manager',emoji:'🏦',dept:'Finance & Operations'},
+  {name:'Pricing Strategist',emoji:'💲',dept:'Finance & Operations'},
+  {name:'Procurement',emoji:'🛒',dept:'Finance & Operations'},
+  {name:'Operations Manager',emoji:'🔧',dept:'Finance & Operations'},
+  {name:'BI Developer',emoji:'📈',dept:'Finance & Operations'},
+  {name:'FP&A Analyst',emoji:'📉',dept:'Finance & Operations'},
+  {name:'Contract Manager',emoji:'📃',dept:'Finance & Operations'},
+  {name:'FinOps Analyst',emoji:'💸',dept:'Finance & Operations'},
+  {name:'Sales Agent',emoji:'💼',dept:'Sales & Revenue'},
+  {name:'Lead Gen',emoji:'🎣',dept:'Sales & Revenue'},
+  {name:'SDR',emoji:'📞',dept:'Sales & Revenue'},
+  {name:'BD & Partnerships',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Revenue Ops',emoji:'⚡',dept:'Sales & Revenue'},
+  {name:'Investor Relations',emoji:'📑',dept:'Sales & Revenue'},
+  {name:'Technical Program Manager',emoji:'🗺️',dept:'Sales & Revenue'},
+  {name:'Account Manager',emoji:'🤝',dept:'Sales & Revenue'},
+  {name:'Sales Enablement',emoji:'🎯',dept:'Sales & Revenue'},
+  {name:'Technical Account Manager',emoji:'🛠️',dept:'Sales & Revenue'},
+  {name:'Product Marketer',emoji:'📢',dept:'Marketing & Growth'},
+  {name:'Content',emoji:'✍️',dept:'Marketing & Growth'},
+  {name:'SEO',emoji:'🔎',dept:'Marketing & Growth'},
+  {name:'Social Media',emoji:'📱',dept:'Marketing & Growth'},
+  {name:'PR',emoji:'📰',dept:'Marketing & Growth'},
+  {name:'Growth Hacker',emoji:'📉',dept:'Marketing & Growth'},
+  {name:'Email Marketer',emoji:'📧',dept:'Marketing & Growth'},
+  {name:'Performance Marketer',emoji:'📊',dept:'Marketing & Growth'},
+  {name:'Demand Gen Manager',emoji:'🔥',dept:'Marketing & Growth'},
+  {name:'Developer Advocate',emoji:'👩‍💻',dept:'Marketing & Growth'},
+  {name:'Event Marketing Manager',emoji:'🎪',dept:'Marketing & Growth'},
+  {name:'Support Agent',emoji:'🎧',dept:'Customer'},
+  {name:'Customer Success',emoji:'🌟',dept:'Customer'},
+  {name:'Community Manager',emoji:'👥',dept:'Customer'},
+  {name:'Brand Designer',emoji:'🎭',dept:'Customer'},
+  {name:'Onboarding Specialist',emoji:'🚀',dept:'Customer'},
+  {name:'VoC Analyst',emoji:'🎙️',dept:'Customer'},
+  {name:'HR / People Ops',emoji:'🧑‍💼',dept:'People & Culture'},
+  {name:'Recruiter',emoji:'🔍',dept:'People & Culture'},
+  {name:'L&D',emoji:'🎓',dept:'People & Culture'},
+  {name:'Compliance Officer',emoji:'📋',dept:'People & Culture'},
+  {name:'HR Business Partner',emoji:'🤲',dept:'People & Culture'},
+  {name:'Comp & Benefits',emoji:'💎',dept:'People & Culture'},
+  {name:'DEI Manager',emoji:'🌍',dept:'People & Culture'},
+  {name:'CHRO',emoji:'🤝',dept:'People & Culture'},
+  {name:'Project Manager',emoji:'📌',dept:'Coordination'},
+  {name:'Scrum Master',emoji:'🔄',dept:'Coordination'},
+  {name:'Executive Assistant',emoji:'📅',dept:'Coordination'},
+  {name:'Knowledge Manager',emoji:'📚',dept:'Coordination'},
+  {name:'Data Engineer',emoji:'🔩',dept:'Data & AI'},
+  {name:'Data Scientist',emoji:'🧮',dept:'Data & AI'},
+  {name:'MLOps Engineer',emoji:'🔁',dept:'Data & AI'},
+  {name:'Analytics Engineer',emoji:'📐',dept:'Data & AI'},
+  {name:'AI Safety Engineer',emoji:'🧯',dept:'Data & AI'},
+  {name:'Database Administrator',emoji:'🗄️',dept:'Data & AI'},
+  {name:'CDO',emoji:'📊',dept:'Data & AI'},
+  {name:'Cybersecurity Analyst',emoji:'🕵️',dept:'Security & Web3'},
+  {name:'Blockchain Developer',emoji:'⛓️',dept:'Security & Web3'},
+  {name:'Penetration Tester',emoji:'🎯',dept:'Security & Web3'},
+  {name:'Cloud Security Architect',emoji:'☁️',dept:'Security & Web3'},
+  {name:'CISO',emoji:'🔐',dept:'Security & Web3'},
+  {name:'Platform Engineer',emoji:'🏗️',dept:'Platform & Infra'},
+  {name:'Site Reliability Engineer',emoji:'📡',dept:'Platform & Infra'},
+  {name:'Network Engineer',emoji:'🌐',dept:'Platform & Infra'},
+  {name:'Cloud Architect',emoji:'☁️',dept:'Platform & Infra'},
+  {name:'Design System Engineer',emoji:'🧱',dept:'Product Design'},
+  {name:'Motion Designer',emoji:'🎬',dept:'Product Design'},
+  {name:'Accessibility Specialist',emoji:'♿',dept:'Product Design'},
+  {name:'CMO',emoji:'📣',dept:'C-Suite'},
+  {name:'COO',emoji:'⚡',dept:'C-Suite'},
+  {name:'CPO',emoji:'🧭',dept:'C-Suite'},
+  {name:'CRO',emoji:'💹',dept:'C-Suite'},
+  {name:'Frontend Developer',emoji:'🖥️',dept:'Engineering Specialists'},
+  {name:'Backend Developer',emoji:'⚙️',dept:'Engineering Specialists'},
+  {name:'Mobile Developer',emoji:'📱',dept:'Engineering Specialists'},
+  {name:'Solutions Engineer',emoji:'🔧',dept:'Engineering Specialists'},
+  {name:'Staff Engineer',emoji:'🏅',dept:'Engineering Specialists'},
+  {name:'API Product Manager',emoji:'🔌',dept:'Engineering Specialists'},
+  {name:'Data Privacy Officer',emoji:'🔏',dept:'Legal & Compliance'},
+  {name:'IP Attorney',emoji:'⚖️',dept:'Legal & Compliance'},
+  {name:'Prompt Engineer',emoji:'✨',dept:'Emerging Tech'},
+  {name:'AI Ethics Officer',emoji:'🧭',dept:'Emerging Tech'},
+  {name:'No-Code Developer',emoji:'🧩',dept:'Emerging Tech'},
+  {name:'Change Manager',emoji:'🔄',dept:'Emerging Tech'},
+];
+
+let apCurrentAgent=null,apActiveTab='tasks';
+function apGetAll(){try{return JSON.parse(localStorage.getItem(AP_KEY)||'{}')}catch{return {}}}
+window.apGetAll=apGetAll;
+function apSaveAll(d){localStorage.setItem(AP_KEY,JSON.stringify(d))}
+function apGetKey(){return localStorage.getItem('company-os-api-key')||''}
+
+function openAgentPanel(name,emoji,role){
+  const a=emoji?{name,emoji,role}:AP_AGENTS.find(x=>x.name===name)||{name,emoji:'🤖',dept:'',role:''};
+  apCurrentAgent=a;
+  document.getElementById('ap-emoji').textContent=a.emoji||'🤖';
+  document.getElementById('ap-name').textContent=a.name;
+  document.getElementById('ap-role').textContent=a.role||a.dept||'';
+  document.getElementById('ap-run-input').value='';
+  document.getElementById('ap-run-output').style.display='none';
+  document.getElementById('ap-run-inner').textContent='▶ Run';
+  apSwitchTab('tasks');
+  apRenderStats();apRenderTasks();apRenderHistory();
+  document.getElementById('ap-overlay').classList.add('open');
+  document.getElementById('ap-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openAgentPanel=openAgentPanel;
+
+function apClose(){
+  document.getElementById('ap-overlay').classList.remove('open');
+  document.getElementById('ap-panel').classList.remove('open');
+  document.body.style.overflow='';
+  apCurrentAgent=null;
+}
+window.apClose=apClose;
+
+function apSwitchTab(tab){
+  apActiveTab=tab;
+  ['tasks','history'].forEach(t=>{
+    document.getElementById('ap-tab-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('ap-tc-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') apRenderHistory();
+}
+window.apSwitchTab=apSwitchTab;
+
+function apRenderStats(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const done=tasks.filter(t=>t.done).length,open=tasks.length-done;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('ap-st-total').textContent=tasks.length;
+  document.getElementById('ap-st-done').textContent=done;
+  document.getElementById('ap-st-open').textContent=open;
+  document.getElementById('ap-st-pct').textContent=pct+'%';
+}
+
+function apRenderTasks(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]);
+  const list=document.getElementById('ap-task-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No tasks yet. Add one below or run an AI task.</div>';return;}
+  list.innerHTML=tasks.map((t,i)=>`
+    <div class="ap-task-item" id="ap-ti-${i}">
+      <div class="ap-chk ${t.done?'done':''}" onclick="apToggle(${i})">${t.done?'✓':''}</div>
+      <div class="ap-task-body">
+        <div class="ap-task-title ${t.done?'done':''}">${t.title.replace(/</g,'&lt;')}</div>
+        ${t.output?`<div class="ap-task-expand" onclick="apToggleOutput(${i})">▸ Show AI output</div><div class="ap-task-output" id="ap-to-${i}">${t.output.replace(/</g,'&lt;')}</div>`:''}
+        <div class="ap-task-meta">${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>
+      <button class="ap-task-del" onclick="apDelete(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function apToggleOutput(idx){
+  const out=document.getElementById('ap-to-'+idx);
+  const exp=out?.previousElementSibling;
+  if(!out)return;
+  const open=out.classList.toggle('open');
+  if(exp)exp.textContent=open?'▾ Hide AI output':'▸ Show AI output';
+}
+window.apToggleOutput=apToggleOutput;
+
+function apRenderHistory(){
+  if(!apCurrentAgent)return;
+  const tasks=(apGetAll()[apCurrentAgent.name]||[]).filter(t=>t.output&&t.output.length>0).reverse();
+  const list=document.getElementById('ap-history-list');
+  if(!tasks.length){list.innerHTML='<div style="font-size:.78rem;color:#4a5180;padding:10px 0">No AI runs yet. Use "Run AI Task" to generate output.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ap-history-item">
+      <div class="ap-history-date">${new Date(t.completedAt||t.createdAt).toLocaleString()}</div>
+      <div class="ap-history-prompt">${t.title.replace(/</g,'&lt;')}</div>
+      <div class="ap-history-output">${t.output.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+
+function apToggle(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  if(tasks[idx]){tasks[idx].done=!tasks[idx].done;tasks[idx].completedAt=tasks[idx].done?Date.now():null;}
+  all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apToggle=apToggle;
+
+function apDelete(idx){
+  if(!apCurrentAgent)return;
+  const all=apGetAll(),tasks=all[apCurrentAgent.name]||[];
+  tasks.splice(idx,1);all[apCurrentAgent.name]=tasks;apSaveAll(all);apRenderTasks();apRenderStats();
+}
+window.apDelete=apDelete;
+
+function apAddTask(){
+  if(!apCurrentAgent)return;
+  const inp=document.getElementById('ap-new-task'),title=inp.value.trim();
+  if(!title)return;
+  const all=apGetAll();
+  if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+  all[apCurrentAgent.name].push({title:title.slice(0,200),done:false,createdAt:Date.now(),output:''});
+  apSaveAll(all);inp.value='';apRenderTasks();apRenderStats();
+}
+window.apAddTask=apAddTask;
+
+async function apRunTask(){
+  if(!apCurrentAgent)return;
+  const prompt=document.getElementById('ap-run-input').value.trim();
+  if(!prompt)return;
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first (in Settings or the API key field in this module).');return;}
+  const btn=document.getElementById('ap-run-btn'),inner=document.getElementById('ap-run-inner');
+  inner.innerHTML='<span class="ap-spinner"></span> Running…';btn.disabled=true;
+  document.getElementById('ap-run-output').style.display='none';
+  const sys=`You are ${apCurrentAgent.name}, a ${apCurrentAgent.role||apCurrentAgent.dept||'specialist AI agent'}. Be expert, concise, and actionable.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,system:sys,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||JSON.stringify(d);
+    const out=document.getElementById('ap-run-output');
+    out.textContent=reply;out.style.display='block';
+    const all=apGetAll();
+    if(!all[apCurrentAgent.name])all[apCurrentAgent.name]=[];
+    all[apCurrentAgent.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    apSaveAll(all);apRenderTasks();apRenderStats();
+    if(apActiveTab==='history')apRenderHistory();
+  }catch(e){
+    const out=document.getElementById('ap-run-output');
+    out.textContent='Error: '+e.message;out.style.display='block';
+  }
+  inner.textContent='▶ Run';btn.disabled=false;
+}
+window.apRunTask=apRunTask;
+
+// Export
+function apExportTasks(){
+  const all=apGetAll();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='company-os-agent-tasks-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+window.apExportTasks=apExportTasks;
+
+// Picker
+function apOpenPicker(){
+  document.getElementById('ap-picker').classList.add('open');
+  document.getElementById('ap-picker-search').value='';
+  apFilterPicker();
+}
+window.apOpenPicker=apOpenPicker;
+
+function apClosePicker(){document.getElementById('ap-picker').classList.remove('open');}
+window.apClosePicker=apClosePicker;
+
+function apFilterPicker(){
+  const q=document.getElementById('ap-picker-search').value.toLowerCase();
+  const all=apGetAll();
+  const agents=q?AP_AGENTS.filter(a=>a.name.toLowerCase().includes(q)||a.dept.toLowerCase().includes(q)):AP_AGENTS;
+  document.getElementById('ap-picker-list').innerHTML=agents.map(a=>{
+    const tasks=(all[a.name]||[]),done=tasks.filter(t=>t.done).length;
+    const badge=tasks.length?`<span class="ap-picker-item-tasks">${done}/${tasks.length}✓</span>`:'';
+    return `<div class="ap-picker-item" onclick="apPickerSelect('${a.name.replace(/'/g,"\'")}')">
+      <span class="ap-picker-item-emoji">${a.emoji}</span>
+      <div style="flex:1;min-width:0"><div class="ap-picker-item-name">${a.name}</div><div class="ap-picker-item-dept">${a.dept}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+window.apFilterPicker=apFilterPicker;
+
+function apPickerSelect(name){
+  const a=AP_AGENTS.find(x=>x.name===name);
+  if(a){apClosePicker();openAgentPanel(a.name,a.emoji,a.dept);}
+}
+window.apPickerSelect=apPickerSelect;
+
+// Bulk Run
+let apBulkSelected=new Set();
+function apOpenBulk(){
+  document.getElementById('ap-bulk-overlay').classList.add('open');
+  document.getElementById('ap-bulk-prompt').value='';
+  document.getElementById('ap-bulk-progress').textContent='';
+  apBulkSelected=new Set(apCurrentAgent?[apCurrentAgent.name]:[]);
+  apRenderBulkGrid();
+}
+window.apOpenBulk=apOpenBulk;
+
+function apCloseBulk(){document.getElementById('ap-bulk-overlay').classList.remove('open');}
+window.apCloseBulk=apCloseBulk;
+
+function apRenderBulkGrid(){
+  const grid=document.getElementById('ap-bulk-agent-grid');
+  grid.innerHTML=AP_AGENTS.map(a=>`
+    <div class="ap-bulk-agent-item ${apBulkSelected.has(a.name)?'selected':''}" onclick="apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <input type="checkbox" ${apBulkSelected.has(a.name)?'checked':''} onclick="event.stopPropagation();apBulkToggle('${a.name.replace(/'/g,"\'")}')">
+      <span>${a.emoji}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+    </div>`).join('');
+  document.getElementById('ap-bulk-count').textContent=apBulkSelected.size+' selected';
+}
+
+function apBulkToggle(name){
+  apBulkSelected.has(name)?apBulkSelected.delete(name):apBulkSelected.add(name);
+  apRenderBulkGrid();
+}
+window.apBulkToggle=apBulkToggle;
+
+function apBulkSelectAll(val){
+  apBulkSelected=val?new Set(AP_AGENTS.map(a=>a.name)):new Set();
+  apRenderBulkGrid();
+}
+window.apBulkSelectAll=apBulkSelectAll;
+
+async function apRunBulk(){
+  const prompt=document.getElementById('ap-bulk-prompt').value.trim();
+  if(!prompt){alert('Enter a prompt first.');return;}
+  if(!apBulkSelected.size){alert('Select at least one agent.');return;}
+  const key=apGetKey();
+  if(!key){alert('Add your Anthropic API key first.');return;}
+  const btn=document.getElementById('ap-bulk-run-btn');
+  const prog=document.getElementById('ap-bulk-progress');
+  btn.disabled=true;
+  const agents=AP_AGENTS.filter(a=>apBulkSelected.has(a.name));
+  const all=apGetAll();
+  let done=0;
+  for(const a of agents){
+    prog.textContent=`Running ${a.emoji} ${a.name}… (${done}/${agents.length})`;
+    const sys=`You are ${a.name}, a ${a.dept} specialist. Be expert, concise, and actionable.`;
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:sys,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await r.json();
+      const reply=d.content?.[0]?.text||'Error';
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:reply});
+    }catch(e){
+      if(!all[a.name])all[a.name]=[];
+      all[a.name].push({title:prompt.slice(0,120),done:true,createdAt:Date.now(),completedAt:Date.now(),output:'Error: '+e.message});
+    }
+    done++;apSaveAll(all);
+  }
+  prog.textContent=`✅ Done! Ran ${done} agents.`;
+  btn.disabled=false;
+  if(apCurrentAgent)apRenderTasks();apRenderStats();apRenderHistory();
+}
+window.apRunBulk=apRunBulk;
+})();
+
+</script>
+
+
+<!-- ==PANEL-ENHANCED== -->
+<div class="ap-overlay" id="ap-overlay" onclick="apClose()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="ap-panel-hdr">
+    <span class="ap-panel-emoji" id="ap-emoji"></span>
+    <div class="ap-panel-info">
+      <div class="ap-panel-name" id="ap-name"></div>
+      <div class="ap-panel-role" id="ap-role"></div>
+    </div>
+    <div class="ap-panel-hdr-btns">
+      <button class="ap-bulk-open-btn" onclick="apOpenBulk()" title="Bulk Run">⚡</button>
+      <button class="ap-panel-close" onclick="apClose()">✕</button>
+    </div>
+  </div>
+  <div class="ap-body">
+    <div>
+      <div class="ap-sec-title">Stats</div>
+      <div class="ap-stats">
+        <div class="ap-stat"><div class="v" id="ap-st-total" style="color:#a78bfa">0</div><div class="l">Tasks</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-done" style="color:#22c55e">0</div><div class="l">Done</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-open" style="color:#60a5fa">0</div><div class="l">Open</div></div>
+        <div class="ap-stat"><div class="v" id="ap-st-pct" style="color:#f59e0b">0%</div><div class="l">Done %</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="ap-tabs">
+        <button class="ap-tab active" id="ap-tab-tasks" onclick="apSwitchTab('tasks')">📋 Tasks</button>
+        <button class="ap-tab" id="ap-tab-history" onclick="apSwitchTab('history')">📜 History</button>
+      </div>
+      <div class="ap-tab-content active" id="ap-tc-tasks">
+        <div id="ap-task-list"></div>
+        <div class="ap-add-row">
+          <input id="ap-new-task" placeholder="Add a task..." onkeydown="if(event.key==='Enter')apAddTask()">
+          <button class="ap-add-btn" onclick="apAddTask()">+</button>
+        </div>
+      </div>
+      <div class="ap-tab-content" id="ap-tc-history">
+        <div id="ap-history-list"></div>
+      </div>
+    </div>
+    <div class="ap-run-box">
+      <div class="ap-sec-title" style="margin-bottom:0">Run AI Task</div>
+      <textarea id="ap-run-input" placeholder="Type anything — runs against this agent's system prompt and auto-saves…"></textarea>
+      <button class="ap-run-btn" id="ap-run-btn" onclick="apRunTask()">
+        <span id="ap-run-inner">▶ Run</span>
+      </button>
+      <div class="ap-run-output" id="ap-run-output"></div>
+    </div>
+    <button class="ap-export-btn" onclick="apExportTasks()">📤 Export all agent tasks as JSON</button>
+  </div>
+</div>
+
+<div class="ap-picker" id="ap-picker">
+  <div class="ap-picker-card">
+    <div class="ap-picker-hdr">
+      <span>📋 Agent Tasks — Pick an agent</span>
+      <button class="ap-picker-close-btn" onclick="apClosePicker()">✕</button>
+    </div>
+    <div class="ap-picker-search"><input id="ap-picker-search" placeholder="🔍 Search agents..." oninput="apFilterPicker()"></div>
+    <div class="ap-picker-list" id="ap-picker-list"></div>
+  </div>
+</div>
+
+<div class="ap-bulk-overlay" id="ap-bulk-overlay">
+  <div class="ap-bulk-card">
+    <div class="ap-bulk-hdr">
+      <span>⚡ Bulk Run — Run a task across multiple agents</span>
+      <button style="background:#1a1e2e;border:1px solid #1e2236;color:#8890bb;border-radius:7px;width:28px;height:28px;cursor:pointer" onclick="apCloseBulk()">✕</button>
+    </div>
+    <div class="ap-bulk-body">
+      <div>
+        <div class="ap-sec-title">Prompt for all selected agents</div>
+        <textarea id="ap-bulk-prompt" style="background:#1a1e2e;border:1px solid #2d3354;color:#dde1f5;border-radius:8px;padding:8px 10px;font-size:.82rem;width:100%;min-height:70px;resize:none;font-family:inherit;outline:none" placeholder="e.g. What are your top 3 priorities this quarter?"></textarea>
+      </div>
+      <div>
+        <div class="ap-sec-title">Select agents <span id="ap-bulk-count" style="color:#a78bfa;font-weight:700"></span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="apBulkSelectAll(true)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">All</button>
+          <button onclick="apBulkSelectAll(false)" style="padding:4px 10px;font-size:.72rem;background:#1a1e2e;border:1px solid #2d3354;color:#8890bb;border-radius:6px;cursor:pointer">None</button>
+        </div>
+        <div class="ap-bulk-agent-grid" id="ap-bulk-agent-grid"></div>
+      </div>
+      <div class="ap-bulk-progress" id="ap-bulk-progress"></div>
+      <button class="ap-bulk-btn" id="ap-bulk-run-btn" onclick="apRunBulk()">⚡ Run all selected</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
