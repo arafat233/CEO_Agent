@@ -568,18 +568,112 @@ function sendSlack(webhookUrl, text) {
   } catch(_) {}
 }
 
+// ── Anthropic API runner (direct cloud access) ──────────────────────────────────
+function callClaudeAPI(systemPrompt, messages, apiKey, onToken) {
+  return new Promise((resolve, reject) => {
+    const apiMessages = messages
+      .filter(m => m.role !== 'system')
+      .map(m => ({ role: m.role, content: m.content }));
+
+    const body = JSON.stringify({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      system: systemPrompt || undefined,
+      messages: apiMessages,
+      stream: !!onToken
+    });
+
+    const req = https.request({
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(body)
+      }
+    }, res => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        let errData = '';
+        res.on('data', chunk => errData += chunk);
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(errData);
+            reject(new Error(parsed.error?.message || `HTTP ${res.statusCode}`));
+          } catch (_) {
+            reject(new Error(`HTTP ${res.statusCode}: ${errData}`));
+          }
+        });
+        return;
+      }
+
+      let fullText = '';
+      if (onToken) {
+        let buffer = '';
+        res.on('data', chunk => {
+          buffer += chunk.toString();
+          let lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) continue;
+            if (trimmed === 'data: [DONE]') continue;
+            try {
+              const parsed = JSON.parse(trimmed.slice(5).trim());
+              if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                const txt = parsed.delta.text;
+                fullText += txt;
+                onToken(txt);
+              }
+            } catch (_) {}
+          }
+        });
+        res.on('end', () => resolve(fullText));
+      } else {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(data);
+            resolve(parsed.content?.[0]?.text || '');
+          } catch (e) {
+            reject(new Error('Failed to parse response: ' + e.message));
+          }
+        });
+      }
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 // ── Backend router ────────────────────────────────────────────────────────────
 async function runAgent(agent, messages, opts) {
   const {onToken} = opts;
+  const apiKey = opts.apiKey || process.env.ANTHROPIC_API_KEY;
   const sysMsg = messages.find(m => m.role === 'system');
   const userMsg = messages.filter(m => m.role !== 'system').map(m => m.content).join('\n');
+
+  if (apiKey) {
+    try {
+      const text = await callClaudeAPI(sysMsg?.content, messages, apiKey, onToken);
+      return {text, backend:'claude-api'};
+    } catch(e) {
+      if (opts.silent !== true) console.log(clr(c.dim, `\n  ⚠ Direct API failed (${e.message.split('\n')[0]}). Falling back to Claude CLI…`));
+    }
+  }
+
   const text = await callClaudeCLI(sysMsg?.content, userMsg, onToken);
   return {text, backend:'claude-cli'};
 }
 
 // ── Context builders ──────────────────────────────────────────────────────────
-function backendLabel() {
-  return clr(c.cyan,'[Claude CLI]');
+function backendLabel(backend) {
+  if (backend === 'claude-api') return clr(c.yellow, '[Claude API]');
+  return clr(c.cyan, '[Claude CLI]');
 }
 
 function buildMessages(agent, prompt) {
