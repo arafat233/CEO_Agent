@@ -1,0 +1,30 @@
+{
+  "name": "company-os",
+  "version": "2.0.0",
+  "description": "Multi-agent C-Suite & Specialist pipeline utilizing Node.js and Claude CLI/API",
+  "main": "company-os-cli.js",
+  "bin": {
+    "company-os": "./company-os-cli.js"
+  },
+  "scripts": {
+    "start": "node company-os-cli.js",
+    "server": "node company-os-cli.js server",
+    "pipeline": "node company-os-cli.js pipeline",
+    "list": "node company-os-cli.js list",
+    "status": "node company-os-cli.js status"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "multi-agent",
+    "claude",
+    "cli",
+    "c-suite",
+    "pipeline"
+  ],
+  "author": "arafat233",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,25 @@
+# Dependency directories
+node_modules/
+
+# Local data / state storage
+.company-os/
+data.json
+schedules.json
+config.json
+broadcast.jsonl
+
+# Generated reports & exports
+*-Report-*.md
+*-Analysis-*.md
+pipeline-report.md
+chain-report-*.md
+*.jsonl
+company-os-sync-*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environments
+.env
+.env.local
